@@ -66,6 +66,21 @@ button:focus-visible,.row:focus-visible{outline:2px solid var(--gold);outline-of
 @media (max-width:640px){.stage3d{aspect-ratio:4/5}}
 .stage3d canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
 .stage3d .msg{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:24px;color:#33484c}
+[hidden]{display:none!important}
+.btc{display:grid;gap:12px}
+.btc .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-width:0}
+.btc h2{font-family:var(--f-display);font-size:1.25rem;margin:0 0 6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.badge{font-family:var(--f-body);font-size:.68rem;font-weight:600;letter-spacing:.06em;padding:1px 8px;border-radius:999px;border:1px solid currentColor}
+.b-VERIFIED{color:#2f8f5b}.b-REPORTED{color:var(--warn)}.b-UNKNOWN{color:var(--muted)}.b-PLANNED{color:var(--wait)}.b-BLOCKED{color:var(--bad)}.b-PARTIAL{color:var(--warn)}.b-IMPLEMENTED{color:var(--wait)}.b-TESTED{color:#2f8f5b}.b-LIVE{color:var(--bad)}
+.btc table{width:100%;border-collapse:collapse;font-size:.84rem}
+.btc th,.btc td{text-align:left;padding:5px 6px;border-top:1px solid var(--line);vertical-align:top;overflow-wrap:anywhere}
+.btc th{color:var(--muted);font-weight:500;font-size:.76rem}
+.btc .tw{overflow-x:auto}
+.btc .kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.btc .kv div{border:1px solid var(--line);border-radius:8px;padding:6px 10px}
+.btc .kv b{display:block;font-size:1.05rem;font-variant-numeric:tabular-nums}
+.btc .kv span{font-size:.74rem;color:var(--muted)}
+.btc .muted{color:var(--muted);font-size:.82rem}
 .note{font-size:.8rem;color:var(--muted);border-left:3px solid var(--gold);padding:6px 12px;background:var(--panel);border-radius:0 8px 8px 0}
 .note b{color:var(--ink)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
@@ -85,6 +100,7 @@ button:focus-visible,.row:focus-visible{outline:2px solid var(--gold);outline-of
     <button type="button" data-mode="hoang-thanh" aria-pressed="true">Hoàng thành</button>
     <button type="button" data-mode="bang" aria-pressed="false">Bảng điều hành</button>
     <button type="button" data-mode="sanh-3d" aria-pressed="false">Sảnh 3D</button>
+    <button type="button" data-mode="phong-btc" aria-pressed="false">Phòng BTC</button>
   </nav>
   <div class="counts" id="counts" aria-label="Đếm theo trạng thái"></div>
 
@@ -104,6 +120,7 @@ button:focus-visible,.row:focus-visible{outline:2px solid var(--gold);outline-of
   </section>
 
   <section id="v-board" hidden><div class="grid" id="teams"></div></section>
+  <section id="v-btc" class="btc" hidden><div class="card muted" id="btcEmpty">Chưa có dữ liệu Phòng BTC — chờ Claude đồng bộ.</div><div id="btcBody" class="btc"></div></section>
   <section id="v-3d" hidden><div class="stage3d"><canvas id="cv3"></canvas><div class="msg" id="msg3">Đang tải Sảnh 3D…</div></div></section>
 
   <div class="note"><b>Mọi phản ứng là dữ liệu thật:</b> lò rèn chỉ bừng lửa, chuông chỉ rung, cổng dịch chuyển chỉ xoáy khi Agent của phòng đó đang giữ một nhiệm vụ trong sổ. Không có hoạt cảnh giả. Sổ hiện nằm trên máy cloud của Claude và cập nhật mỗi lần Claude đồng bộ; khi nối hook trên laptop sẽ cập nhật theo từng thao tác.</div>
@@ -121,7 +138,7 @@ const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
 const $=id=>document.getElementById(id);
 const esc=s=>{const d=document.createElement("span");d.textContent=s==null?"":String(s);return d.innerHTML;};
 const vn=iso=>{if(!iso)return"—";try{return new Date(iso).toLocaleString("vi-VN",{timeZone:"Asia/Ho_Chi_Minh",hour:"2-digit",minute:"2-digit",day:"2-digit",month:"2-digit"});}catch(e){return iso;}};
-let members=[],meta=null,selected=null;
+let members=[],meta=null,selected=null,b02=null;
 const W=384,H=240,RW=64,RH=48;
 
 /* ---------- sprite ---------- */
@@ -397,19 +414,39 @@ function build3D(){if(!three)return;const{T,world}=three;while(world.children.le
     const d=dragon3D(T,colorFor(m.id),m.kind==="leader",m.activity==="OFF");d.g.position.set(cx,0,cz+.6);d.g.scale.setScalar(.85);world.add(d.g);three.figs.push({wings:d.wings,act:m.activity,seed:cx+cz});});}
 
 /* ---------- chế độ & dữ liệu ---------- */
-const MODES={"hoang-thanh":"v-city","bang":"v-board","sanh-3d":"v-3d"};
+const MODES={"hoang-thanh":"v-city","bang":"v-board","sanh-3d":"v-3d","phong-btc":"v-btc"};
 function setMode(n){if(!MODES[n])n="hoang-thanh";Object.entries(MODES).forEach(([k,v])=>{$(v).hidden=k!==n;});
   document.querySelectorAll("nav.modes button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.mode===n)));
   if(location.hash!=="#"+n)history.replaceState(null,"","#"+n);if(n==="sanh-3d")load3D();if(n==="hoang-thanh")setTimeout(fit,0);}
 document.querySelectorAll("nav.modes button").forEach(b=>b.addEventListener("click",()=>setMode(b.dataset.mode)));
 addEventListener("hashchange",()=>setMode(location.hash.slice(1)));
 setMode(location.hash.slice(1)||"hoang-thanh");
+const BADGE=s=>`<span class="badge b-${esc(s)}">${esc(s)}</span>`;
+function tbl(cols,rows){return `<div class="tw"><table><thead><tr>${cols.map(c=>`<th>${esc(c[1])}</th>`).join("")}</tr></thead><tbody>${(rows||[]).map(r=>`<tr>${cols.map(c=>`<td>${c[2]?c[2](r[c[0]],r):esc(r[c[0]]??"—")}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;}
+function card(title,status,body){return `<section class="card"><h2>${esc(title)} ${status?BADGE(status):""}</h2>${body}</section>`;}
+function renderBTC(){
+  const B=b02; $("btcEmpty").hidden=!!B; if(!B){$("btcBody").innerHTML="";return;}
+  const o=B.overview||{},f=B.flags||{},br=o.bot_reported||{};
+  const kv=(a)=>`<div class="kv">${a.map(([k,v])=>`<div><span>${esc(k)}</span><b>${esc(v??"—")}</b></div>`).join("")}</div>`;
+  let h="";
+  h+=card("Vận hành",B.executor?.status,kv([["Bot gửi lệnh (executor)",B.executor?.name],["Bản vá an toàn",f.patch_installed?"Đã cài":"Chưa cài"],["HALT",f.halt?"CÓ":"không"],["STOP",f.stop?"CÓ":"không"],["Kiểm kê sàn gần nhất",B.inventory_at?vn(B.inventory_at):"chưa có"],["Cập nhật trang",vn(B.updated_at)]])+(B.executor?.note?`<p class="muted">${esc(B.executor.note)}</p>`:""));
+  h+=card("Vốn & số dư",o.status,kv([["USDT khả dụng (sàn)",o.usdt_free],["Vốn trần",o.cap],["Equity bot tự báo",br.equity],["Mốc gốc bot",br.start],["Tạm dừng mua đến",br.pause_until?vn(br.pause_until):"—"]])+(o.balances?tbl([["asset","Tài sản"],["free","Khả dụng"],["locked","Bị khóa"]],o.balances):"")+(o.note?`<p class="muted">${esc(o.note)}</p>`:""));
+  h+=card("Chính sách rủi ro","VERIFIED",tbl([["k","Tham số"],["v","Giá trị"],["who","Ai quyết"]],B.risk));
+  const P=B.plan; h+=card("Kế hoạch giao dịch (TRADE_PLAN)",P?.status||"UNKNOWN",P?kv(Object.entries(P.fields||{}))+`<p class="muted">${esc(P.note||"")}</p>`:`<p class="muted">Chưa có dữ liệu giá thật từ sàn.</p>`);
+  h+=card("Nhiệm vụ B02_BTC","VERIFIED",tbl([["id","ID"],["owner","Phụ trách"],["state","Trạng thái"],["objective","Việc"]],B.tasks));
+  h+=card("Bản vá bot",B.patch?.status,`<p class="muted">${esc(B.patch?.summary||"")}</p>`+tbl([["code","Mã"],["what","Nội dung"],["state","Trạng thái"]],B.patch?.items));
+  h+=card(`Trader BTC (${B.traders?.counts||"—"})`,B.traders?.status,(B.traders?.note?`<p class="muted">${esc(B.traders.note)}</p>`:"")+tbl([["id","ID"],["name","Tên"],["platform","Nền tảng"],["tier","Mức xác minh"],["url","Nguồn",(v)=>v?`<a href="${esc(v)}" target="_blank" rel="noopener">mở</a>`:"—"]],B.traders?.rows));
+  h+=card("Đấu trường Claude vs Grok",B.arena?.status,`<p class="muted">${esc(B.arena?.note||"")}</p>`+tbl([["metric","Chỉ số"],["grok","Grok (thật)"],["claude","Claude (bóng)"]],B.arena?.rows));
+  h+=card("Tin X về BTC",B.x_feed?.status,`<p class="muted">${esc(B.x_feed?.note||"")}</p>`);
+  h+=card("Nguồn & thư viện",B.sources_status||"VERIFIED",tbl([["name","Tên"],["license","Giấy phép"],["decision","Quyết định"],["why","Lý do"]],B.sources));
+  $("btcBody").innerHTML=h;
+}
 function apply(){$("syncAt").textContent=meta?vn(meta.synced_at):"—";$("srcTxt").textContent=meta?`Nguồn: sổ nhiệm vụ (sandbox) · commit ${meta.commit} · ${meta.tasks_total} nhiệm vụ`:"Nguồn: —";
-  renderBoard();build3D();if(selected)select(selected,false);}
+  renderBoard();build3D();renderBTC();if(selected)select(selected,false);}
 (async()=>{const timer=setTimeout(()=>{if(!members.length)$("liveTxt").textContent="Chưa nhận được dữ liệu (10 giây)";},10000);
   const db=window.claude?await window.claude.use("db"):null;
   if(!db){clearTimeout(timer);$("liveTxt").textContent="Cần mở trong Claude và đăng nhập để xem dữ liệu thật";$("detail").textContent="Trang chỉ hiển thị dữ liệu thật từ sổ nhiệm vụ, nên cần đăng nhập Claude.";return;}
-  db.collection("office").onSnapshot(snap=>{clearTimeout(timer);const ms=[];let mt=null;snap.docs.forEach(d=>{if(!d.exists)return;const v=d.data();if(d.id==="meta")mt=v;else ms.push(v);});
+  db.collection("office").onSnapshot(snap=>{clearTimeout(timer);const ms=[];let mt=null;snap.docs.forEach(d=>{if(!d.exists)return;const v=d.data();if(d.id==="meta")mt=v;else if(d.id==="b02_state")b02=v;else if(!d.id.startsWith("b02_"))ms.push(v);});
     members=ms;meta=mt;$("live").classList.add("on");$("liveTxt").textContent=members.length?"Đang nghe sổ nhiệm vụ":"Sổ trống — chờ Claude đồng bộ lần đầu";apply();},
     ()=>{clearTimeout(timer);$("live").classList.remove("on");$("liveTxt").textContent="Mất kết nối dữ liệu — tải lại trang để thử lại";});})();
 })();
