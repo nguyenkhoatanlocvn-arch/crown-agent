@@ -1,0 +1,240 @@
+<title>Phòng điều hành Agent</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Be+Vietnam+Pro:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap&subset=vietnamese">
+<style>
+/* Layout: phòng 3D ở trên làm "cửa sổ nhìn vào văn phòng", bảng 2D đầy đủ ở dưới làm nguồn đọc chính trên điện thoại. */
+:root{
+  --bg:#eef1f5; --panel:#ffffff; --ink:#152238; --muted:#5b6b82; --line:#d6dde7;
+  --gold:#a8731a; --floor:#dfe5ee; --desk:#c9b28a; --wall:#c7d0dd;
+  --ok:#1f8a5b; --warn:#b7791f; --bad:#c0392b; --wait:#2f6fb5; --idle:#7d8ba1; --off:#b8c2d0;
+  --f-display:"Playfair Display", Georgia, "Times New Roman", serif;
+  --f-body:"Be Vietnam Pro", "Segoe UI", system-ui, sans-serif;
+  --f-mono:"JetBrains Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0d1420; --panel:#141d2c; --ink:#e7ecf4; --muted:#93a2b8; --line:#26334a;
+  --gold:#d9a646; --floor:#1a2435; --desk:#6e5a3c; --wall:#223047;
+  --ok:#39b77d; --warn:#e0a43a; --bad:#e2574a; --wait:#5a9ae0; --idle:#7f8ea6; --off:#3a4860; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0d1420; --panel:#141d2c; --ink:#e7ecf4; --muted:#93a2b8; --line:#26334a;
+  --gold:#d9a646; --floor:#1a2435; --desk:#6e5a3c; --wall:#223047;
+  --ok:#39b77d; --warn:#e0a43a; --bad:#e2574a; --wait:#5a9ae0; --idle:#7f8ea6; --off:#3a4860; color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);line-height:1.5}
+.wrap{max-width:1180px;margin:0 auto;padding-block:18px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:18px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px}
+h1{font-family:var(--f-display);font-weight:700;font-size:clamp(1.5rem,3.2vw,2.2rem);margin:0;text-wrap:balance;letter-spacing:.01em}
+h1 small{display:block;font-family:var(--f-body);font-size:.72rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--gold)}
+.sync{font-family:var(--f-mono);font-size:.78rem;color:var(--muted);display:grid;gap:2px;text-align:right}
+.sync b{color:var(--ink);font-weight:500}
+.live{display:inline-flex;align-items:center;gap:6px;justify-self:end;padding:2px 10px;border:1px solid var(--line);border-radius:999px;background:var(--panel);color:var(--ink)}
+.live i{width:8px;height:8px;border-radius:50%;background:var(--idle)}
+.live.on i{background:var(--ok)}
+.counts{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:.8rem;padding:3px 10px;border-radius:999px;border:1px solid var(--line);background:var(--panel);font-variant-numeric:tabular-nums}
+.dot{width:9px;height:9px;border-radius:50%;flex:none}
+.s-WORKING{background:var(--ok)}.s-REVIEW{background:var(--warn)}.s-BLOCKED{background:var(--bad)}.s-WAITING{background:var(--wait)}.s-IDLE{background:var(--idle)}.s-OFF{background:var(--off)}
+.stage{position:relative;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--floor);aspect-ratio:16/9;max-width:100%}
+@media (max-width:640px){.stage{aspect-ratio:4/5}}
+.stage canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
+.stage .hint{position:absolute;left:10px;bottom:8px;font-size:.72rem;color:var(--muted);background:color-mix(in srgb,var(--panel) 80%,transparent);padding:2px 8px;border-radius:6px}
+.stage .msg{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:24px;color:var(--muted);font-size:.95rem}
+.detail{position:absolute;right:10px;top:10px;width:min(300px,calc(100% - 20px));background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px 14px;font-size:.85rem;display:grid;gap:4px}
+.detail h3{margin:0;font-size:.95rem}
+.detail .k{color:var(--muted);font-size:.75rem}
+.detail button{justify-self:end;font:inherit;font-size:.75rem;background:none;border:1px solid var(--line);border-radius:6px;padding:2px 8px;color:var(--ink);cursor:pointer}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.team{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-width:0}
+.team h2{font-family:var(--f-display);font-size:1.05rem;margin:0 0 8px;font-weight:600}
+.team h2 span{font-family:var(--f-mono);font-size:.72rem;color:var(--muted);font-weight:400;margin-left:6px}
+.row{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;padding:7px 0;border-top:1px solid var(--line);align-items:start;cursor:pointer}
+.row:first-of-type{border-top:0}
+.row:focus-visible{outline:2px solid var(--gold);outline-offset:2px;border-radius:4px}
+.row .id{font-family:var(--f-mono);font-size:.78rem;display:flex;align-items:center;gap:6px;padding-top:2px}
+.row .nm{font-size:.86rem;min-width:0}
+.row .tk{grid-column:2;font-size:.78rem;color:var(--muted);min-width:0;overflow-wrap:anywhere}
+.row.off .nm{color:var(--muted)}
+.note{font-size:.8rem;color:var(--muted);border-left:3px solid var(--gold);padding:6px 12px;background:var(--panel);border-radius:0 8px 8px 0}
+.note b{color:var(--ink)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1><small>CROWN AGENT · theo dõi thật</small>Phòng điều hành Agent</h1>
+    <div class="sync">
+      <span class="live" id="live"><i></i><span id="liveTxt">Đang kết nối sổ nhiệm vụ…</span></span>
+      <span>Đồng bộ lần cuối: <b id="syncAt">—</b></span>
+      <span id="srcTxt">Nguồn: —</span>
+    </div>
+  </header>
+
+  <div class="counts" id="counts" aria-label="Đếm theo trạng thái"></div>
+
+  <div class="stage" id="stage">
+    <canvas id="cv" aria-label="Phòng 3D các Agent"></canvas>
+    <div class="msg" id="stageMsg">Đang chờ dữ liệu thật từ sổ nhiệm vụ. Bảng bên dưới sẽ hiện khi có dữ liệu.</div>
+    <div class="hint">Kéo để xoay · cuộn/chụm để phóng · chạm vào Agent để xem việc</div>
+    <div class="detail" id="detail" hidden></div>
+  </div>
+
+  <div class="note"><b>Cách đọc:</b> trạng thái mỗi Agent suy ra từ nhiệm vụ trong sổ, không phải hiệu ứng. Xanh lá = đang giữ việc · Vàng = chờ người khác duyệt · Đỏ = bị chặn · Xanh dương = có việc chưa nhận · Xám = rảnh · Mờ = mới đăng ký, chưa kích hoạt. Hôm nay sổ nằm trên máy cloud của Claude, cập nhật mỗi lần Claude đồng bộ; khi nối hook trên laptop sẽ cập nhật theo từng thao tác.</div>
+
+  <div class="grid" id="teams"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+const STATUS = {WORKING:"Đang làm",REVIEW:"Chờ duyệt",BLOCKED:"Bị chặn",WAITING:"Có việc chưa nhận",IDLE:"Rảnh",OFF:"Chưa kích hoạt"};
+const ORDER = ["WORKING","REVIEW","BLOCKED","WAITING","IDLE","OFF"];
+const TEAMS = [
+  {id:"CHAIRMAN", title:"Chủ tịch & kiểm soát độc lập", match:m=>m.id==="CHAIRMAN"||m.boss==="CHAIRMAN"&&m.kind==="agent"},
+  {id:"VUA_CEO", title:"Agent Vua (CEO)", match:m=>m.id==="VUA_CEO"||m.boss==="VUA_CEO"},
+  {id:"CFO", title:"CFO — Vốn & chi phí", match:m=>m.id==="CFO"||m.boss==="CFO"},
+  {id:"CMO", title:"CMO — Thị trường", match:m=>["CMO-01","CMO-02"].includes(m.id)||["CMO-01","CMO-02"].includes(m.boss)}
+];
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+let members = [], meta = null, selected = null;
+const $ = id => document.getElementById(id);
+const vn = iso => { if(!iso) return "—"; try { return new Date(iso).toLocaleString("vi-VN",{timeZone:"Asia/Ho_Chi_Minh",hour:"2-digit",minute:"2-digit",day:"2-digit",month:"2-digit"}); } catch(e){ return iso; } };
+
+function teamOf(m){ return TEAMS.find(t=>t.match(m)) || TEAMS[1]; }
+
+/* ---------- 2D ---------- */
+function render2D(){
+  const c = {}; ORDER.forEach(s=>c[s]=0); members.forEach(m=>c[m.activity]=(c[m.activity]||0)+1);
+  $("counts").innerHTML = ORDER.map(s=>`<span class="chip"><span class="dot s-${s}"></span>${STATUS[s]} <b>${c[s]}</b></span>`).join("");
+  $("teams").innerHTML = TEAMS.map(t=>{
+    const ms = members.filter(m=>teamOf(m)===t).sort((a,b)=>(a.kind==="leader"?-1:1)-(b.kind==="leader"?-1:1) || ORDER.indexOf(a.activity)-ORDER.indexOf(b.activity) || a.id.localeCompare(b.id));
+    return `<section class="team"><h2>${t.title}<span>${ms.length} thành viên</span></h2>${ms.map(m=>`
+      <div class="row ${m.activity==="OFF"?"off":""}" tabindex="0" data-id="${m.id}" role="button" aria-label="${m.id} ${STATUS[m.activity]}">
+        <span class="id"><span class="dot s-${m.activity}"></span>${m.id}</span>
+        <span class="nm">${esc(m.name)}</span>
+        <span class="tk">${m.task?`${STATUS[m.activity]} · ${esc(m.task.objective)}`:STATUS[m.activity]}</span>
+      </div>`).join("")}</section>`;
+  }).join("");
+  document.querySelectorAll(".row").forEach(r=>{
+    const go=()=>select(r.dataset.id);
+    r.addEventListener("click",go); r.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();go();}});
+  });
+}
+function esc(s){ const d=document.createElement("span"); d.textContent=s==null?"":String(s); return d.innerHTML; }
+
+function select(id){
+  selected = id;
+  const m = members.find(x=>x.id===id); const d=$("detail");
+  if(!m){ d.hidden=true; return; }
+  d.innerHTML = `<h3>${m.id} — ${esc(m.name)}</h3>
+    <span><span class="dot s-${m.activity}" style="display:inline-block;margin-right:6px"></span>${STATUS[m.activity]}${m.open_tasks>1?` · ${m.open_tasks} việc mở`:""}</span>
+    <span class="k">Cấp trên: ${m.boss||"—"} · Quyền: ${m.tier}</span>
+    ${m.task?`<span>${esc(m.task.objective)}</span><span class="k">${m.task.id} · ${m.task.state} · từ ${vn(m.task.since)}${m.task.note?` · ${esc(m.task.note)}`:""}</span>`:`<span class="k">Không có nhiệm vụ trong sổ.</span>`}
+    <button type="button" id="closeD">Đóng</button>`;
+  d.hidden=false; $("closeD").onclick=()=>{d.hidden=true;selected=null;};
+}
+
+/* ---------- 3D ---------- */
+let three = null;
+function css(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || "#888"; }
+function initThree(){
+  if(!window.THREE) return null;
+  const cv=$("cv"); let renderer;
+  try { renderer=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:false}); } catch(e){ return null; }
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  const scene=new THREE.Scene(), cam=new THREE.PerspectiveCamera(40,1,0.1,200);
+  scene.add(new THREE.HemisphereLight(0xffffff,0x445566,0.9));
+  const sun=new THREE.DirectionalLight(0xffffff,0.55); sun.position.set(8,18,10); scene.add(sun);
+  const floor=new THREE.Mesh(new THREE.PlaneGeometry(40,30),new THREE.MeshLambertMaterial({color:css("--floor")}));
+  floor.rotation.x=-Math.PI/2; scene.add(floor);
+  const world=new THREE.Group(); scene.add(world);
+  const st={renderer,scene,cam,world,floor,figs:new Map(),rooms:[],yaw:0.6,pitch:0.95,dist:30,ray:new THREE.Raycaster(),ptr:new THREE.Vector2()};
+  // điều khiển: kéo xoay, cuộn/chụm phóng
+  let drag=null, pinch=null;
+  cv.addEventListener("pointerdown",e=>{cv.setPointerCapture(e.pointerId);drag={x:e.clientX,y:e.clientY,moved:0};});
+  cv.addEventListener("pointermove",e=>{ if(!drag||pinch) return; const dx=e.clientX-drag.x, dy=e.clientY-drag.y; drag.moved+=Math.abs(dx)+Math.abs(dy); drag.x=e.clientX; drag.y=e.clientY; st.yaw-=dx*0.006; st.pitch=Math.min(1.35,Math.max(0.35,st.pitch+dy*0.004)); });
+  cv.addEventListener("pointerup",e=>{ if(drag&&drag.moved<6) pick(e); drag=null; });
+  cv.addEventListener("wheel",e=>{e.preventDefault(); st.dist=Math.min(48,Math.max(12,st.dist+e.deltaY*0.02));},{passive:false});
+  cv.addEventListener("touchstart",e=>{ if(e.touches.length===2){ pinch=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);} },{passive:true});
+  cv.addEventListener("touchmove",e=>{ if(pinch&&e.touches.length===2){ const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY); st.dist=Math.min(48,Math.max(12,st.dist*(pinch/d))); pinch=d; } },{passive:true});
+  cv.addEventListener("touchend",()=>{pinch=null;},{passive:true});
+  function pick(e){ const r=cv.getBoundingClientRect(); st.ptr.set(((e.clientX-r.left)/r.width)*2-1, -((e.clientY-r.top)/r.height)*2+1); st.ray.setFromCamera(st.ptr,cam);
+    const hits=st.ray.intersectObjects([...st.figs.values()].map(f=>f.hit),false); if(hits[0]) select(hits[0].object.userData.id); }
+  new ResizeObserver(()=>{ const w=cv.clientWidth,h=cv.clientHeight; renderer.setSize(w,h,false); cam.aspect=w/h; cam.updateProjectionMatrix(); }).observe(cv);
+  const clock=new THREE.Clock();
+  (function loop(){ requestAnimationFrame(loop); const t=clock.getElapsedTime();
+    cam.position.set(Math.sin(st.yaw)*Math.cos(st.pitch)*st.dist, Math.sin(st.pitch)*st.dist, Math.cos(st.yaw)*Math.cos(st.pitch)*st.dist); cam.lookAt(0,0,0);
+    st.figs.forEach(f=>{ const a=f.act;
+      if(!reduce){ if(a==="WORKING"){ f.body.position.y=0.95+Math.sin(t*6+f.seed)*0.05; f.head.rotation.y=Math.sin(t*2+f.seed)*0.3; }
+        if(a==="BLOCKED") f.lamp.material.emissiveIntensity=0.4+0.6*Math.abs(Math.sin(t*1.6+f.seed));
+        if(a==="REVIEW") f.lamp.material.emissiveIntensity=0.5+0.4*Math.sin(t*2.2+f.seed); }
+      f.ring.visible = f.id===selected; if(f.ring.visible) f.ring.rotation.z=t; });
+    renderer.render(scene,cam); })();
+  return st;
+}
+function label(text, color){
+  const c=document.createElement("canvas"); c.width=256; c.height=64; const g=c.getContext("2d");
+  g.font="600 30px 'JetBrains Mono', monospace"; g.textAlign="center"; g.textBaseline="middle"; g.fillStyle=color; g.fillText(text,128,32);
+  const s=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),transparent:true,depthWrite:false})); s.scale.set(2.6,0.65,1); return s;
+}
+function build3D(){
+  if(!three) return;
+  const {world,figs}=three; while(world.children.length) world.remove(world.children[0]); figs.clear();
+  three.floor.material.color.set(css("--floor"));
+  const colorOf={WORKING:css("--ok"),REVIEW:css("--warn"),BLOCKED:css("--bad"),WAITING:css("--wait"),IDLE:css("--idle"),OFF:css("--off")};
+  const ink=css("--ink"), gold=css("--gold");
+  // bốn phòng: Vua (giữa sau), CFO (trái), CMO (phải), Chủ tịch + kiểm soát (trước)
+  const rooms={VUA_CEO:{x:0,z:-5,w:16,d:9},CFO:{x:-13,z:2,w:8,d:7},CMO:{x:13,z:2,w:8,d:7},CHAIRMAN:{x:0,z:8,w:12,d:5}};
+  Object.entries(rooms).forEach(([k,r])=>{
+    const pad=new THREE.Mesh(new THREE.BoxGeometry(r.w,0.08,r.d),new THREE.MeshLambertMaterial({color:css("--wall")})); pad.position.set(r.x,0.04,r.z); world.add(pad);
+    const t=TEAMS.find(t=>t.id===k); const l=label(k==="CHAIRMAN"?"CHỦ TỊCH":k==="VUA_CEO"?"VUA · CEO":k,gold); l.position.set(r.x,0.2,r.z-r.d/2-0.6); l.scale.set(4,1,1); world.add(l);
+  });
+  TEAMS.forEach(t=>{
+    const r=rooms[t.id]; const ms=members.filter(m=>teamOf(m)===t).sort((a,b)=>(a.kind==="leader"?-1:1)-(b.kind==="leader"?-1:1)||a.id.localeCompare(b.id));
+    const cols=Math.max(2,Math.ceil(Math.sqrt(ms.length*r.w/r.d))), rowsN=Math.ceil(ms.length/cols);
+    ms.forEach((m,i)=>{
+      const cx=r.x-r.w/2+(i%cols+0.5)*(r.w/cols), cz=r.z-r.d/2+(Math.floor(i/cols)+0.5)*(r.d/rowsN);
+      const g=new THREE.Group(); g.position.set(cx,0,cz); world.add(g);
+      const desk=new THREE.Mesh(new THREE.BoxGeometry(1.3,0.6,0.7),new THREE.MeshLambertMaterial({color:css("--desk")})); desk.position.set(0,0.38,0.45); g.add(desk);
+      const col=new THREE.Color(colorOf[m.activity]); const dim=m.activity==="OFF";
+      const mat=new THREE.MeshLambertMaterial({color:col,transparent:dim,opacity:dim?0.45:1});
+      const body=new THREE.Mesh(new THREE.CylinderGeometry(0.28,0.34,0.9,14),mat); body.position.y=0.95; g.add(body);
+      const head=new THREE.Mesh(new THREE.SphereGeometry(0.24,16,12),mat); head.position.y=0.72; body.add(head);
+      const lamp=new THREE.Mesh(new THREE.SphereGeometry(0.11,12,8),new THREE.MeshStandardMaterial({color:col,emissive:col,emissiveIntensity:dim?0.1:0.8})); lamp.position.set(0,2.05,0); g.add(lamp);
+      if(m.kind==="leader"){ const crown=new THREE.Mesh(new THREE.ConeGeometry(0.2,0.25,5),new THREE.MeshStandardMaterial({color:gold,emissive:gold,emissiveIntensity:0.3})); crown.position.y=1.12; body.add(crown); }
+      const ring=new THREE.Mesh(new THREE.RingGeometry(0.6,0.72,32),new THREE.MeshBasicMaterial({color:gold,side:THREE.DoubleSide})); ring.rotation.x=-Math.PI/2; ring.position.y=0.06; ring.visible=false; g.add(ring);
+      const tag=label(m.id,ink); tag.position.y=2.45; g.add(tag);
+      const hit=new THREE.Mesh(new THREE.BoxGeometry(1.4,2.6,1.4),new THREE.MeshBasicMaterial({visible:false})); hit.position.y=1.2; hit.userData.id=m.id; g.add(hit);
+      figs.set(m.id,{id:m.id,act:m.activity,body,head,lamp,ring,hit,seed:i*1.7});
+    });
+  });
+}
+function rebuildTheme(){ if(three&&members.length) build3D(); }
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",rebuildTheme);
+new MutationObserver(rebuildTheme).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
+
+function apply(){
+  $("syncAt").textContent = meta? vn(meta.synced_at):"—";
+  $("srcTxt").textContent = meta? `Nguồn: ${meta.source} · commit ${meta.commit} · ${meta.tasks_total} nhiệm vụ`:"Nguồn: —";
+  if(!members.length){ $("stageMsg").hidden=false; return; }
+  render2D();
+  if(three){ $("stageMsg").hidden=true; build3D(); }
+  else { $("stageMsg").hidden=false; $("stageMsg").textContent="Thiết bị này không chạy được 3D. Toàn bộ trạng thái có trong bảng bên dưới."; }
+  if(selected) select(selected);
+}
+
+three = initThree();
+(async()=>{
+  const timer=setTimeout(()=>{ if(!members.length){ $("liveTxt").textContent="Chưa nhận được dữ liệu (10 giây)"; } },10000);
+  const db = window.claude ? await window.claude.use("db") : null;
+  if(!db){ clearTimeout(timer); $("liveTxt").textContent="Cần mở trong Claude và đăng nhập để xem dữ liệu thật"; $("stageMsg").textContent="Trang này chỉ hiển thị dữ liệu thật từ sổ nhiệm vụ, nên cần đăng nhập Claude."; return; }
+  db.collection("office").onSnapshot(snap=>{
+    clearTimeout(timer);
+    const ms=[]; let mt=null;
+    snap.docs.forEach(d=>{ if(!d.exists) return; const v=d.data(); if(d.id==="meta") mt=v; else ms.push(v); });
+    members=ms; meta=mt;
+    $("live").classList.add("on"); $("liveTxt").textContent = members.length? "Đang nghe sổ nhiệm vụ":"Sổ trống — chờ Claude đồng bộ lần đầu";
+    apply();
+  }, err=>{ clearTimeout(timer); $("live").classList.remove("on"); $("liveTxt").textContent="Mất kết nối dữ liệu — tải lại trang để thử lại"; });
+})();
+})();
+</script>
