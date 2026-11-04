@@ -330,6 +330,8 @@ class TaskStore:
                 allowed = self._authorities(t["owner_agent_id"]) | {t["owner_agent_id"]}
                 if frm == "REVIEW":
                     allowed |= {"A20"}
+                    if actor in self._workers(task_id):
+                        raise TaskError(f"{actor} đã làm nhiệm vụ này — kết luận review phải do người khác")
                 if actor not in allowed:
                     raise TaskError(f"{actor} không có quyền chuyển {frm} → {to_state} (được: {', '.join(sorted(allowed))})")
             if to_state == "REVIEW" and not self._current_evidence(t):
@@ -353,9 +355,8 @@ class TaskStore:
                 approvals.append(f"{actor}: {approval.strip()}")
             if frm == "FAILED" and to_state == "READY" and t["retry_count"] >= MAX_RETRY:
                 raise TaskError(f"Đã thử lại {t['retry_count']} lần — cần Chủ tịch/Vua quyết định")
-            pending = t["pending_retry"]
-            if to_state == "READY":
-                pending = 1 if frm in ("FAILED", "INTERRUPTED") else 0
+            # Cờ thử lại chỉ được BẬT ở đây; chỉ claim() mới tắt (đi vòng qua BLOCKED không xóa được).
+            pending = 1 if (to_state == "READY" and frm in ("FAILED", "INTERRUPTED")) else t["pending_retry"]
             self.db.execute(
                 """UPDATE tasks SET state=?, state_version=state_version+1, approval_refs=?, pending_retry=?,
                    updated_at=?, lease_owner=NULL, lease_expiry=NULL WHERE task_id=?""",

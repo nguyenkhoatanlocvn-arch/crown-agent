@@ -144,6 +144,23 @@ class TaskFixes(unittest.TestCase):
                 self.s.record(t, "A11", tok, evidence="e")
                 self.s.move(t, "REVIEW", "A11", token=tok)
 
+    # Vòng review 3
+    def test_retry_flag_survives_block_detour(self):
+        t = self.mk()
+        tok = self.s.claim(t, "A11")
+        self.s.move(t, "FAILED", "A11", token=tok)
+        self.s.move(t, "READY", "VUA_CEO")
+        self.s.move(t, "BLOCKED", "VUA_CEO")
+        self.s.move(t, "READY", "VUA_CEO")
+        self.s.claim(t, "A11")
+        self.assertEqual(self.s.get(t)["retry_count"], 1)
+
+    def test_worker_cannot_fail_own_review(self):
+        t = self.mk(); self.to_review(t, "A11")
+        with self.assertRaises(TaskError):
+            self.s.move(t, "FAILED", "A11")
+        self.assertEqual(self.s.move(t, "FAILED", "A20")["state"], "FAILED")
+
     # MINOR
     def test_record_unknown_task_is_task_error(self):
         with self.assertRaises(TaskError):

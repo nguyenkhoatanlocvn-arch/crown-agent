@@ -31,6 +31,14 @@ DRAFT → READY → RUNNING → REVIEW → VERIFIED_DONE; nhánh BLOCKED / WAITI
 - REVIEW và VERIFIED_DONE cần bằng chứng; người làm không tự duyệt.
 - Thử lại tối đa 3 lần rồi phải có người quyết.
 
+## Kiểm định
+3 vòng review độc lập (Agent 20 chạy bằng subagent riêng, chỉ đọc). Vòng 1 tìm 2 lỗi NGHIÊM TRỌNG (tự duyệt qua tên viết thường / qua người làm trước) + 9 QUAN TRỌNG; vòng 2–3 tìm thêm lỗi do chính bản sửa gây ra. Tất cả có test tái hiện trong `tests/test_review_fixes.py`.
+
+## Giới hạn đã biết (ghi rõ, chưa xử lý)
+- Khi chủ nhiệm vụ cũng là người làm, có thể báo BLOCKED thay vì FAILED để không tốn lượt thử lại. Cần quy tắc ở tầng điều phối (A10) hoặc giới hạn số lần BLOCKED.
+- CLI không xác thực người dùng: `--actor` chỉ là ID khai báo. Xác thực thật thuộc tầng web/backend sau này.
+- Chưa có giữ chỗ ngân sách, backup tự động, chạy Agent bằng model.
+
 ## Chưa có (đúng phạm vi M1-a)
 Chưa nối laptop, chưa chạy Agent thật bằng model, chưa có web/3D, chưa có ngân sách giữ chỗ, chưa backup tự động.
 "20 Agent đăng ký" ≠ 20 phiên đang chạy: M1 chỉ A03 ACTIVE.
