@@ -106,6 +106,8 @@ class TaskStore:
         cols = {r["name"] for r in self.db.execute("PRAGMA table_info(tasks)")}
         if "attempt_evidence_start" not in cols:  # nâng cấp DB cũ, không mất dữ liệu
             self.db.execute("ALTER TABLE tasks ADD COLUMN attempt_evidence_start INTEGER NOT NULL DEFAULT 0")
+        if "pending_retry" not in cols:  # 1 = lần nhận tới là thử lại sau thất bại/gián đoạn
+            self.db.execute("ALTER TABLE tasks ADD COLUMN pending_retry INTEGER NOT NULL DEFAULT 0")
         # Khôi phục lịch sử người làm cho DB tạo trước khi có bảng task_workers (idempotent).
         self.db.execute("""INSERT OR IGNORE INTO task_workers(task_id, worker)
                            SELECT task_id, actor FROM events WHERE to_state='RUNNING' AND note LIKE '%token=%'
@@ -243,7 +245,10 @@ class TaskStore:
                 if d is None or d["state"] != "VERIFIED_DONE":
                     raise TaskError(f"Phụ thuộc {dep} chưa VERIFIED_DONE")
             retry = t["retry_count"]
-            if t["started_at"] is not None:  # mọi lần nhận lại đều là một lần thử lại
+            # Tính là thử lại: sau FAILED/INTERRUPTED, nhận lại khi lease hết hạn, làm lại sau review.
+            # KHÔNG tính: tiếp tục sau hết hạn mức, bị chặn, chờ duyệt (việc vẫn khỏe, chỉ tạm dừng).
+            is_retry = t["pending_retry"] == 1 or t["state"] in ("REVIEW", "RUNNING")
+            if is_retry:
                 if retry >= MAX_RETRY:
                     raise TaskError(f"Đã thử lại {retry} lần — cần Chủ tịch/Vua quyết định")
                 retry += 1
@@ -252,7 +257,7 @@ class TaskStore:
             ev_start = len(json.loads(t["evidence_refs"]))  # bằng chứng lần trước không tính cho lần này
             self.db.execute(
                 """UPDATE tasks SET state='RUNNING', lease_owner=?, lease_expiry=?, fencing_token=?,
-                   last_worker=?, retry_count=?, attempt_evidence_start=?, state_version=state_version+1,
+                   last_worker=?, retry_count=?, attempt_evidence_start=?, pending_retry=0, state_version=state_version+1,
                    started_at=COALESCE(started_at, ?), updated_at=? WHERE task_id=?""",
                 (worker, expiry, token, worker, retry, ev_start, self._now(), self._now(), task_id),
             )
@@ -320,6 +325,13 @@ class TaskStore:
                 if token is None:
                     raise TaskError("Rời RUNNING phải kèm fencing token của người đang giữ")
                 self._check_lease(t, actor, token)
+            elif self.registry is not None and to_state != "VERIFIED_DONE" and frm != "WAITING_APPROVAL":
+                # Hủy / tiếp tục / mở việc / đánh trượt review: chỉ chủ nhiệm vụ hoặc cấp trên (+A20 khi đánh trượt).
+                allowed = self._authorities(t["owner_agent_id"]) | {t["owner_agent_id"]}
+                if frm == "REVIEW":
+                    allowed |= {"A20"}
+                if actor not in allowed:
+                    raise TaskError(f"{actor} không có quyền chuyển {frm} → {to_state} (được: {', '.join(sorted(allowed))})")
             if to_state == "REVIEW" and not self._current_evidence(t):
                 raise TaskError("Chưa có bằng chứng của lần làm này — không được gửi REVIEW")
             workers = self._workers(task_id)
@@ -341,10 +353,13 @@ class TaskStore:
                 approvals.append(f"{actor}: {approval.strip()}")
             if frm == "FAILED" and to_state == "READY" and t["retry_count"] >= MAX_RETRY:
                 raise TaskError(f"Đã thử lại {t['retry_count']} lần — cần Chủ tịch/Vua quyết định")
+            pending = t["pending_retry"]
+            if to_state == "READY":
+                pending = 1 if frm in ("FAILED", "INTERRUPTED") else 0
             self.db.execute(
-                """UPDATE tasks SET state=?, state_version=state_version+1, approval_refs=?, updated_at=?,
-                   lease_owner=NULL, lease_expiry=NULL WHERE task_id=?""",
-                (to_state, json.dumps(approvals, ensure_ascii=False), self._now(), task_id),
+                """UPDATE tasks SET state=?, state_version=state_version+1, approval_refs=?, pending_retry=?,
+                   updated_at=?, lease_owner=NULL, lease_expiry=NULL WHERE task_id=?""",
+                (to_state, json.dumps(approvals, ensure_ascii=False), pending, self._now(), task_id),
             )
             self._event(task_id, actor, frm, to_state, note or (approval and f"chấp thuận: {approval}") or "")
             self.db.execute("COMMIT")

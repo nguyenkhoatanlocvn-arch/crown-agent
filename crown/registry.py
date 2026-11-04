@@ -92,12 +92,10 @@ def scopes_overlap(a: str, b: str) -> bool:
 
 
 def _items(data, key: str, fname: str, errors: list[str]) -> list[dict]:
-    if not isinstance(data, dict) or not isinstance(data.get(key), (list, dict)):
-        errors.append(f"{fname}: phải là object có trường '{key}'")
+    if not isinstance(data, dict) or not isinstance(data.get(key), list):
+        errors.append(f"{fname}: phải là object có trường '{key}' dạng danh sách")
         return []
     items = data[key]
-    if isinstance(items, dict):
-        return [items]
     bad = [i for i in items if not isinstance(i, dict) or not isinstance(i.get("id"), str)]
     if bad:
         errors.append(f"{fname}: có {len(bad)} mục không phải object có 'id' dạng chữ")
@@ -191,6 +189,10 @@ def validate(reg: Registry) -> None:
             errors.append(f"{aid}: namespace bộ nhớ phải là đường dẫn sạch trong agents/{aid}/")
         if not isinstance(a.get("write_scope"), list) or not all(clean_path(x) for x in a.get("write_scope", [])):
             errors.append(f"{aid}: vùng ghi phải là danh sách đường dẫn sạch (không '.', '..', rỗng, tuyệt đối)")
+        for sc in a.get("write_scope", []) if isinstance(a.get("write_scope"), list) else []:
+            c = clean_path(sc)
+            if c and c.startswith("agents/") and not c.startswith(f"agents/{aid}/"):
+                errors.append(f"{aid}: vùng ghi '{sc}' nằm trong thư mục của Agent khác")
         if not isinstance(a.get("skills", []), list):
             errors.append(f"{aid}: skills phải là danh sách")
 

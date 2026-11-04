@@ -47,7 +47,7 @@ def safe(fn, *a, **kw):
 
 for t, note in ((king, "B-001: chờ Chủ tịch Add folder"), (btc, "B-001/B-002: chờ thư mục + terminal laptop")):
     if s.get(t["task_id"])["state"] == "READY":
-        s.move(t["task_id"], "BLOCKED", "VUA_CEO", note=note)
+        s.move(t["task_id"], "BLOCKED", t["owner_agent_id"], note=note)
 
 if s.get(skills["task_id"])["state"] == "READY":
     tok = s.claim(skills["task_id"], "A03")

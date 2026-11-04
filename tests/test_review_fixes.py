@@ -117,6 +117,33 @@ class TaskFixes(unittest.TestCase):
             s2.move(t, "VERIFIED_DONE", "VUA_CEO")
         self.assertIn("đã từng làm", str(cm.exception))
 
+    # Vòng review 2
+    def test_outsider_cannot_cancel_or_resume(self):
+        t = self.mk()
+        with self.assertRaises(TaskError):
+            self.s.move(t, "CANCELLED", "A04")
+        tok = self.s.claim(t, "A11")
+        self.s.move(t, "PAUSED_QUOTA", "A11", token=tok)
+        with self.assertRaises(TaskError):
+            self.s.move(t, "READY", "A04")
+        self.assertEqual(self.s.move(t, "READY", "A11")["state"], "READY")  # chủ nhiệm vụ được tiếp tục
+
+    def test_quota_pauses_do_not_burn_retries(self):
+        t = self.mk()
+        for _ in range(6):
+            tok = self.s.claim(t, "A11")
+            self.s.move(t, "PAUSED_QUOTA", "A11", token=tok)
+            self.s.move(t, "READY", "A11")
+        self.assertEqual(self.s.get(t)["retry_count"], 0)
+
+    def test_review_rework_counts_as_retry(self):
+        t = self.mk()
+        with self.assertRaises(TaskError):
+            for _ in range(6):
+                tok = self.s.claim(t, "A11")
+                self.s.record(t, "A11", tok, evidence="e")
+                self.s.move(t, "REVIEW", "A11", token=tok)
+
     # MINOR
     def test_record_unknown_task_is_task_error(self):
         with self.assertRaises(TaskError):
@@ -184,6 +211,12 @@ class RegistryFixes(unittest.TestCase):
         def m(d):
             d["legacy_map.json"]["units"].pop("N07_ACCOUNT_OPERATIONS")
         self.bad(m)
+
+    def test_scope_into_other_agents_folder(self):
+        self.bad(lambda d: self.ag(d, "A01")["write_scope"].append("agents/A02/"))
+
+    def test_agents_as_object_not_list(self):
+        self.bad(lambda d: d["agents.json"].update(agents={"x": 1}))
 
     def test_wrong_types_give_registry_error_not_crash(self):
         self.bad(lambda d: self.ag(d, "A05").update(leader={"id": "VUA_CEO"}))
