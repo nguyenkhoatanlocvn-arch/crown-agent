@@ -1,0 +1,31 @@
+{
+  "version": "2026-11-04.1",
+  "note": "Bảng chuyển 25 đơn vị KING AI V8 sang mô hình mới (master prompt mục 13). Mã cũ giữ làm alias, không xóa. Trạng thái: MAPPED_DESIGN = mới thiết kế, chưa đối chiếu source thật.",
+  "units": {
+    "L01_SKILL_GENESIS": {"maps_to": ["A03"], "status": "MAPPED_DESIGN"},
+    "L02_AI_RESEARCH": {"maps_to": ["A19", "A03", "A18"], "status": "MAPPED_DESIGN", "note": "R01-R05 là lane nghiên cứu, không phải 5 công ty"},
+    "L03_PROMPT_VAULT": {"maps_to": ["A14"], "status": "MAPPED_DESIGN"},
+    "L04_APP_DISCOVERY": {"maps_to": ["A04"], "status": "MAPPED_DESIGN"},
+    "B01_ETSY": {"maps_to": ["ETSY"], "status": "MAPPED_DESIGN"},
+    "B02_BTC": {"maps_to": ["BTC"], "status": "MAPPED_DESIGN"},
+    "B03_FACEBOOK": {"maps_to": ["FACEBOOK"], "status": "MAPPED_DESIGN"},
+    "B04_X": {"maps_to": ["X"], "status": "MAPPED_DESIGN"},
+    "B05_CINEMA": {"maps_to": ["CMO-02"], "status": "MAPPED_DESIGN", "note": "Studio nội dung; giữ mã và workflow cũ"},
+    "B06_SHOPIFY": {"maps_to": ["SHOPIFY"], "status": "MAPPED_DESIGN"},
+    "B07_TIKTOK": {"maps_to": ["TIKTOK_CAPCUT"], "status": "MAPPED_DESIGN"},
+    "B08_DIGITAL_EARNINGS": {"maps_to": ["VENTURE", "A13"], "status": "MAPPED_DESIGN", "note": "Giữ hồ sơ B08 riêng"},
+    "B09_RETAIL_SUPERMARKET": {"maps_to": ["RETAIL"], "status": "MAPPED_DESIGN"},
+    "B10_CAPCUT_CREATOR": {"maps_to": ["TIKTOK_CAPCUT"], "status": "MAPPED_DESIGN", "note": "Không gộp mất lịch sử B07/B10"},
+    "T01_PC_COMMAND": {"maps_to": ["A07"], "status": "MAPPED_DESIGN"},
+    "T02_CODE_FACTORY": {"maps_to": ["A18"], "status": "MAPPED_DESIGN"},
+    "T03_OPEN_SOURCE": {"maps_to": ["A03", "A04", "A17"], "status": "MAPPED_DESIGN"},
+    "T04_AUTOMATION": {"maps_to": ["A10"], "status": "MAPPED_DESIGN"},
+    "N01_TREASURY": {"maps_to": ["A08"], "status": "MAPPED_DESIGN"},
+    "N02_MEMORY_BANK": {"maps_to": ["A02", "A01"], "status": "MAPPED_DESIGN"},
+    "N03_IDENTITY_API": {"maps_to": ["A05", "A16"], "status": "MAPPED_DESIGN"},
+    "N04_SECURITY": {"maps_to": ["A17"], "status": "MAPPED_DESIGN"},
+    "N05_STRATEGY": {"maps_to": ["VUA_CEO", "A01"], "status": "MAPPED_DESIGN"},
+    "N06_FINANCE_COMMAND": {"maps_to": ["CFO", "A09"], "status": "MAPPED_DESIGN"},
+    "N07_ACCOUNT_OPERATIONS": {"maps_to": ["A05"], "status": "MAPPED_DESIGN"}
+  }
+}

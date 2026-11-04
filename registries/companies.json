@@ -1,0 +1,24 @@
+{
+  "version": "2026-11-04.1",
+  "companies": [
+    {"id": "BTC", "name": "Công ty BTC (BTCDesk / bot Grok)", "owner": "CFO", "tech_support": "VUA_CEO", "status": "TAKEOVER_READONLY",
+     "fact": "REPORTED: bot đang chạy trên laptop, dùng API Binance giao dịch thật, quyền rút đã tắt (Chủ tịch nói 2026-11-04)",
+     "rules": "Chỉ đọc + phát triển ở bản sao; AI không giao dịch, không đổi rủi ro", "skills": ["btc-readonly-audit"]},
+    {"id": "ETSY", "name": "Công ty Etsy (digital downloads)", "owner": "CMO-01", "status": "PRE_LAUNCH",
+     "fact": "VERIFIED (Drive 2026-11-03): shop chưa mở, 0 đơn, MVP PAYFLOW-001 ở mức spec",
+     "rules": "Claude chỉ tạo nháp; Chủ tịch duyệt từng listing; tuân chính sách AI 22/10/2026", "skills": ["etsy-api-safe-use", "sheets-single-writer"]},
+    {"id": "SHOPIFY", "name": "Công ty Shopify", "owner": "CMO-01", "status": "PENDING",
+     "fact": "REPORTED: dự án chờ, chưa triển khai", "rules": "Không mua domain/gói/app khi chưa duyệt", "skills": []},
+    {"id": "FACEBOOK", "name": "Công ty Facebook (Pages/Reels)", "owner": "CMO-02", "status": "DEFERRED",
+     "fact": "REPORTED: >10 page, 4 bật kiếm tiền, 1 page ra tiền hiệu quả; Chủ tịch hoãn tới khi có web + Agent Vua",
+     "rules": "Chỉ API chính thức; không via/proxy/IP giả", "skills": ["meta-reels-publish"]},
+    {"id": "X", "name": "Công ty X (2 tài khoản)", "owner": "CMO-02", "status": "REGISTERED",
+     "fact": "REPORTED: 2 tài khoản X", "rules": "Tách dữ liệu/token/KPI từng tài khoản; không spam/tương tác giả", "skills": []},
+    {"id": "TIKTOK_CAPCUT", "name": "Công ty TikTok + CapCut Creator", "owner": "CMO-02", "status": "REGISTERED",
+     "fact": "REPORTED: từng làm affiliate, đã ngưng", "rules": "So sánh 3 hướng trước khi làm", "skills": []},
+    {"id": "RETAIL", "name": "Tạp hóa gia đình", "owner": "VUA_CEO", "status": "REGISTERED",
+     "fact": "REPORTED: cửa hàng thật, chưa có sổ sách và app", "rules": "Khảo sát hoạt động thật trước khi chọn POS", "skills": []},
+    {"id": "VENTURE", "name": "Venture Studio (kiếm tiền: làm web thuê…)", "owner": "VUA_CEO", "status": "REGISTERED",
+     "fact": "D-007: vốn nhỏ → ra tiền thật → Chủ tịch duyệt vòng sau", "rules": "Tiền về tài khoản Chủ tịch; không cam kết thành công", "skills": []}
+  ]
+}

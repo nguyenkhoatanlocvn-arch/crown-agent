@@ -1,0 +1,59 @@
+{
+  "version": "2026-11-04.1",
+  "tiers": ["READ", "SANDBOX_WRITE", "OPERATIONAL_WRITE", "SENSITIVE"],
+  "leaders": [
+    {
+      "id": "CHAIRMAN",
+      "name": "Chủ tịch Nguyễn Khoa Tấn Lộc",
+      "role": "Sở hữu tài sản, chiến lược, trần ngân sách, cấp/thu hồi quyền, dừng khẩn cấp, quyết định tiền thật",
+      "supervisor": null,
+      "kind": "human",
+      "status": "ACTIVE",
+      "tier": "SENSITIVE",
+      "can_emergency_stop": "ALL"
+    },
+    {
+      "id": "VUA_CEO",
+      "name": "Agent Vua (kiêm EX-CEO)",
+      "role": "Điều hành chung, một nguồn phân công, kỹ thuật và vận hành",
+      "supervisor": "CHAIRMAN",
+      "kind": "agent",
+      "status": "ACTIVE",
+      "tier": "OPERATIONAL_WRITE",
+      "can_emergency_stop": "OPERATIONS",
+      "decision_ref": "D-001"
+    },
+    {
+      "id": "CFO",
+      "name": "EX-CFO — Vốn & chi phí",
+      "role": "Ngân sách, giữ chỗ chi phí, kế toán, chặn khi vượt trần; vốn và rủi ro BTC",
+      "supervisor": "CHAIRMAN",
+      "kind": "agent",
+      "status": "ACTIVE",
+      "tier": "OPERATIONAL_WRITE",
+      "can_emergency_stop": "SPENDING"
+    },
+    {
+      "id": "CMO-01",
+      "name": "EX-CMO-01 — Thương mại & doanh thu (chịu trách nhiệm cuối)",
+      "role": "Etsy, Shopify; đơn hàng thật, doanh thu, lãi sau phí",
+      "supervisor": "CHAIRMAN",
+      "kind": "agent",
+      "status": "ACTIVE",
+      "tier": "OPERATIONAL_WRITE",
+      "can_emergency_stop": "PUBLISHING",
+      "decision_ref": "D-002 (cách chia: ĐỀ XUẤT, chờ chốt)"
+    },
+    {
+      "id": "CMO-02",
+      "name": "EX-CMO-02 — Nội dung & khán giả",
+      "role": "Facebook, X, TikTok/CapCut; dẫn khách về cho CMO-01",
+      "supervisor": "CMO-01",
+      "kind": "agent",
+      "status": "ACTIVE",
+      "tier": "OPERATIONAL_WRITE",
+      "can_emergency_stop": "PUBLISHING",
+      "decision_ref": "D-002 (cách chia: ĐỀ XUẤT, chờ chốt)"
+    }
+  ]
+}
