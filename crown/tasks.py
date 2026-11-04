@@ -59,6 +59,11 @@ CREATE TABLE IF NOT EXISTS tasks (
   started_at TEXT,
   updated_at TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS task_workers (
+  task_id TEXT NOT NULL,
+  worker TEXT NOT NULL,
+  PRIMARY KEY (task_id, worker)
+);
 CREATE TABLE IF NOT EXISTS events (
   event_id INTEGER PRIMARY KEY AUTOINCREMENT,
   task_id TEXT NOT NULL,
@@ -98,6 +103,36 @@ class TaskStore:
         self.db.row_factory = sqlite3.Row
         self.db.execute("PRAGMA journal_mode=WAL")
         self.db.executescript(SCHEMA)
+        cols = {r["name"] for r in self.db.execute("PRAGMA table_info(tasks)")}
+        if "attempt_evidence_start" not in cols:  # nâng cấp DB cũ, không mất dữ liệu
+            self.db.execute("ALTER TABLE tasks ADD COLUMN attempt_evidence_start INTEGER NOT NULL DEFAULT 0")
+        # Khôi phục lịch sử người làm cho DB tạo trước khi có bảng task_workers (idempotent).
+        self.db.execute("""INSERT OR IGNORE INTO task_workers(task_id, worker)
+                           SELECT task_id, actor FROM events WHERE to_state='RUNNING' AND note LIKE '%token=%'
+                           UNION SELECT task_id, last_worker FROM tasks WHERE last_worker IS NOT NULL""")
+
+    # ---------- danh tính & thẩm quyền ----------
+    def _require_member(self, actor: str, what: str) -> dict | None:
+        if self.registry is None:
+            return None
+        try:
+            m = self.registry.member(actor)
+        except KeyError:
+            raise TaskError(f"'{actor}' không có trong sổ đăng ký — không được {what}") from None
+        if m.get("status") == "DISABLED":
+            raise TaskError(f"{actor} đang bị tắt — không được {what}")
+        return m
+
+    def _workers(self, task_id: str) -> set[str]:
+        return {r["worker"] for r in self.db.execute("SELECT worker FROM task_workers WHERE task_id=?", (task_id,))}
+
+    def _authorities(self, owner: str) -> set[str]:
+        """Ai được duyệt/chấp thuận: cấp trên của chủ nhiệm vụ, Chủ tịch, và (với duyệt kết quả) Agent 20."""
+        chain = self.registry.chain(owner) if owner in self.registry.agents or owner in self.registry.leaders else []
+        return set(chain[1:]) | {"CHAIRMAN"}
+
+    def _current_evidence(self, t) -> list[str]:
+        return json.loads(t["evidence_refs"])[t["attempt_evidence_start"]:]
 
     def close(self) -> None:
         self.db.close()
@@ -150,14 +185,22 @@ class TaskStore:
                 raise TaskError(f"{owner_agent_id} đang bị tắt")
             if company_id and company_id not in self.registry.companies:
                 raise TaskError(f"Công ty '{company_id}' không có trong sổ đăng ký")
+            self._require_member(actor, "tạo nhiệm vụ")
         self._tx()
         try:
             if idempotency_key:
-                row = self.db.execute("SELECT task_id FROM tasks WHERE idempotency_key=?",
+                row = self.db.execute("SELECT * FROM tasks WHERE idempotency_key=?",
                                       (idempotency_key,)).fetchone()
                 if row:
+                    same = (row["owner_agent_id"], row["objective"], row["acceptance_criteria"], row["company_id"]) == \
+                           (owner_agent_id, objective, acceptance_criteria, company_id)
+                    if not same:
+                        raise TaskError(f"Khóa '{idempotency_key}' đã dùng cho nhiệm vụ khác ({row['task_id']})")
                     self.db.execute("COMMIT")
                     return self.get(row["task_id"])
+            for dep in dependencies or []:
+                if self.db.execute("SELECT 1 FROM tasks WHERE task_id=?", (dep,)).fetchone() is None:
+                    raise TaskError(f"Phụ thuộc '{dep}' không tồn tại")
             tid = "T-" + uuid.uuid4().hex[:10]
             state = "READY" if ready else "DRAFT"
             now = self._now()
@@ -177,6 +220,7 @@ class TaskStore:
     # ---------- nhận việc ----------
     def claim(self, task_id: str, worker: str, ttl_seconds: int = 900) -> int:
         """Nhận việc. Trả về fencing token; worker phải gửi kèm token khi ghi."""
+        self._require_member(worker, "nhận việc")
         self._tx()
         try:
             t = self.db.execute("SELECT * FROM tasks WHERE task_id=?", (task_id,)).fetchone()
@@ -198,14 +242,21 @@ class TaskStore:
                 d = self.db.execute("SELECT state FROM tasks WHERE task_id=?", (dep,)).fetchone()
                 if d is None or d["state"] != "VERIFIED_DONE":
                     raise TaskError(f"Phụ thuộc {dep} chưa VERIFIED_DONE")
+            retry = t["retry_count"]
+            if t["started_at"] is not None:  # mọi lần nhận lại đều là một lần thử lại
+                if retry >= MAX_RETRY:
+                    raise TaskError(f"Đã thử lại {retry} lần — cần Chủ tịch/Vua quyết định")
+                retry += 1
             token = t["fencing_token"] + 1
             expiry = (now + timedelta(seconds=ttl_seconds)).astimezone(timezone.utc).isoformat()
+            ev_start = len(json.loads(t["evidence_refs"]))  # bằng chứng lần trước không tính cho lần này
             self.db.execute(
                 """UPDATE tasks SET state='RUNNING', lease_owner=?, lease_expiry=?, fencing_token=?,
-                   last_worker=?, state_version=state_version+1, started_at=COALESCE(started_at, ?),
-                   updated_at=? WHERE task_id=?""",
-                (worker, expiry, token, worker, self._now(), self._now(), task_id),
+                   last_worker=?, retry_count=?, attempt_evidence_start=?, state_version=state_version+1,
+                   started_at=COALESCE(started_at, ?), updated_at=? WHERE task_id=?""",
+                (worker, expiry, token, worker, retry, ev_start, self._now(), self._now(), task_id),
             )
+            self.db.execute("INSERT OR IGNORE INTO task_workers(task_id, worker) VALUES (?,?)", (task_id, worker))
             self._event(task_id, worker, t["state"], "RUNNING", f"{note}; token={token}")
             self.db.execute("COMMIT")
             return token
@@ -225,6 +276,8 @@ class TaskStore:
         self._tx()
         try:
             t = self.db.execute("SELECT * FROM tasks WHERE task_id=?", (task_id,)).fetchone()
+            if t is None:
+                raise TaskError(f"Không có nhiệm vụ {task_id}")
             if t["state"] != "RUNNING":
                 raise TaskError(f"{task_id} không ở RUNNING")
             self._check_lease(t, worker, token)
@@ -246,11 +299,15 @@ class TaskStore:
             raise
 
     # ---------- chuyển trạng thái ----------
-    def move(self, task_id: str, to_state: str, actor: str, *, token: int | None = None, note: str = "") -> dict:
+    def move(self, task_id: str, to_state: str, actor: str, *, token: int | None = None, note: str = "",
+             approval: str | None = None) -> dict:
         if to_state not in STATES:
             raise TaskError(f"Trạng thái '{to_state}' không tồn tại")
         if to_state == "RUNNING":
             raise TaskError("Dùng claim() để vào RUNNING")
+        self._require_member(actor, f"chuyển sang {to_state}")
+        if to_state == "VERIFIED_DONE" and self.registry is None:
+            raise TaskError("Duyệt VERIFIED_DONE cần sổ đăng ký để kiểm thẩm quyền")
         self._tx()
         try:
             t = self.db.execute("SELECT * FROM tasks WHERE task_id=?", (task_id,)).fetchone()
@@ -263,25 +320,33 @@ class TaskStore:
                 if token is None:
                     raise TaskError("Rời RUNNING phải kèm fencing token của người đang giữ")
                 self._check_lease(t, actor, token)
-            if to_state == "REVIEW" and not json.loads(t["evidence_refs"]):
-                raise TaskError("Chưa có bằng chứng — không được gửi REVIEW")
+            if to_state == "REVIEW" and not self._current_evidence(t):
+                raise TaskError("Chưa có bằng chứng của lần làm này — không được gửi REVIEW")
+            workers = self._workers(task_id)
+            approvals = json.loads(t["approval_refs"])
             if to_state == "VERIFIED_DONE":
-                if not json.loads(t["evidence_refs"]):
-                    raise TaskError("VERIFIED_DONE cần bằng chứng")
-                if actor == t["last_worker"]:
-                    raise TaskError("Người làm không được tự duyệt VERIFIED_DONE — cần người kiểm khác")
-            retry = t["retry_count"]
-            if frm == "FAILED" and to_state == "READY":
-                if retry >= MAX_RETRY:
-                    raise TaskError(f"Đã thử lại {retry} lần — cần Chủ tịch/Vua quyết định")
-                retry += 1
-            release = to_state != "RUNNING"
+                if not self._current_evidence(t):
+                    raise TaskError("VERIFIED_DONE cần bằng chứng của lần làm hiện tại")
+                if actor in workers:
+                    raise TaskError(f"{actor} đã từng làm nhiệm vụ này — không được tự duyệt")
+                allowed = self._authorities(t["owner_agent_id"]) | {"A20"}
+                if actor not in allowed:
+                    raise TaskError(f"{actor} không có thẩm quyền duyệt (được: {', '.join(sorted(allowed))})")
+            if frm == "WAITING_APPROVAL" and to_state == "READY":
+                if not approval or not approval.strip():
+                    raise TaskError("Rời WAITING_APPROVAL phải ghi nội dung/mã quyết định chấp thuận")
+                allowed = self._authorities(t["owner_agent_id"]) if self.registry else {"CHAIRMAN"}
+                if actor in workers or actor not in allowed:
+                    raise TaskError(f"{actor} không có thẩm quyền chấp thuận (được: {', '.join(sorted(allowed))})")
+                approvals.append(f"{actor}: {approval.strip()}")
+            if frm == "FAILED" and to_state == "READY" and t["retry_count"] >= MAX_RETRY:
+                raise TaskError(f"Đã thử lại {t['retry_count']} lần — cần Chủ tịch/Vua quyết định")
             self.db.execute(
-                f"""UPDATE tasks SET state=?, state_version=state_version+1, retry_count=?, updated_at=?
-                    {', lease_owner=NULL, lease_expiry=NULL' if release else ''} WHERE task_id=?""",
-                (to_state, retry, self._now(), task_id),
+                """UPDATE tasks SET state=?, state_version=state_version+1, approval_refs=?, updated_at=?,
+                   lease_owner=NULL, lease_expiry=NULL WHERE task_id=?""",
+                (to_state, json.dumps(approvals, ensure_ascii=False), self._now(), task_id),
             )
-            self._event(task_id, actor, frm, to_state, note)
+            self._event(task_id, actor, frm, to_state, note or (approval and f"chấp thuận: {approval}") or "")
             self.db.execute("COMMIT")
         except Exception:
             self.db.execute("ROLLBACK")

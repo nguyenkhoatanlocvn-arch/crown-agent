@@ -37,10 +37,10 @@ class TaskTest(unittest.TestCase):
     # Tình huống 1: hai worker cùng nhận
     def test_two_workers_only_one_wins(self):
         t = self.new()
-        tok = self.s.claim(t["task_id"], "worker-1")
+        tok = self.s.claim(t["task_id"], "A11")
         with self.assertRaises(TaskError):
-            self.s.claim(t["task_id"], "worker-2")
-        self.assertEqual(self.s.get(t["task_id"])["lease_owner"], "worker-1")
+            self.s.claim(t["task_id"], "A18")
+        self.assertEqual(self.s.get(t["task_id"])["lease_owner"], "A11")
         self.assertEqual(tok, 1)
 
     def test_parallel_threads_claim_once(self):
@@ -65,20 +65,20 @@ class TaskTest(unittest.TestCase):
     # Tình huống 2: worker cũ hết lease vẫn ghi
     def test_stale_worker_rejected_after_reclaim(self):
         t = self.new()
-        old = self.s.claim(t["task_id"], "worker-old", ttl_seconds=60)
+        old = self.s.claim(t["task_id"], "A11", ttl_seconds=60)
         self.clock.advance(61)
-        new = self.s.claim(t["task_id"], "worker-new")
+        new = self.s.claim(t["task_id"], "A18")
         self.assertEqual(new, old + 1)
         with self.assertRaises(TaskError):
-            self.s.record(t["task_id"], "worker-old", old, evidence="log.txt")
-        self.s.record(t["task_id"], "worker-new", new, evidence="log.txt")
+            self.s.record(t["task_id"], "A11", old, evidence="log.txt")
+        self.s.record(t["task_id"], "A18", new, evidence="log.txt")
 
     def test_expired_lease_cannot_write_even_without_reclaim(self):
         t = self.new()
-        tok = self.s.claim(t["task_id"], "w", ttl_seconds=10)
+        tok = self.s.claim(t["task_id"], "A11", ttl_seconds=10)
         self.clock.advance(11)
         with self.assertRaises(TaskError):
-            self.s.record(t["task_id"], "w", tok, evidence="x")
+            self.s.record(t["task_id"], "A11", tok, evidence="x")
 
     # Tình huống 3: tạo 2 lần
     def test_idempotent_create(self):

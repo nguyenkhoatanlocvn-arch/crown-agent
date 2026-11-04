@@ -39,7 +39,7 @@ class CliTest(unittest.TestCase):
         self.assertEqual(code, 1)
 
     def test_task_flow_rejections_exit_nonzero(self):
-        code, out, _ = run("task", "new", "A11", "obj", "crit", "--ready", "--key", "k1")
+        code, out, _ = run("task", "new", "A11", "obj", "crit", "--actor", "VUA_CEO", "--ready", "--key", "k1")
         self.assertEqual(code, 0)
         tid = out.split()[0]
         code, out, _ = run("task", "claim", tid, "A11")

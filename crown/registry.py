@@ -15,6 +15,9 @@ REG_DIR = ROOT / "registries"
 TIERS = ["READ", "SANDBOX_WRITE", "OPERATIONAL_WRITE", "SENSITIVE"]
 AGENT_STATUSES = {"ACTIVE", "REGISTERED", "DISABLED"}
 EXPECTED_AGENT_IDS = [f"A{i:02d}" for i in range(1, 21)]
+# Lãnh đạo hợp lệ. Thêm lãnh đạo mới = thay đổi mô hình tổ chức → Chủ tịch quyết, sửa danh sách này có review.
+EXPECTED_LEADER_IDS = {"CHAIRMAN", "VUA_CEO", "CFO", "CMO-01", "CMO-02"}
+EXPECTED_LEGACY_COUNT = 25
 
 
 class RegistryError(Exception):
@@ -66,6 +69,18 @@ def _load_json(path: Path) -> dict:
         raise RegistryError(f"File {path.name} không phải JSON hợp lệ: dòng {e.lineno}") from e
 
 
+def clean_path(p) -> str | None:
+    """Chuẩn hóa đường dẫn tương đối kiểu 'a/b/'. Trả None nếu rỗng, tuyệt đối, có '.', '..' hoặc '\\'."""
+    if not isinstance(p, str) or not p.strip() or p.startswith("/") or "\\" in p:
+        return None
+    segs = p.strip().split("/")
+    if segs and segs[-1] == "":
+        segs = segs[:-1]
+    if not segs or any(s in ("", ".", "..") for s in segs):
+        return None
+    return "/".join(segs) + "/"
+
+
 def scopes_overlap(a: str, b: str) -> bool:
     """Hai vùng ghi chồng nhau nếu một vùng là tiền tố của vùng kia ('*' = một cấp bất kỳ)."""
     sa = [s for s in a.split("/") if s]
@@ -76,18 +91,44 @@ def scopes_overlap(a: str, b: str) -> bool:
     return True
 
 
+def _items(data, key: str, fname: str, errors: list[str]) -> list[dict]:
+    if not isinstance(data, dict) or not isinstance(data.get(key), (list, dict)):
+        errors.append(f"{fname}: phải là object có trường '{key}'")
+        return []
+    items = data[key]
+    if isinstance(items, dict):
+        return [items]
+    bad = [i for i in items if not isinstance(i, dict) or not isinstance(i.get("id"), str)]
+    if bad:
+        errors.append(f"{fname}: có {len(bad)} mục không phải object có 'id' dạng chữ")
+    return [i for i in items if isinstance(i, dict) and isinstance(i.get("id"), str)]
+
+
+def _index(items: list[dict], fname: str, errors: list[str]) -> dict[str, dict]:
+    out: dict[str, dict] = {}
+    for it in items:
+        if it["id"] in out:
+            errors.append(f"{fname}: ID trùng '{it['id']}'")
+        out[it["id"]] = it
+    return out
+
+
 def load(reg_dir: Path = REG_DIR) -> Registry:
+    errors: list[str] = []
     lead = _load_json(reg_dir / "leaders.json")
     ag = _load_json(reg_dir / "agents.json")
     co = _load_json(reg_dir / "companies.json")
-    legacy_path = reg_dir / "legacy_map.json"
-    legacy = _load_json(legacy_path)["units"] if legacy_path.exists() else {}
-    reg = Registry(
-        leaders={x["id"]: x for x in lead.get("leaders", [])},
-        agents={x["id"]: x for x in ag.get("agents", [])},
-        companies={x["id"]: x for x in co.get("companies", [])},
-        legacy=legacy,
-    )
+    lg = _load_json(reg_dir / "legacy_map.json")
+    leaders = _index(_items(lead, "leaders", "leaders.json", errors), "leaders.json", errors)
+    agents = _index(_items(ag, "agents", "agents.json", errors), "agents.json", errors)
+    companies = _index(_items(co, "companies", "companies.json", errors), "companies.json", errors)
+    legacy = lg.get("units") if isinstance(lg, dict) else None
+    if not isinstance(legacy, dict) or not all(isinstance(v, dict) for v in legacy.values()):
+        errors.append("legacy_map.json: 'units' phải là object mã → {maps_to: [...]}")
+        legacy = {}
+    if errors:
+        raise RegistryError("Sổ đăng ký không hợp lệ:\n- " + "\n- ".join(errors))
+    reg = Registry(leaders=leaders, agents=agents, companies=companies, legacy=legacy)
     validate(reg)
     return reg
 
@@ -95,10 +136,11 @@ def load(reg_dir: Path = REG_DIR) -> Registry:
 def validate(reg: Registry) -> None:
     errors: list[str] = []
 
-    # 1. Đủ lãnh đạo bắt buộc, ID không trùng giữa lãnh đạo và Agent.
-    for must in ("CHAIRMAN", "VUA_CEO", "CFO", "CMO-01"):
-        if must not in reg.leaders:
-            errors.append(f"Thiếu lãnh đạo bắt buộc {must}")
+    # 1. Đúng bộ lãnh đạo đã chốt; ID không trùng giữa lãnh đạo và Agent.
+    for must in sorted(EXPECTED_LEADER_IDS - set(reg.leaders)):
+        errors.append(f"Thiếu lãnh đạo bắt buộc {must}")
+    for extra in sorted(set(reg.leaders) - EXPECTED_LEADER_IDS):
+        errors.append(f"Lãnh đạo '{extra}' chưa được Chủ tịch phê duyệt trong mô hình tổ chức")
     dup = set(reg.leaders) & set(reg.agents)
     if dup:
         errors.append(f"ID trùng giữa lãnh đạo và Agent: {sorted(dup)}")
@@ -111,10 +153,16 @@ def validate(reg: Registry) -> None:
 
     # 3. Chỉ Chủ tịch là người, không có cấp trên, có SENSITIVE.
     for lid, l in reg.leaders.items():
+        if l.get("tier") not in TIERS:
+            errors.append(f"{lid}: mức quyền '{l.get('tier')}' không hợp lệ")
         if lid == "CHAIRMAN":
             if l.get("supervisor") is not None:
                 errors.append("CHAIRMAN không được có cấp trên")
+            if l.get("kind") != "human":
+                errors.append("CHAIRMAN phải là người (kind=human)")
             continue
+        if l.get("kind") != "agent":
+            errors.append(f"{lid}: chỉ Chủ tịch là người; lãnh đạo khác phải kind=agent")
         if l.get("tier") == "SENSITIVE":
             errors.append(f"{lid}: chỉ Chủ tịch giữ quyền SENSITIVE")
         if l.get("supervisor") not in reg.leaders:
@@ -128,6 +176,8 @@ def validate(reg: Registry) -> None:
                 errors.append(f"{aid}: thiếu trường '{f}'")
         if isinstance(a.get("leader"), list):
             errors.append(f"{aid}: chỉ được có MỘT lãnh đạo chính")
+        elif not isinstance(a.get("leader"), str):
+            errors.append(f"{aid}: lãnh đạo phải là một ID dạng chữ")
         elif a.get("leader") not in reg.leaders:
             errors.append(f"{aid}: lãnh đạo '{a.get('leader')}' không tồn tại")
         if a.get("status") not in AGENT_STATUSES:
@@ -136,8 +186,13 @@ def validate(reg: Registry) -> None:
             errors.append(f"{aid}: mức quyền '{a.get('tier')}' không hợp lệ")
         elif a["tier"] == "SENSITIVE":
             errors.append(f"{aid}: Agent không được giữ quyền SENSITIVE")
-        if a.get("memory_ns") and not str(a["memory_ns"]).startswith(f"agents/{aid}/"):
-            errors.append(f"{aid}: namespace bộ nhớ phải nằm trong agents/{aid}/")
+        ns = clean_path(a.get("memory_ns"))
+        if ns is None or not ns.startswith(f"agents/{aid}/"):
+            errors.append(f"{aid}: namespace bộ nhớ phải là đường dẫn sạch trong agents/{aid}/")
+        if not isinstance(a.get("write_scope"), list) or not all(clean_path(x) for x in a.get("write_scope", [])):
+            errors.append(f"{aid}: vùng ghi phải là danh sách đường dẫn sạch (không '.', '..', rỗng, tuyệt đối)")
+        if not isinstance(a.get("skills", []), list):
+            errors.append(f"{aid}: skills phải là danh sách")
 
     # 5. Quyền cấp dưới <= quyền cấp trên.
     for mid in list(reg.leaders) + list(reg.agents):
@@ -148,7 +203,7 @@ def validate(reg: Registry) -> None:
         if mt in TIERS and bt in TIERS and TIERS.index(mt) > TIERS.index(bt):
             errors.append(f"{mid}: quyền {mt} cao hơn cấp trên {boss} ({bt})")
 
-    # 6. Không chu trình chỉ huy, mọi chuỗi kết thúc ở Chủ tịch.
+    # 6. Không chu trình chỉ huy, mọi chuỗi kết thúc ở Chủ tịch (chỉ chạy khi cấu trúc đã đúng kiểu).
     if not errors:
         for mid in list(reg.leaders) + list(reg.agents):
             try:
@@ -159,7 +214,8 @@ def validate(reg: Registry) -> None:
                 errors.append(str(e))
 
     # 7. Vùng ghi giữa các Agent không chồng nhau (master mục 09: một nơi ghi).
-    scopes = [(aid, s) for aid, a in reg.agents.items() for s in a.get("write_scope", [])]
+    scopes = [(aid, clean_path(s)) for aid, a in reg.agents.items()
+              if isinstance(a.get("write_scope"), list) for s in a["write_scope"] if clean_path(s)]
     for i, (a1, s1) in enumerate(scopes):
         for a2, s2 in scopes[i + 1:]:
             if a1 != a2 and scopes_overlap(s1, s2):
@@ -172,8 +228,13 @@ def validate(reg: Registry) -> None:
 
     # 9. Mã cũ KING AI trỏ tới đích tồn tại.
     targets = set(reg.leaders) | set(reg.agents) | set(reg.companies)
+    if len(reg.legacy) != EXPECTED_LEGACY_COUNT:
+        errors.append(f"Bảng mã cũ phải có đủ {EXPECTED_LEGACY_COUNT} đơn vị KING AI (đang có {len(reg.legacy)})")
     for code, u in reg.legacy.items():
-        for t in u.get("maps_to", []):
+        if not isinstance(u.get("maps_to"), list) or not u["maps_to"]:
+            errors.append(f"Mã cũ {code}: maps_to phải là danh sách không rỗng")
+            continue
+        for t in u["maps_to"]:
             if t not in targets:
                 errors.append(f"Mã cũ {code}: đích '{t}' không tồn tại")
 

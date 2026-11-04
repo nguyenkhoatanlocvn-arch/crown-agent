@@ -5,11 +5,11 @@
   python -m crown companies            Công ty con
   python -m crown legacy               Bảng chuyển 25 mã KING AI cũ
   python -m crown check                Kiểm tra sổ đăng ký
-  python -m crown task new OWNER "mục tiêu" "tiêu chí xong" [--company X] [--key K] [--ready]
+  python -m crown task new OWNER "mục tiêu" "tiêu chí xong" --actor ID [--company X] [--key K] [--ready]
   python -m crown task list [--state S]
   python -m crown task claim TASK WORKER [--ttl 900]
   python -m crown task record TASK WORKER TOKEN [--artifact A] [--evidence E] [--next N]
-  python -m crown task move TASK STATE ACTOR [--token N] [--note "..."]
+  python -m crown task move TASK STATE ACTOR [--token N] [--note "..."] [--approval "mã quyết định"]
   python -m crown task show TASK
 DB mặc định: runtime/tasks.db (đổi bằng biến CROWN_DB).
 """
@@ -99,13 +99,13 @@ def main(argv: list[str] | None = None) -> int:
     st = sub.add_parser("task"); ts = st.add_subparsers(dest="tcmd", required=True)
     n = ts.add_parser("new"); n.add_argument("owner"); n.add_argument("objective"); n.add_argument("criteria")
     n.add_argument("--company"); n.add_argument("--key"); n.add_argument("--ready", action="store_true")
-    n.add_argument("--actor", default="CHAIRMAN")
+    n.add_argument("--actor", required=True, help="ID người tạo trong sổ đăng ký")
     l = ts.add_parser("list"); l.add_argument("--state")
     c = ts.add_parser("claim"); c.add_argument("task"); c.add_argument("worker"); c.add_argument("--ttl", type=int, default=900)
     r = ts.add_parser("record"); r.add_argument("task"); r.add_argument("worker"); r.add_argument("token", type=int)
     r.add_argument("--artifact"); r.add_argument("--evidence"); r.add_argument("--next")
     m = ts.add_parser("move"); m.add_argument("task"); m.add_argument("state"); m.add_argument("actor")
-    m.add_argument("--token", type=int); m.add_argument("--note", default="")
+    m.add_argument("--token", type=int); m.add_argument("--note", default=""); m.add_argument("--approval")
     s = ts.add_parser("show"); s.add_argument("task")
     args = p.parse_args(argv)
 
@@ -145,7 +145,8 @@ def main(argv: list[str] | None = None) -> int:
                          next_action=args.next)
             print("Đã ghi.")
         elif args.tcmd == "move":
-            _print_task(store.move(args.task, args.state, args.actor, token=args.token, note=args.note))
+            _print_task(store.move(args.task, args.state, args.actor, token=args.token, note=args.note,
+                                   approval=args.approval))
         elif args.tcmd == "show":
             _print_task(store.get(args.task))
             for e in store.events(args.task):
