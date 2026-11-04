@@ -32,7 +32,7 @@ class CliTest(unittest.TestCase):
         code, out, _ = run("org")
         self.assertEqual(code, 0)
         self.assertLess(out.index("VUA_CEO"), out.index("CFO —"))
-        self.assertIn("Agent ACTIVE: 1/20", out)
+        self.assertIn("Agent ACTIVE: 5/20", out)
 
     def test_unknown_agent(self):
         code, _, err = run("agent", "A99")

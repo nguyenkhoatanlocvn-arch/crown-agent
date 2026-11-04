@@ -30,7 +30,7 @@ class RealRegistryTest(unittest.TestCase):
 
     def test_only_m1_core_active(self):
         active = sorted(a for a, v in self.reg.agents.items() if v["status"] == "ACTIVE")
-        self.assertEqual(active, ["A03"])
+        self.assertEqual(active, ["A03", "A11", "A17", "A18", "A20"])  # 2026-11-04: B02_BTC kich hoat A11/A17/A18/A20
 
     def test_legacy_25_units_all_mapped(self):
         self.assertEqual(len(self.reg.legacy), 25)
