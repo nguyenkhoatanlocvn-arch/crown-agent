@@ -64,6 +64,11 @@ for aid, a in reg.agents.items():
     members.append({"id": aid, "name": a["name"], "kind": "agent", "boss": a["leader"],
                     "cluster": a["cluster"], "status": a["status"], "tier": a["tier"],
                     "activity": act, "task": task, "open_tasks": n})
+for sid, a in reg.subagents.items():   # Agent con (A03.1...)
+    act, task, n = activity_of(sid, a["status"])
+    members.append({"id": sid, "name": a["name"], "kind": "agent", "boss": a["parent"],
+                    "cluster": reg.agents[a["parent"]]["cluster"], "status": a["status"], "tier": a["tier"],
+                    "activity": act, "task": task, "open_tasks": n})
 
 try:
     commit = subprocess.run(["git", "-C", str(ROOT), "rev-parse", "--short", "HEAD"],

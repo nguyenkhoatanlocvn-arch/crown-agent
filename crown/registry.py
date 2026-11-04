@@ -5,7 +5,7 @@ Nạp file JSON trong registries/ và kiểm tra các luật tổ chức của m
 """
 from __future__ import annotations
 
-import json
+import json, re
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -30,17 +30,22 @@ class Registry:
     agents: dict[str, dict]
     companies: dict[str, dict]
     legacy: dict[str, dict] = field(default_factory=dict)
+    subagents: dict[str, dict] = field(default_factory=dict)   # 2026-11-05: Agent con (A03.1...) thuộc một Agent cha
 
     def member(self, member_id: str) -> dict:
         if member_id in self.leaders:
             return self.leaders[member_id]
         if member_id in self.agents:
             return self.agents[member_id]
+        if member_id in self.subagents:
+            return self.subagents[member_id]
         raise KeyError(member_id)
 
     def boss_of(self, member_id: str) -> str | None:
         m = self.member(member_id)
-        return m.get("supervisor") if member_id in self.leaders else m.get("leader")
+        if member_id in self.leaders: return m.get("supervisor")
+        if member_id in self.subagents: return m.get("parent")
+        return m.get("leader")
 
     def chain(self, member_id: str) -> list[str]:
         """Chuỗi chỉ huy từ member lên Chủ tịch."""
@@ -120,13 +125,15 @@ def load(reg_dir: Path = REG_DIR) -> Registry:
     leaders = _index(_items(lead, "leaders", "leaders.json", errors), "leaders.json", errors)
     agents = _index(_items(ag, "agents", "agents.json", errors), "agents.json", errors)
     companies = _index(_items(co, "companies", "companies.json", errors), "companies.json", errors)
+    sub_path = reg_dir / "subagents.json"
+    subagents = _index(_items(_load_json(sub_path), "subagents", "subagents.json", errors), "subagents.json", errors) if sub_path.exists() else {}
     legacy = lg.get("units") if isinstance(lg, dict) else None
     if not isinstance(legacy, dict) or not all(isinstance(v, dict) for v in legacy.values()):
         errors.append("legacy_map.json: 'units' phải là object mã → {maps_to: [...]}")
         legacy = {}
     if errors:
         raise RegistryError("Sổ đăng ký không hợp lệ:\n- " + "\n- ".join(errors))
-    reg = Registry(leaders=leaders, agents=agents, companies=companies, legacy=legacy)
+    reg = Registry(leaders=leaders, agents=agents, companies=companies, legacy=legacy, subagents=subagents)
     validate(reg)
     return reg
 
@@ -230,6 +237,30 @@ def validate(reg: Registry) -> None:
 
     # 9. Mã cũ KING AI trỏ tới đích tồn tại.
     targets = set(reg.leaders) | set(reg.agents) | set(reg.companies)
+    # Agent con: A##.n thuộc Agent cha A##; quyền <= cha; vùng ghi nằm TRONG vùng cha và không chồng anh em.
+    sub_scopes = []
+    for sid, sa in reg.subagents.items():
+        par = sa.get("parent")
+        if not re.fullmatch(r"A\d{2}\.\d+", sid) or par not in reg.agents or not sid.startswith(par + "."):
+            errors.append(f"{sid}: Agent con phải có dạng <cha>.<số> và cha có trong A01..A20"); continue
+        for k in ("name", "status", "tier", "mission", "memory_ns", "write_scope", "out_of_scope"):
+            if k not in sa: errors.append(f"{sid}: thiếu trường {k}")
+        if sa.get("status") not in AGENT_STATUSES: errors.append(f"{sid}: trạng thái không hợp lệ")
+        pt, st_ = reg.agents[par].get("tier"), sa.get("tier")
+        if st_ not in TIERS or (pt in TIERS and TIERS.index(st_) > TIERS.index(pt)):
+            errors.append(f"{sid}: mức quyền {st_} vượt cha {par} ({pt})")
+        pscopes = [clean_path(x) for x in reg.agents[par].get("write_scope", [])]
+        for w in sa.get("write_scope", []):
+            cw = clean_path(w)
+            if cw is None or not any(ps and cw.startswith(ps) for ps in pscopes):
+                errors.append(f"{sid}: vùng ghi '{w}' phải nằm trong vùng của {par}")
+            else:
+                for oid, ow in sub_scopes:
+                    if scopes_overlap(cw, ow): errors.append(f"{sid}: vùng ghi '{w}' chồng {oid} ('{ow}')")
+                sub_scopes.append((sid, cw))
+        if clean_path(sa.get("memory_ns", "")) is None or not clean_path(sa.get("memory_ns", "")).startswith(clean_path(reg.agents[par]["memory_ns"]) or "-"):
+            errors.append(f"{sid}: bộ nhớ phải nằm trong {reg.agents[par].get('memory_ns')}")
+
     if len(reg.legacy) != EXPECTED_LEGACY_COUNT:
         errors.append(f"Bảng mã cũ phải có đủ {EXPECTED_LEGACY_COUNT} đơn vị KING AI (đang có {len(reg.legacy)})")
     for code, u in reg.legacy.items():

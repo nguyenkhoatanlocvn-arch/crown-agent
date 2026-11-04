@@ -130,7 +130,7 @@ class TaskStore:
 
     def _authorities(self, owner: str) -> set[str]:
         """Ai được duyệt/chấp thuận: cấp trên của chủ nhiệm vụ, Chủ tịch, và (với duyệt kết quả) Agent 20."""
-        chain = self.registry.chain(owner) if owner in self.registry.agents or owner in self.registry.leaders else []
+        chain = self.registry.chain(owner) if owner in self.registry.agents or owner in self.registry.leaders or owner in self.registry.subagents else []
         return set(chain[1:]) | {"CHAIRMAN"}
 
     def _current_evidence(self, t) -> list[str]:

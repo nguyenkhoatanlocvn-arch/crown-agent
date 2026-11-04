@@ -118,3 +118,28 @@ class ScopeOverlapTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class SubagentTest(unittest.TestCase):
+    """2026-11-05: Agent con A03.1-A03.3."""
+    def setUp(self):
+        import copy, tempfile, shutil
+        self.tmp = Path(tempfile.mkdtemp()); shutil.copytree(R.REG_DIR, self.tmp, dirs_exist_ok=True)
+        self.sub = json.loads((self.tmp / "subagents.json").read_text(encoding="utf-8"))
+    def _write(self): (self.tmp / "subagents.json").write_text(json.dumps(self.sub, ensure_ascii=False), encoding="utf-8")
+    def test_real_subagents_load_and_chain(self):
+        reg = R.load()
+        self.assertEqual(sorted(reg.subagents), ["A03.1", "A03.2", "A03.3"])
+        self.assertEqual(reg.chain("A03.2"), ["A03.2", "A03", "VUA_CEO", "CHAIRMAN"])
+    def test_scope_outside_parent_rejected(self):
+        self.sub["subagents"][0]["write_scope"] = ["companies/BTC/"]; self._write()
+        with self.assertRaises(R.RegistryError): R.load(self.tmp)
+    def test_sibling_overlap_rejected(self):
+        self.sub["subagents"][1]["write_scope"] = ["skills/"]; self._write()
+        with self.assertRaises(R.RegistryError): R.load(self.tmp)
+    def test_tier_above_parent_rejected(self):
+        self.sub["subagents"][0]["tier"] = "OPERATIONAL_WRITE"; self._write()
+        with self.assertRaises(R.RegistryError): R.load(self.tmp)
+    def test_bad_id_or_parent_rejected(self):
+        self.sub["subagents"][0]["id"] = "A04.1"; self._write()
+        with self.assertRaises(R.RegistryError): R.load(self.tmp)

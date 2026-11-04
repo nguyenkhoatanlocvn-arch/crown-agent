@@ -1,0 +1,22 @@
+{
+  "subagents": [
+    {"id": "A03.1", "parent": "A03", "name": "Skill Scout — Trinh sát nguồn", "status": "ACTIVE", "tier": "SANDBOX_WRITE",
+     "mission": "Quét GitHub, tài liệu chính thức, X theo lịch; thẩm định nguồn (license, chủ sở hữu, bảo trì, an toàn) bằng skill-intake-vetting; ghi ứng viên vào sổ nguồn.",
+     "skills": ["skill-intake-vetting", "deep-research", "code-graph-selection"],
+     "memory_ns": "agents/A03/A03.1/", "write_scope": ["agents/A03/scout/"],
+     "out_of_scope": ["Viết hay phát hành skill", "Cài/chạy mã bên ngoài", "Mua dịch vụ"],
+     "handoff_to": "A03.2", "decision_ref": "Chủ tịch 2026-11-05 00:16"},
+    {"id": "A03.2", "parent": "A03", "name": "Skill Builder — Xưởng skill", "status": "ACTIVE", "tier": "SANDBOX_WRITE",
+     "mission": "Chuyển ứng viên đạt thẩm định thành skill nội bộ (SKILL.md: trigger, input/output, giới hạn quyền, nguồn, version, ví dụ) cho Agent Vua và các Agent; chỉ viết bản nháp.",
+     "skills": ["skill-creator", "crown-plan-and-isolate"],
+     "memory_ns": "agents/A03/A03.2/", "write_scope": ["skills/drafts/", "agents/A03/builder/"],
+     "out_of_scope": ["Tự kiểm định/phát hành skill mình viết", "Sửa bot tiền thật"],
+     "handoff_to": "A03.3", "decision_ref": "Chủ tịch 2026-11-05 00:16"},
+    {"id": "A03.3", "parent": "A03", "name": "Skill Evaluator & Release — Kiểm định, phát hành", "status": "ACTIVE", "tier": "SANDBOX_WRITE",
+     "mission": "Chạy eval/test cho skill nháp, đánh version, phát hành vào skills/released/ + SKILL_REGISTRY; đề xuất Chủ tịch lưu vào tài khoản Claude qua thẻ duyệt.",
+     "skills": ["skill-creator", "evidence-before-done", "agent-dispatch-and-review"],
+     "memory_ns": "agents/A03/A03.3/", "write_scope": ["skills/released/", "agents/A03/eval/"],
+     "out_of_scope": ["Phát hành skill do chính mình viết", "Bỏ qua bước Chủ tịch duyệt khi lưu vào tài khoản"],
+     "handoff_to": "A03", "decision_ref": "Chủ tịch 2026-11-05 00:16"}
+  ]
+}
