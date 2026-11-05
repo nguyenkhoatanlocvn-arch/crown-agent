@@ -8,12 +8,12 @@ Tệp giống bí mật bị bỏ qua và ghi tên vào danh sách skipped. URL 
 """
 from __future__ import annotations
 
-import fnmatch
+import os
 import shutil
 import zipfile
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
-from .access import DEFAULT_POLICY
+from .access import secret_reason
 from .util import ToolError, atomic_write_json, iso, mutex, read_json, sha256_file, sha256_text, tool_root
 
 KINDS = {
@@ -33,8 +33,15 @@ def kind_of(path: Path) -> str:
     return "file"
 
 
-def _secretish(name: str) -> bool:
-    return any(fnmatch.fnmatch(name.lower(), g.lower()) for g in DEFAULT_POLICY["deny_globs"])
+def _job(job_id: str) -> str:
+    from .jobs import JOB_ID_RE
+    if not isinstance(job_id, str) or not JOB_ID_RE.match(job_id):
+        raise ToolError(f"Mã việc không hợp lệ: {str(job_id)[:60]!r}")
+    return job_id
+
+
+def _looks_like_path(text: str) -> bool:
+    return text.startswith(("/", "./", "../", "~/", "~\\", ".\\")) or (len(text) > 2 and text[1] == ":" and text[2] in "\\/")
 
 
 class Inbox:
@@ -44,7 +51,7 @@ class Inbox:
         self.base.mkdir(parents=True, exist_ok=True)
 
     def manifest(self, job_id: str) -> dict:
-        return read_json(self.base / job_id / "manifest.json",
+        return read_json(self.base / _job(job_id) / "manifest.json",
                          default={"job_id": job_id, "items": [], "skipped": [], "updated_at": None})
 
     def _store(self, job_id: str, private: bool) -> Path:
@@ -52,9 +59,16 @@ class Inbox:
         d.mkdir(parents=True, exist_ok=True)
         return d
 
-    def _add_file(self, src: Path, dst: Path, man: dict, private: bool, origin: str, pointer: str | None) -> None:
-        if _secretish(src.name):
-            man["skipped"].append({"name": src.name, "why": "tên tệp giống bí mật"})
+    def _add_file(self, src: Path, dst: Path, man: dict, private: bool, origin: str, pointer: str | None,
+                  relname: str | None = None) -> None:
+        """relname: đường dẫn của tệp bên trong thư mục được gửi (để xét cả tên thư mục, vd. .git/config)."""
+        shown = relname or src.name
+        if src.is_symlink():  # liên kết có thể trỏ tới tệp bí mật mang tên vô hại
+            man["skipped"].append({"name": shown, "why": "liên kết tượng trưng"})
+            return
+        why = secret_reason(relname or src.name)
+        if why:
+            man["skipped"].append({"name": shown, "why": f"giống bí mật ({why})"})
             return
         dst.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(src, dst)
@@ -64,17 +78,21 @@ class Inbox:
 
     def add(self, job_id: str, item: str | Path, *, private: bool = True, pointer: str | None = None) -> dict:
         """Thêm một mục: đường dẫn tệp/thư mục/ZIP, hoặc chuỗi URL, hoặc văn bản prompt."""
-        with mutex(self.base / job_id / "manifest.json"):
+        with mutex(self.base / _job(job_id) / "manifest.json"):
             man = self.manifest(job_id)
             text = str(item)
             p = Path(text).expanduser() if len(text) < 1024 and "\n" not in text else None
+            if p is not None and not p.exists() and not p.is_symlink() and _looks_like_path(text) and " " not in text.strip():
+                raise ToolError(f"Không thấy tệp hay thư mục: {text} (nếu đây là prompt, hãy viết thành câu)")
             if text.startswith(("http://", "https://")):
                 man["items"].append({"kind": "url", "url": text, "sha256": sha256_text(text), "private": private,
                                      "fetched": False, "at": iso()})
             elif p is not None and p.is_file() and kind_of(p) == "archive":
                 self._add_zip(p, job_id, man, private)
-            elif p is not None and p.is_file():
+            elif p is not None and (p.is_file() or p.is_symlink()) and not p.is_dir():
                 self._add_file(p, self._store(job_id, private) / p.name, man, private, "file", pointer)
+            elif p is not None and p.is_dir() and p.is_symlink():
+                man["skipped"].append({"name": p.name, "why": "liên kết tượng trưng"})
             elif p is not None and p.is_dir():
                 self._add_dir(p, job_id, man, private)
             else:
@@ -92,13 +110,24 @@ class Inbox:
             return man
 
     def _add_dir(self, src: Path, job_id: str, man: dict, private: bool) -> None:
-        files = [f for f in sorted(src.rglob("*")) if f.is_file() and not f.is_symlink()]
-        total = sum(f.stat().st_size for f in files)
+        files: list[Path] = []
+        for dirpath, dirnames, filenames in os.walk(src, followlinks=False):  # không đi theo thư mục liên kết
+            base = Path(dirpath)
+            for dn in list(dirnames):
+                why = secret_reason((base / dn).relative_to(src))
+                if why or (base / dn).is_symlink():
+                    dirnames.remove(dn)  # bỏ cả nhánh: .git, .ssh, .aws...
+                    man["skipped"].append({"name": (base / dn).relative_to(src).as_posix() + "/",
+                                           "why": f"giống bí mật ({why})" if why else "liên kết tượng trưng"})
+            files += [base / fn for fn in sorted(filenames)]
+        files.sort()
+        total = sum(f.stat().st_size for f in files if not f.is_symlink())
         if len(files) > MAX_FILES or total > MAX_TOTAL_MB << 20:
             raise ToolError(f"Thư mục quá lớn ({len(files)} tệp, {total >> 20} MB; hạn mức {MAX_FILES} tệp, {MAX_TOTAL_MB} MB)")
         base = self._store(job_id, private) / src.name
         for f in files:
-            self._add_file(f, base / f.relative_to(src), man, private, f"folder:{src.name}", None)
+            rel = f.relative_to(src)
+            self._add_file(f, base / rel, man, private, f"folder:{src.name}", None, relname=rel.as_posix())
 
     def _add_zip(self, src: Path, job_id: str, man: dict, private: bool) -> None:
         base = self._store(job_id, private) / src.stem
@@ -112,8 +141,15 @@ class Inbox:
                 if base.resolve() not in target.parents:  # chống zip-slip
                     man["skipped"].append({"name": i.filename, "why": "đường dẫn trong ZIP thoát ra ngoài"})
                     continue
-                if _secretish(Path(i.filename).name):
-                    man["skipped"].append({"name": i.filename, "why": "tên tệp giống bí mật"})
+                if "\\" in i.filename or ":" in i.filename or i.filename.startswith("/"):
+                    man["skipped"].append({"name": i.filename, "why": "tên trong ZIP có ký tự đường dẫn không an toàn"})
+                    continue
+                why = secret_reason(PurePosixPath(i.filename))
+                if why:
+                    man["skipped"].append({"name": i.filename, "why": f"giống bí mật ({why})"})
+                    continue
+                if (i.external_attr >> 16) & 0o170000 == 0o120000:
+                    man["skipped"].append({"name": i.filename, "why": "liên kết tượng trưng trong ZIP"})
                     continue
                 target.parent.mkdir(parents=True, exist_ok=True)
                 with z.open(i) as fsrc, open(target, "wb") as fdst:

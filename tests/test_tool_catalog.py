@@ -13,14 +13,14 @@ from tool.core.runner import Runner
 from tool.core.skills import Skills
 from tool.core.util import ToolError, read_json
 
-from .tool_fixtures import make_build, make_root
+from .tool_fixtures import job_at_publish, make_build, make_root, publish_via_job
 
 T, AT = "agent-tool", "agent-tool-at"
 
 
-def _race_publish(root, build, actor, q):
+def _race_publish(root, build, actor, job_id, token, q):
     try:
-        Catalog(Path(root)).publish(Path(build), actor)
+        Catalog(Path(root)).publish(Path(build), actor, job_id=job_id, token=token)
         q.put((actor, "OK"))
     except ToolError as e:
         q.put((actor, str(e)))
@@ -35,8 +35,8 @@ class Base(unittest.TestCase):
         self.cat = Catalog(self.root, self.dir)
         self.runner = Runner(self.root, self.dir)
 
-    def publish(self, version="1.0.0", **kw):
-        return self.cat.publish(make_build(self.tmp, version=version, **kw), T)
+    def publish(self, version="1.0.0", actor=T, **kw):
+        return publish_via_job(self.root, actor, version=version, **kw)
 
     def data(self, relpath, text="chào anh Lộc\n"):
         p = self.tmp / "repo" / relpath
@@ -62,8 +62,9 @@ class PublishGateTest(Base):
         self.assertNotIn("chào anh", json.dumps(saved, ensure_ascii=False))   # bản ghi không chứa nội dung dữ liệu
 
     def test_only_executives_publish(self):
+        jid, tok, build = job_at_publish(self.root)
         with self.assertRaisesRegex(ToolError, "không có quyền phát hành tool"):
-            self.cat.publish(make_build(self.tmp), "A18")
+            self.cat.publish(build, "A18", job_id=jid, token=tok)
 
     def test_failing_tests_block_publish(self):
         with self.assertRaisesRegex(ToolError, "Không đạt kiểm thử"):
@@ -77,14 +78,15 @@ class PublishGateTest(Base):
             b = make_build(self.tmp / imp.split()[1], extra_import=imp)
             self.assertTrue(any(word in v for v in sandbox.lint_permissions(b, read_json(b / "manifest.json"))), imp)
             with self.assertRaisesRegex(ToolError, "Không đạt kiểm thử"):
-                self.cat.publish(b, T)
+                self.publish(extra_import=imp)
 
     def test_paid_tool_blocked_until_cfo_budget_approved(self):
-        b = make_build(self.tmp, cost=0.5)
         with self.assertRaisesRegex(ToolError, "Vượt hạn mức CFO"):
-            self.cat.publish(b, T)
-        Budget(self.root).approve(2.0, "API thử", "KHO-DX-001")
-        self.cat.publish(b, T)
+            self.publish(cost=0.5)
+        with self.assertRaisesRegex(ToolError, "Chỉ Chủ tịch ghi khoản duyệt chi"):   # Agent không tự duyệt ngân sách
+            Budget(self.root).approve(2.0, "API thử", "KHO-DX-001", T)
+        Budget(self.root).approve(2.0, "API thử", "KHO-DX-001", "CHAIRMAN")
+        self.publish(cost=0.5)
         other = make_root()                                # khoản duyệt của kho này không lọt sang kho khác
         self.addCleanup(shutil.rmtree, other.parent.parent, True)
         self.assertEqual(Budget(other).remaining(), 0)
@@ -107,14 +109,16 @@ class PublishGateTest(Base):
                 (lambda m, b: m["examples"][0].update(expected={"../x.txt": "examples/mau.expected.txt"}), "không hợp lệ"),
                 (lambda m, b: m["interface"]["inputs"][0].update(name="../in"), "tên mỗi đầu vào"),
                 (lambda m, b: os.symlink(secret, b / "examples" / "lien_ket.txt"), "liên kết tượng trưng")):
+            def apply(b, mutate=mutate):
+                m = read_json(b / "manifest.json")
+                mutate(m, b)
+                (b / "manifest.json").write_text(json.dumps(m, ensure_ascii=False), encoding="utf-8")
             b = make_build(self.tmp / "trav")
-            m = read_json(b / "manifest.json")
-            mutate(m, b)
-            (b / "manifest.json").write_text(json.dumps(m, ensure_ascii=False), encoding="utf-8")
-            errs = validate_manifest(m, b)
+            apply(b)
+            errs = validate_manifest(read_json(b / "manifest.json"), b)
             self.assertTrue(any(word in x for x in errs), (word, errs))
             with self.assertRaisesRegex(ToolError, "Manifest không hợp lệ"):
-                self.cat.publish(b, T)
+                self.publish(mutate=apply)
         b = make_build(self.tmp / "trav2")               # ca thử trỏ ra ngoài: ca đó trượt, không đọc tệp ngoài
         cases = read_json(b / "tests" / "cases.json")
         cases["cases"].append({"name": "doc-ngoai", "inputs": {"input": "../../../ngoai.txt"}, "expect": {"exit_code": 0}})
@@ -142,9 +146,10 @@ class PublishGateTest(Base):
 
 class DuplicateAndRollbackTest(Base):
     def test_two_agents_publishing_same_version_exactly_one_wins(self):
-        b1, b2 = make_build(self.tmp / "a"), make_build(self.tmp / "b")
+        (j1, t1, b1), (j2, t2, b2) = job_at_publish(self.root, T), job_at_publish(self.root, AT)
         q = mp.Queue()
-        ps = [mp.Process(target=_race_publish, args=(str(self.root), str(b), who, q)) for b, who in ((b1, T), (b2, AT))]
+        ps = [mp.Process(target=_race_publish, args=(str(self.root), str(b), who, j, t, q))
+              for b, who, j, t in ((b1, T, j1, t1), (b2, AT, j2, t2))]
         [p.start() for p in ps]
         [p.join(60) for p in ps]
         res = dict(q.get(timeout=5) for _ in ps)
@@ -183,9 +188,8 @@ class DuplicateAndRollbackTest(Base):
         ok = release.smoke("upper-text", "A19", root=self.root, extra=case, rollback_actor=AT)
         self.assertTrue(ok["ok"]); self.assertIsNone(ok["rolled_back"]); self.assertEqual(len(ok["cases"]), 2)
         # Bản 1.1.0 "đạt" bộ thử của chính nó (ví dụ bị sửa theo lỗi) nhưng sai với dữ liệu khác mẫu.
-        b = make_build(self.tmp, version="1.1.0", broken=True)
-        (b / "examples" / "mau.expected.txt").write_text("XIN CHÀO\n!", encoding="utf-8")
-        self.cat.publish(b, AT)
+        self.publish("1.1.0", AT, broken=True,
+                     mutate=lambda b: (b / "examples" / "mau.expected.txt").write_text("XIN CHÀO\n!", encoding="utf-8"))
         self.assertEqual(self.cat.resolve("upper-text")[1], "1.1.0")
         bad = release.smoke("upper-text", "A19", root=self.root, extra=case, rollback_actor=AT)
         self.assertFalse(bad["ok"])

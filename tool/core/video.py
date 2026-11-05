@@ -1,7 +1,9 @@
 """Lấy khung hình từ video mẫu bằng FFmpeg cục bộ (gọi lệnh đã cài, không sửa, không nhúng mã FFmpeg).
 
-Kết quả: workbench/<mã việc>/frames/f_###_t####.##s.png (không vào git) + frames.json (mốc thời gian, băm)
-+ samples/contact_sheet.jpg (một ảnh ghép nhỏ làm bằng chứng). Việc đọc khung hình để ghi "người dùng bấm gì,
+Kết quả: workbench/<mã việc>/frames/f_###_t####.##s.png + frames/contact_sheet.jpg (ảnh ghép) — cả thư mục frames/
+KHÔNG vào git và không thuộc vùng dùng chung, vì khung hình là nội dung của mẫu. Vào git chỉ có frames.json (mốc thời
+gian, băm). Riêng mẫu công khai (tự tạo, public=True) có thêm bản sao ảnh ghép ở samples/ làm bằng chứng xem được.
+Việc đọc khung hình để ghi "người dùng bấm gì,
 màn hình đổi ra sao" do Agent nhánh Phân tích mẫu làm; tệp này chỉ lo phần cắt hình đúng mốc thời gian.
 """
 from __future__ import annotations
@@ -76,7 +78,7 @@ def plan_times(duration: float, every: float | None = None, at: list[float] | No
 
 
 def extract_frames(video: Path, job_dir: Path, *, every: float | None = None, at: list[float] | None = None,
-                   scene: bool = True, max_frames: int = 40, width: int = 1280) -> dict:
+                   scene: bool = True, max_frames: int = 40, width: int = 1280, public: bool = False) -> dict:
     video, job_dir = Path(video), Path(job_dir)
     if not video.is_file():
         raise ToolError(f"Không thấy video: {video}")
@@ -100,17 +102,20 @@ def extract_frames(video: Path, job_dir: Path, *, every: float | None = None, at
         frames.append({"index": len(frames), "t": t, "file": f"frames/{name}", "sha256": sha256_file(fdir / name)})
     if not frames:
         raise ToolError("FFmpeg không lấy được khung hình nào")
-    sdir = job_dir / "samples"
-    sdir.mkdir(exist_ok=True)
     cols = min(4, len(frames))
     rows = math.ceil(len(frames) / cols)
-    sheet = sdir / "contact_sheet.jpg"
+    sheet = fdir / "contact_sheet.jpg"  # nằm trong frames/: không vào git, không thuộc vùng dùng chung
     subprocess.run([ff, "-hide_banner", "-loglevel", "error", "-pattern_type", "glob", "-framerate", "1",
                     "-i", str(fdir / "f_*.png"), "-vf", f"scale=400:-2,tile={cols}x{rows}:padding=4:color=white",
                     "-frames:v", "1", "-q:v", "5", "-y", str(sheet)], capture_output=True, text=True, timeout=180)
+    shared = None
+    if public and sheet.is_file():  # mẫu tự tạo, không riêng tư: cho một bản vào samples/ làm bằng chứng
+        (job_dir / "samples").mkdir(exist_ok=True)
+        shutil.copyfile(sheet, job_dir / "samples" / "contact_sheet.jpg")
+        shared = "samples/contact_sheet.jpg"
     meta = {"video": video.name, "video_sha256": sha256_file(video), **info,
             "method": "at" if at else ("scene+grid" if changes else "grid"),
-            "scene_changes": changes, "frames": frames,
-            "contact_sheet": "samples/contact_sheet.jpg" if sheet.is_file() else None, "extracted_at": iso()}
+            "scene_changes": changes, "frames": frames, "private": not public,
+            "contact_sheet": shared or ("frames/contact_sheet.jpg" if sheet.is_file() else None), "extracted_at": iso()}
     atomic_write_json(job_dir / "frames.json", meta)
     return meta

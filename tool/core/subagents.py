@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Callable
 
 from .identity import Directory
-from .util import ToolError, atomic_write_json, iso, mutex, parse_iso, read_json, tool_root, utc_now
+from .util import ToolError, atomic_write_json, iso, mutex, parse_iso, read_json, safe_id, tool_root, utc_now
 
 WORKER_KINDS = {"claude-subagent", "process", "session"}
 DEFAULT_LIMITS = {"max_runtime_s": 1800, "paid_usd": 0, "max_output_mb": 50}
@@ -33,10 +33,14 @@ class SubAgents:
         return int(self.dir.limits.get("max_concurrent_subagents", 2))
 
     def get(self, sub_id: str) -> dict:
-        p = self.base / f"{sub_id}.json"
+        p = self.base / f"{safe_id(sub_id, 'ID Agent con')}.json"
         if not p.is_file():
             raise ToolError(f"Không có Agent con {sub_id}")
         return read_json(p)
+
+    def is_live(self, sub_id: str) -> bool:
+        s = self.get(sub_id)
+        return s["state"] == "ACTIVE" and parse_iso(s["expires_at"]) > self.clock()
 
     def list(self, state: str | None = None) -> list[dict]:
         out = [read_json(p) for p in sorted(self.base.glob("*.json"))]
@@ -59,7 +63,17 @@ class SubAgents:
             raise ToolError(f"Loại worker '{worker}' không hợp lệ")
         if not output or not output.strip():
             raise ToolError("Agent con phải có đầu ra cần giao (output)")
+        if job_id is not None:  # mã việc được ghép vào vùng ghi: phải đúng khuôn và là việc có thật
+            from .jobs import JOB_ID_RE
+            if not isinstance(job_id, str) or not JOB_ID_RE.match(job_id) or not (self.root / "workbench" / job_id / "job.json").is_file():
+                raise ToolError(f"Không có việc {job_id!r} để giao cho Agent con")
+        for sc in write_scope or []:  # vùng ghi tự chọn phải nằm trong tool/, không ký tự đại diện
+            parts = [x for x in str(sc).split("/") if x]
+            if not parts or parts[0] != "tool" or len(parts) < 3 or any(x in (".", "..", "*") or "\\" in x for x in parts):
+                raise ToolError(f"Vùng ghi của Agent con phải là thư mục cụ thể trong tool/ (vd. tool/workbench/<mã việc>/): {sc!r}")
         lim = dict(DEFAULT_LIMITS, **(limits or {}))
+        if not isinstance(lim["max_runtime_s"], int) or not 60 <= lim["max_runtime_s"] <= 4 * 3600:
+            raise ToolError("Hạn mức thời gian của Agent con phải từ 1 phút đến 4 giờ")
         if lim["paid_usd"] != 0:
             from .budget import Budget
             Budget(self.root).require(lim["paid_usd"], f"hạn mức trả phí cho Agent con nhánh {branch}", assigned_by)

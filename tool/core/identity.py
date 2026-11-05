@@ -16,7 +16,7 @@ from pathlib import Path
 
 from crown import registry as R
 
-from .util import ToolError, read_json, tool_root
+from .util import ToolError, parse_iso, read_json, safe_id, tool_root, utc_now
 
 DEPT_ID = "TOOL"
 CHAIRMAN = "CHAIRMAN"
@@ -37,17 +37,28 @@ class Directory:
     # ---- tra cứu ----
     def _sub(self, member_id: str) -> dict | None:
         p = self.root / "agents" / "sub" / f"{member_id}.json"
-        return read_json(p) if p.is_file() else None
+        if not p.is_file():
+            return None
+        m = read_json(p)
+        if not isinstance(m, dict) or m.get("id") != member_id:  # hồ sơ phải tự khai đúng ID của tên tệp
+            raise ToolError(f"Hồ sơ Agent con '{member_id}' không khớp ID ghi bên trong — từ chối")
+        live = m.get("state") == "ACTIVE" and bool(m.get("expires_at")) and parse_iso(m["expires_at"]) > utc_now()
+        if not live:  # Agent con đã xong/hỏng/quá hạn: còn danh tính để tra cứu, hết quyền ghi
+            m = dict(m, write_scope=[], live=False)
+        return m
 
     def _web(self, member_id: str) -> dict | None:
         d = read_json(self.root / "agents" / "directory.json", default={})
         m = (d.get("members") or {}).get(member_id)
-        return dict(m, source="web-office") if isinstance(m, dict) else None
+        # Danh bạ web chỉ cấp danh tính để tìm và gọi tool; không cấp vùng ghi hay mức quyền.
+        return {"name": m.get("name", member_id), "status": m.get("status", "ACTIVE"), "tier": "READ",
+                "write_scope": [], "boss": m.get("boss") or m.get("parent")} if isinstance(m, dict) else None
 
     def resolve(self, member_id: str) -> dict:
         """Trả hồ sơ thành viên; ném ToolError nếu không có trong danh bạ hoặc bị tắt."""
         if not isinstance(member_id, str) or not member_id.strip():
             raise ToolError("Thiếu ID người gọi")
+        safe_id(member_id, "ID người gọi")
         m, source = None, None
         try:
             m, source = self.reg.member(member_id), "registry"
@@ -66,7 +77,9 @@ class Directory:
                 or member_id in self.reg.subagents else "agent")
         return {"id": member_id, "name": m.get("name", member_id), "kind": kind, "source": source,
                 "tier": m.get("tier", "READ"), "status": m.get("status", "ACTIVE"),
-                "write_scope": list(m.get("write_scope", []) or []), "memory_ns": m.get("memory_ns"),
+                "write_scope": [x for x in (m.get("write_scope") or []) if isinstance(x, str) and x.strip("/ ")],
+                "memory_ns": m.get("memory_ns"), "job_id": m.get("job_id") if source == "tool-subagent" else None,
+                "live": m.get("live", True),
                 "boss": self.boss_of(member_id, m), "auth": "danh bạ (ID tự khai, chưa có khóa riêng)"}
 
     def boss_of(self, member_id: str, m: dict | None = None) -> str | None:

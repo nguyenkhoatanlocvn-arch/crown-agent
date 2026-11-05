@@ -16,13 +16,15 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Callable
 
-from .identity import Directory
+from .identity import CHAIRMAN, Directory
 from .jobs import JobStore
-from .util import (VN_TZ, ToolError, atomic_write_json, iso, mutex, new_id, parse_iso, read_json, tool_root, utc_now)
+from .util import (VN_TZ, ToolError, atomic_write_json, iso, mutex, new_id, parse_iso, read_json, safe_id, tool_root,
+                   utc_now)
 
 DEFAULT_SCHEDULE = {"cron": "5 * * * *", "tz": "Asia/Ho_Chi_Minh", "minute": 5, "window_minutes": 20,
                     "paused": False, "max_session_minutes": 50, "trigger_id": None, "worker_trigger_id": None}
 RESULTS = {"NO_CHANGE", "RELEASED", "ROLLED_BACK", "WORKED", "NO_RELEASE", "SKIPPED_OVERLAP", "PAUSED", "ERROR"}
+TRIGGERS = {"scheduler", "manual", "web"}
 
 
 def _git(*args: str, cwd: Path | None = None, timeout: int = 120) -> subprocess.CompletedProcess:
@@ -109,7 +111,10 @@ class Scheduler:
 
     # ---------- phiên ----------
     def get(self, run_id: str) -> dict:
-        return read_json(self.sessions / f"{run_id}.json")
+        p = self.sessions / f"{safe_id(run_id, 'Mã phiên')}.json"
+        if not p.is_file():
+            raise ToolError(f"Không có phiên {run_id}")
+        return read_json(p)
 
     def _save(self, s: dict) -> dict:
         atomic_write_json(self.sessions / f"{s['run_id']}.json", s)
@@ -125,15 +130,21 @@ class Scheduler:
         self.dir.require_executive(agent, "mở phiên AT")
         now = self.clock()
         sched = self.schedule()
+        marked = bool((marker or "").strip())
         trig, basis = classify_trigger(now, sched, marker)
         if trigger:
-            trig, basis = trigger, f"chỉ định: {trigger}"
+            if trigger not in TRIGGERS:
+                raise ToolError(f"--trigger phải là một trong: {', '.join(sorted(TRIGGERS))}")
+            if trigger != "scheduler" and not marked:
+                raise ToolError("Lượt chạy tay hoặc từ web phải kèm --marker ghi rõ ai/cái gì kích hoạt")
+            trig, basis = trigger, f"chỉ định: {trigger}" + (f" · {marker.strip()[:80]}" if marked else "")
         s = {"run_id": new_id("AT", now, "%Y%m%d-%H%M"), "agent": agent, "trigger": trig, "trigger_basis": basis,
              "started_at": iso(now), "finished_at": None, "result": None, "plan": None, "releases": [],
              "notes": [], "github": None}
         with mutex(self.lock_path):
             lock = read_json(self.lock_path, default={"state": "FREE"})
-            if trig == "scheduler" and sched.get("paused"):
+            # Tạm dừng chặn MỌI phiên không có dấu chạy tay/web — kể cả phiên bắt đầu trễ ngoài khung phút của lịch.
+            if sched.get("paused") and (trig == "scheduler" or not marked):
                 s.update(result="PAUSED", finished_at=iso(now), notes=["Lịch đang tạm dừng — phiên kết thúc ngay"])
                 return self._save(s)
             if lock.get("state") == "HELD" and parse_iso(lock["expires_at"]) > now:
@@ -171,20 +182,47 @@ class Scheduler:
             s["notes"].append(text)
             return self._save(s)
 
-    def register_release(self, run_id: str, tool_id: str, version: str, smoke: str) -> dict:
+    def reserve_release(self, run_id: str, actor: str, tool_id: str, version: str) -> dict:
+        """Giữ một suất phát hành tự động của phiên TRƯỚC khi phát hành. Gọi bởi Catalog.publish(auto=True).
+
+        Hạn mức được đếm ngay tại đây, dưới khóa phiên: phát hành tự động không thể vượt hạn mức bằng cách
+        "quên" ghi sổ. Phiên phải đang sống (chưa kết thúc, còn giữ khóa) và người phát hành là chủ phiên.
+        """
         with mutex(self.lock_path):
             s = self._mine(run_id)
+            if s["agent"] != actor:
+                raise ToolError(f"Phiên {run_id} là của {s['agent']} — {actor} không phát hành tự động trong phiên này")
             cap = int(self.dir.limits.get("max_auto_releases_per_session", 1))
             if len(s["releases"]) >= cap:
-                raise ToolError(f"Phiên {run_id} đã có {cap} bản phát hành tự động — hết hạn mức của phiên")
-            s["releases"].append({"tool": tool_id, "version": version, "smoke": smoke, "at": iso(self.clock())})
+                raise ToolError(f"Phiên {run_id} đã phát hành tự động {cap} bản — hết hạn mức của phiên")
+            s["releases"].append({"tool": tool_id, "version": version, "smoke": None, "at": iso(self.clock())})
             return self._save(s)
 
-    def end(self, run_id: str, result: str, note: str = "") -> dict:
+    def cancel_release(self, run_id: str, tool_id: str, version: str) -> None:
+        """Trả lại suất khi bản phát hành không thành (không qua cổng kiểm thử, bị bên khác giành trước...)."""
+        with mutex(self.lock_path):
+            s = self.get(run_id)
+            s["releases"] = [r for r in s["releases"] if not (r["tool"] == tool_id and r["version"] == version
+                                                              and r.get("smoke") is None)]
+            self._save(s)
+
+    def register_release(self, run_id: str, tool_id: str, version: str, smoke: str) -> dict:
+        """Ghi kết quả gọi thử từ kho chung cho bản đã phát hành trong phiên (suất do publish giữ sẵn)."""
+        with mutex(self.lock_path):
+            s = self._mine(run_id)
+            rel = next((r for r in s["releases"] if r["tool"] == tool_id and r["version"] == version), None)
+            if rel is None:
+                raise ToolError(f"Phiên {run_id} chưa phát hành {tool_id}@{version} — không có gì để ghi kết quả gọi thử")
+            rel.update(smoke=smoke, smoke_at=iso(self.clock()))
+            return self._save(s)
+
+    def end(self, run_id: str, result: str, note: str = "", agent: str | None = None) -> dict:
         if result not in RESULTS:
             raise ToolError(f"Kết quả phiên phải là một trong: {', '.join(sorted(RESULTS))}")
         with mutex(self.lock_path):
             s = self.get(run_id)
+            if agent != CHAIRMAN and agent != s["agent"]:  # chỉ chủ phiên (hoặc Chủ tịch) đóng phiên và nhả khóa
+                raise ToolError(f"Phiên {run_id} là của {s['agent']} — {agent or '(không nêu tên)'} không được kết thúc phiên này")
             if s["result"] is not None:
                 raise ToolError(f"Phiên {run_id} đã kết thúc ({s['result']})")
             if result == "RELEASED" and not s["releases"]:
@@ -233,10 +271,14 @@ class Scheduler:
         p = self.root / "runs" / "watch_state.json"
         with mutex(p):
             st = read_json(p, default={"sources": {}, "processed": []})
+            src = st["sources"].get(source_id)
+            if src is None:
+                raise ToolError(f"Không có nguồn '{source_id}' trong sổ theo dõi GitHub")
             if key not in st["processed"]:
                 st["processed"].append(key)
-            src = st["sources"].setdefault(source_id, {})
-            if src.get("pending"):
+            # Chỉ chốt đúng thay đổi vừa xử lý. Nếu nguồn đã đổi tiếp (pending mới hơn), giữ lại để phiên sau xét.
+            pend = src.get("pending")
+            if pend and hashlib.sha256(f"{source_id}|{pend}".encode()).hexdigest()[:16] == key:
                 src["fingerprint"] = src.pop("pending")
             src.update(last_outcome=outcome, last_note=note, last_at=iso(self.clock()))
             atomic_write_json(p, st)

@@ -3848,6 +3848,181 @@
      ]
     }
    }
+  },
+  {
+   "name": "kt-21-g16-chu-so-khong-phai-ascii-khong-la-dong-so",
+   "inputs": {
+    "input": "tests/data_kt/kt21_g16_chu_so_khong_phai_ascii.srt"
+   },
+   "expect": {
+    "exit_code": 0,
+    "files": {
+     "kt21_g16_chu_so_khong_phai_ascii.srt": "tests/data_kt/kt21_g16_chu_so_khong_phai_ascii.expected.srt"
+    },
+    "report": {
+     "ok": true,
+     "cues": 2,
+     "changed": 2,
+     "inserted": 0,
+     "ignored_timecodes": 3,
+     "mapping": [
+      [
+       "5",
+       1
+      ],
+      [
+       "9",
+       2
+      ]
+     ]
+    }
+   }
+  },
+  {
+   "name": "kt-22-g17-vi-tri-dinh-lien-gio-ket-thuc-khong-la-timecode",
+   "inputs": {
+    "input": "tests/data_kt/kt22_g17_vi_tri_dinh_lien.srt"
+   },
+   "expect": {
+    "exit_code": 0,
+    "files": {
+     "kt22_g17_vi_tri_dinh_lien.srt": "tests/data_kt/kt22_g17_vi_tri_dinh_lien.expected.srt"
+    },
+    "report": {
+     "ok": true,
+     "cues": 2,
+     "changed": 2,
+     "inserted": 0,
+     "ignored_timecodes": 0,
+     "mapping": [
+      [
+       "4",
+       1
+      ],
+      [
+       "8",
+       2
+      ]
+     ]
+    }
+   }
+  },
+  {
+   "name": "kt-23-g20-duoi-SRT-viet-hoa-giu-nguyen-ten",
+   "inputs": {
+    "input": "tests/data_kt/KT23_DUOI_VIET_HOA.SRT"
+   },
+   "expect": {
+    "exit_code": 0,
+    "files": {
+     "KT23_DUOI_VIET_HOA.SRT": "tests/data_kt/kt23_duoi_viet_hoa.expected.srt"
+    },
+    "report": {
+     "ok": true,
+     "cues": 2,
+     "changed": 2,
+     "inserted": 0,
+     "ignored_timecodes": 0,
+     "mapping": [
+      [
+       "6",
+       1
+      ],
+      [
+       "6",
+       2
+      ]
+     ]
+    }
+   }
+  },
+  {
+   "name": "kt-24-g12-timecode-ngay-sau-timecode-khac",
+   "inputs": {
+    "input": "tests/data_kt/kt24_g12_timecode_sau_timecode.srt"
+   },
+   "expect": {
+    "exit_code": 0,
+    "files": {
+     "kt24_g12_timecode_sau_timecode.srt": "tests/data_kt/kt24_g12_timecode_sau_timecode.expected.srt"
+    },
+    "report": {
+     "ok": true,
+     "cues": 2,
+     "changed": 2,
+     "inserted": 0,
+     "ignored_timecodes": 1,
+     "mapping": [
+      [
+       "3",
+       1
+      ],
+      [
+       "8",
+       2
+      ]
+     ]
+    }
+   }
+  },
+  {
+   "name": "kt-25-g14-khoang-trang-unicode",
+   "inputs": {
+    "input": "tests/data_kt/kt25_g14_khoang_trang_unicode.srt"
+   },
+   "expect": {
+    "exit_code": 0,
+    "files": {
+     "kt25_g14_khoang_trang_unicode.srt": "tests/data_kt/kt25_g14_khoang_trang_unicode.expected.srt"
+    },
+    "report": {
+     "ok": true,
+     "cues": 3,
+     "changed": 2,
+     "inserted": 1,
+     "ignored_timecodes": 0,
+     "mapping": [
+      [
+       "7",
+       1
+      ],
+      [
+       null,
+       2
+      ],
+      [
+       "9",
+       3
+      ]
+     ]
+    }
+   }
+  },
+  {
+   "name": "kt-26-g19-start-1.0-bi-tu-choi",
+   "inputs": {
+    "input": "tests/data_kt/kt26_g19_start_khong_phai_so_nguyen_json.srt"
+   },
+   "params": {
+    "start": 1.0
+   },
+   "expect": {
+    "exit_code": 2,
+    "no_output": true
+   }
+  },
+  {
+   "name": "kt-27-g19-start-null-bi-tu-choi",
+   "inputs": {
+    "input": "tests/data_kt/kt26_g19_start_khong_phai_so_nguyen_json.srt"
+   },
+   "params": {
+    "start": null
+   },
+   "expect": {
+    "exit_code": 2,
+    "no_output": true
+   }
   }
  ]
 }

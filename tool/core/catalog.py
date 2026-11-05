@@ -13,14 +13,16 @@ from __future__ import annotations
 import os
 import re
 import shutil
+import time
 from datetime import datetime
 from pathlib import Path
 from typing import Callable
 
 from . import sandbox
+from .access import secret_reason
 from .budget import Budget
 from .identity import Directory
-from .util import (ToolError, atomic_write_json, fold, iso, mutex, read_json, sha256_file, tool_root, utc_now)
+from .util import (ToolError, atomic_write_json, fold, iso, mutex, read_json, sha256_file, tool_root, tree_digest, utc_now)
 
 CATEGORIES = {
     "video-image": "Video & ảnh",
@@ -32,6 +34,7 @@ CATEGORIES = {
 ID_RE = re.compile(r"^[a-z][a-z0-9]*(-[a-z0-9]+)*$")
 VER_RE = re.compile(r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$")
 RUNTIMES = {"python"}
+CLAIM_STALE_S = 600  # dấu giành quyền phát hành cũ hơn mức này mà chưa thành bản phát hành = tiến trình đã chết giữa chừng
 
 
 def ver_key(v: str) -> tuple[int, int, int]:
@@ -104,6 +107,19 @@ def validate_manifest(m: dict, tool_dir: Path | None = None) -> list[str]:
         links = sandbox.symlinks_in(Path(tool_dir))
         if links:
             e.append("thư mục tool không được có liên kết tượng trưng: " + ", ".join(links[:5]))
+    if tool_dir is not None:  # kho là vùng dùng chung: tệp giống bí mật không được theo bản dựng vào kho
+        for f in sorted(x for x in Path(tool_dir).rglob("*") if x.is_file() and "__pycache__" not in x.parts):
+            why = secret_reason(f.relative_to(tool_dir))
+            if why:
+                e.append(f"bản dựng có tệp giống bí mật: {f.relative_to(tool_dir).as_posix()} ({why})")
+    lim = m.get("limits", {})
+    if not isinstance(lim, dict):
+        e.append("limits phải là object")
+    else:
+        for k, cap in sandbox.LIMIT_CAPS.items():
+            v = lim.get(k)
+            if v is not None and (isinstance(v, bool) or not isinstance(v, int) or not 1 <= v <= cap):
+                e.append(f"limits.{k} phải là số nguyên từ 1 đến {cap}")
     return e
 
 
@@ -158,6 +174,10 @@ class Catalog:
     def verify_integrity(self, tool_id: str, version: str) -> None:
         d = self.version_dir(tool_id, version)
         rel = read_json(d / "RELEASE.json")
+        # RELEASE.json tự nó cũng được chốt băm trong hồ sơ tool: sửa mã rồi sửa luôn bảng băm vẫn bị phát hiện.
+        info = next((v for v in self.tool(tool_id)["versions"] if v["version"] == version), {})
+        if info.get("release_sha256") and info["release_sha256"] != sha256_file(d / "RELEASE.json"):
+            raise ToolError(f"{tool_id}@{version}: RELEASE.json đã bị sửa sau khi phát hành — từ chối chạy")
         now = _files(d)
         if now != rel["files"]:
             changed = sorted(set(now.items()) ^ set(rel["files"].items()))
@@ -194,8 +214,49 @@ class Catalog:
         return out
 
     # ---------- phát hành ----------
-    def publish(self, build_dir: Path, actor: str, *, job: dict | None = None, session: dict | None = None,
-                auto: bool = False) -> dict:
+    def _gate(self, build_dir: Path, actor: str, job_id: str | None, token: int | None) -> dict:
+        """Cổng việc: phát hành luôn thuộc một việc ĐANG CHẠY do chính người phát hành giữ quyền ghi.
+
+        Không có đường phát hành ngoài sổ việc: không việc → không có kiểm thử độc lập → không phát hành.
+        """
+        from .jobs import JobStore
+        if not job_id or token is None:
+            raise ToolError("Phát hành phải kèm mã việc và fencing token (--job, --token): tool chỉ vào kho qua sổ việc")
+        jobs = JobStore(self.root, self.dir, self.clock)
+        job = jobs.get(job_id)
+        jobs._held(job, actor, token)  # việc đang RUNNING, đúng người giữ, đúng token, lease còn hạn
+        steps = {s["id"]: s for s in job["steps"]}
+        if steps["test"]["status"] != "DONE":
+            raise ToolError("Chưa có bước kiểm thử độc lập đạt — không phát hành")
+        if not steps["test"]["sub"] or not steps["build"]["sub"] or steps["test"]["sub"] == steps["build"]["sub"]:
+            raise ToolError("Người kiểm thử trùng người viết mã (hoặc thiếu tên) — không phát hành")
+        if steps["publish"]["status"] != "RUNNING" or steps["publish"]["by"] != actor:
+            raise ToolError(f"Bước publish của {job_id} chưa được {actor} bắt đầu (job start {job_id} publish ...)")
+        if Path(build_dir).resolve() != (jobs.job_dir(job_id) / "build").resolve():
+            raise ToolError(f"Chỉ phát hành bản dựng của chính việc này: tool/workbench/{job_id}/build/")
+        if steps["test"].get("build_digest") != tree_digest(Path(build_dir)):
+            raise ToolError("Bản dựng đã thay đổi sau khi kiểm thử độc lập — phải kiểm thử lại trước khi phát hành")
+        return job
+
+    def _stale_claim(self, tdir: Path, version: str, claim: Path) -> bool:
+        """Dấu giành quyền bị bỏ lại bởi một lần phát hành chết giữa chừng? Nếu đúng: dọn để thử lại được."""
+        with mutex(tdir / "tool.json"):
+            t = read_json(tdir / "tool.json", default={"versions": []})
+            if any(v["version"] == version for v in t["versions"]):
+                return False  # đã phát hành thật
+            try:
+                age = time.time() - claim.stat().st_mtime
+            except OSError:
+                return True
+            if age < CLAIM_STALE_S:
+                return False  # có thể bên kia đang phát hành ngay lúc này
+            shutil.rmtree(tdir / f".stage-{version}", ignore_errors=True)
+            shutil.rmtree(tdir / version, ignore_errors=True)  # thư mục phiên bản chưa kịp vào hồ sơ tool
+            claim.unlink(missing_ok=True)
+            return True
+
+    def publish(self, build_dir: Path, actor: str, *, job_id: str | None = None, token: int | None = None,
+                session_id: str | None = None, auto: bool = False) -> dict:
         """Phát hành một bản dựng vào kho chung. Tự chạy lại toàn bộ ca thử, không tin báo cáo có sẵn."""
         self.dir.require_executive(actor, "phát hành tool")
         build_dir = Path(build_dir)
@@ -207,19 +268,30 @@ class Catalog:
         if errs:
             raise ToolError("Manifest không hợp lệ:\n- " + "\n- ".join(errs))
         tool_id, version = m["id"], m["version"]
-        Budget(self.root).require(float(m.get("cost_usd_per_run", 0)), f"tool {tool_id} tính phí mỗi lượt", actor)
-        if job is not None:
-            steps = {s["id"]: s for s in job["steps"]}
-            if steps["test"]["status"] != "DONE":
-                raise ToolError("Chưa có bước kiểm thử độc lập đạt — không phát hành")
-            if steps["test"]["sub"] == steps["build"]["sub"]:
-                raise ToolError("Người kiểm thử trùng người viết mã — không phát hành")
+        cost = float(m.get("cost_usd_per_run", 0))
+        Budget(self.root).require(cost, f"tool {tool_id} tính phí mỗi lượt", actor)
+        job = self._gate(build_dir, actor, job_id, token)
+        sched = None
+        if auto or session_id:
+            from .scheduler import Scheduler
+            sched = Scheduler(self.root, self.dir, self.clock)
         if auto:
-            if session is None:
+            if session_id is None:
                 raise ToolError("Phát hành tự động phải thuộc một phiên AT")
-            cap = int(self.dir.limits.get("max_auto_releases_per_session", 1))
-            if len(session.get("releases", [])) >= cap:
-                raise ToolError(f"Phiên {session['run_id']} đã phát hành tự động {cap} bản — hết hạn mức của phiên")
+            if cost > 0:
+                raise ToolError("Tool tính phí không phát hành tự động — cần Chủ tịch có mặt")
+            sched.reserve_release(session_id, actor, tool_id, version)  # đếm hạn mức phiên NGAY, dưới khóa phiên
+        elif session_id:
+            sched.get(session_id)
+        try:
+            return self._publish(build_dir, m, actor, job, session_id, auto)
+        except BaseException:
+            if auto:
+                sched.cancel_release(session_id, tool_id, version)
+            raise
+
+    def _publish(self, build_dir: Path, m: dict, actor: str, job: dict, session_id: str | None, auto: bool) -> dict:
+        tool_id, version = m["id"], m["version"]
         test = sandbox.run_cases(build_dir, m)
         if not test["ok"]:
             bad = test["lint"] + [f"ca '{c['name']}': {c['detail']}" for c in test["cases"] if not c["ok"]]
@@ -228,15 +300,20 @@ class Catalog:
         tdir = self.base / tool_id
         tdir.mkdir(parents=True, exist_ok=True)
         claim = tdir / f".claim-{version}"
-        try:  # giành quyền phát hành phiên bản này: nguyên tử, đúng một bên thắng
-            fd = os.open(claim, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o644)
-            os.write(fd, f"{actor} {iso(self.clock())}\n".encode())
-            os.close(fd)
-        except FileExistsError:
-            who = claim.read_text(encoding="utf-8").strip() if claim.exists() else "?"
-            raise ToolError(f"{tool_id}@{version} đã được phát hành hoặc đang được phát hành bởi: {who} "
-                            f"— không phát hành trùng. Dùng số phiên bản mới.") from None
+        for attempt in (1, 2):
+            try:  # giành quyền phát hành phiên bản này: nguyên tử, đúng một bên thắng
+                fd = os.open(claim, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o644)
+                os.write(fd, f"{actor} {iso(self.clock())}\n".encode())
+                os.close(fd)
+                break
+            except FileExistsError:
+                if attempt == 1 and self._stale_claim(tdir, version, claim):
+                    continue
+                who = claim.read_text(encoding="utf-8").strip() if claim.exists() else "?"
+                raise ToolError(f"{tool_id}@{version} đã được phát hành hoặc đang được phát hành bởi: {who} "
+                                f"— không phát hành trùng. Dùng số phiên bản mới.") from None
         vdir = self.version_dir(tool_id, version)
+        steps = {s["id"]: s for s in job["steps"]}
         try:
             if vdir.exists():
                 raise ToolError(f"{tool_id}@{version} đã có trong kho")
@@ -247,12 +324,11 @@ class Catalog:
                             ignore=shutil.ignore_patterns("__pycache__", "*.pyc", "RELEASE.json", ".git"))
             release = {
                 "tool_id": tool_id, "version": version, "published_by": actor, "auto": auto,
-                "published_at": iso(self.clock()), "job_id": job["job_id"] if job else None,
-                "session": session["run_id"] if session else None,
+                "published_at": iso(self.clock()), "job_id": job["job_id"], "session": session_id,
                 "test": {"ok": True, "cases": [{"name": c["name"], "ok": c["ok"]} for c in test["cases"]],
                          "isolation": test["isolation"]},
-                "builder": next((s["sub"] for s in (job or {}).get("steps", []) if s["id"] == "build"), None),
-                "tester": next((s["sub"] for s in (job or {}).get("steps", []) if s["id"] == "test"), None),
+                "builder": steps["build"]["sub"], "tester": steps["test"]["sub"],
+                "build_digest": steps["test"].get("build_digest"),
                 "files": _files(stage),
             }
             atomic_write_json(stage / "RELEASE.json", release)
@@ -266,41 +342,60 @@ class Catalog:
             prev = t.get("current_version")
             t.update(name=m["name"], category=m["category"], summary=m["summary"], keywords=m["keywords"])
             t["versions"].append({"version": version, "status": "GOOD", "published_by": actor,
-                                  "published_at": release["published_at"], "auto": auto, "note": ""})
+                                  "published_at": release["published_at"], "auto": auto, "note": "",
+                                  "release_sha256": sha256_file(vdir / "RELEASE.json")})
             if prev is None or ver_key(version) > ver_key(prev):
                 t["current_version"] = version
             t["history"].append({"at": release["published_at"], "actor": actor, "action": "publish",
                                  "version": version, "from": prev, "to": t["current_version"],
-                                 "note": f"việc {release['job_id']}" if release["job_id"] else ""})
+                                 "note": f"việc {release['job_id']}"})
             atomic_write_json(tdir / "tool.json", t)
         return release
 
     # ---------- khôi phục ----------
-    def rollback(self, tool_id: str, actor: str, reason: str, to_version: str | None = None) -> dict:
-        """Thu hồi phiên bản hiện hành và quay về bản tốt trước đó (hoặc bản chỉ định). Không xóa tệp."""
+    def rollback(self, tool_id: str, actor: str, reason: str, to_version: str | None = None,
+                 version: str | None = None) -> dict:
+        """Thu hồi một phiên bản (mặc định: bản hiện hành) và, nếu đó là bản hiện hành, quay về bản tốt. Không xóa tệp.
+
+        version: bản cần thu hồi. Thu hồi một bản KHÔNG phải bản hiện hành thì bản hiện hành giữ nguyên.
+        to_version: bản tốt muốn quay về (chỉ dùng khi thu hồi bản hiện hành).
+        """
         self.dir.require_executive(actor, "khôi phục phiên bản tool")
         if not reason or not reason.strip():
             raise ToolError("Khôi phục phải ghi lý do")
+        if not isinstance(tool_id, str) or not ID_RE.match(tool_id):
+            raise ToolError(f"Kho không có tool '{str(tool_id)[:60]}'")
+        for v in (version, to_version):
+            if v is not None and not VER_RE.match(str(v)):
+                raise ToolError(f"Phiên bản không hợp lệ: {v!r}")
         tdir = self.base / tool_id
+        if not (tdir / "tool.json").is_file():
+            raise ToolError(f"Kho không có tool '{tool_id}'")
         with mutex(tdir / "tool.json"):
             t = self.tool(tool_id)
             cur = t.get("current_version")
-            if cur is None:
+            bad = version or cur
+            if bad is None:
                 raise ToolError(f"{tool_id} không có phiên bản hiện hành để thu hồi")
-            good = sorted((v["version"] for v in t["versions"] if v["status"] == "GOOD" and v["version"] != cur),
+            info = next((v for v in t["versions"] if v["version"] == bad), None)
+            if info is None or info["status"] != "GOOD":
+                raise ToolError(f"{tool_id}@{bad} không phải bản đang gọi được — không có gì để thu hồi")
+            good = sorted((v["version"] for v in t["versions"] if v["status"] == "GOOD" and v["version"] != bad),
                           key=ver_key)
-            if to_version is not None:
+            if bad != cur:
+                if to_version is not None:
+                    raise ToolError("--to chỉ dùng khi thu hồi bản hiện hành")
+                target = cur
+            elif to_version is not None:
                 if to_version not in good:
                     raise ToolError(f"{tool_id}@{to_version} không phải bản tốt để quay về (bản tốt: {', '.join(good) or 'không có'})")
                 target = to_version
-            else:
-                older = [v for v in good if ver_key(v) < ver_key(cur)]
-                target = older[-1] if older else None
-            for v in t["versions"]:
-                if v["version"] == cur:
-                    v.update(status="WITHDRAWN", note=reason.strip(), withdrawn_at=iso(self.clock()), withdrawn_by=actor)
+            else:  # bản tốt gần nhất phía dưới; không có thì bản tốt cao nhất còn lại
+                older = [v for v in good if ver_key(v) < ver_key(bad)]
+                target = older[-1] if older else (good[-1] if good else None)
+            info.update(status="WITHDRAWN", note=reason.strip(), withdrawn_at=iso(self.clock()), withdrawn_by=actor)
             t["current_version"] = target
-            t["history"].append({"at": iso(self.clock()), "actor": actor, "action": "rollback", "version": cur,
+            t["history"].append({"at": iso(self.clock()), "actor": actor, "action": "rollback", "version": bad,
                                  "from": cur, "to": target, "note": reason.strip()})
             atomic_write_json(tdir / "tool.json", t)
-            return {"tool_id": tool_id, "withdrawn": cur, "current_version": target}
+            return {"tool_id": tool_id, "withdrawn": bad, "current_version": target}

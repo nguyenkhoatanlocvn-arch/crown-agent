@@ -7,6 +7,7 @@ TOOL chỉ dùng dịch vụ tính phí khi đã có khoản được duyệt gh
 from __future__ import annotations
 
 import copy
+import re
 from pathlib import Path
 
 from .util import ToolError, atomic_write_json, iso, mutex, read_json, tool_root
@@ -46,15 +47,26 @@ class Budget:
             raise ToolError(f"Vượt hạn mức CFO: '{what}' cần {cost:g} USD, còn {rem:g} USD đã duyệt. "
                             f"Tạo đề xuất chi_them trên Kho Báu để Chủ tịch duyệt ({actor} không tự chi).")
 
-    def approve(self, amount: float, what: str, approval_ref: str) -> dict:
-        """Ghi một khoản ĐÃ được Chủ tịch duyệt trên Kho Báu (mã đề xuất bắt buộc)."""
-        if amount <= 0 or not approval_ref.strip():
-            raise ToolError("Khoản duyệt phải > 0 và có mã đề xuất đã duyệt trên Kho Báu")
+    def approve(self, amount: float, what: str, approval_ref: str, actor: str) -> dict:
+        """Ghi một khoản ĐÃ được Chủ tịch duyệt trên Kho Báu (mã đề xuất bắt buộc). Chỉ Chủ tịch ghi.
+
+        Giới hạn đã biết: ID là tự khai, nên đây là hàng rào chống tự duyệt nhầm và là dấu vết kiểm tra,
+        không phải chữ ký. Khoản duyệt hiện trên web (tab Agent & lịch) để Chủ tịch đối chiếu với Kho Báu.
+        """
+        if actor != "CHAIRMAN":
+            raise ToolError(f"Chỉ Chủ tịch ghi khoản duyệt chi — {actor or '(không nêu tên)'} bị từ chối (Agent không tự duyệt ngân sách)")
+        if isinstance(amount, bool) or not isinstance(amount, (int, float)) or not 0 < amount <= 10_000:
+            raise ToolError("Khoản duyệt phải là số > 0 (và không quá 10.000 USD một khoản)")
+        ref = (approval_ref or "").strip()
+        if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._/-]{3,63}", ref):
+            raise ToolError("Thiếu mã đề xuất đã duyệt trên Kho Báu (4–64 ký tự chữ/số, vd. KHO-DX-001)")
+        if not (what or "").strip():
+            raise ToolError("Khoản duyệt phải ghi rõ chi cho việc gì")
         with mutex(self.path):
             b = self.load()
-            if any(a["approval_ref"] == approval_ref for a in b["approved"]):
+            if any(a["approval_ref"] == ref for a in b["approved"]):
                 return b
-            b["approved"].append({"amount": amount, "what": what, "approval_ref": approval_ref, "at": iso()})
+            b["approved"].append({"amount": amount, "what": what.strip(), "approval_ref": ref, "by": actor, "at": iso()})
             b["updated_at"] = iso()
             atomic_write_json(self.path, b)
             return b

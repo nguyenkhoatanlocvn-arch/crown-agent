@@ -4,6 +4,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import secrets
 import time
 import unicodedata
@@ -19,6 +20,18 @@ DATA_DIRS = ("inbox", "workbench", "catalog", "skills", "agents", "runs")
 
 class ToolError(Exception):
     """Thao tác TOOL bị từ chối vì vi phạm luật (quyền, khóa, trạng thái, hạn mức)."""
+
+
+# Mọi mã định danh (người gọi, Agent con, tin, phiên, skill) đều được ghép vào đường dẫn tệp ở đâu đó,
+# nên phải qua một khuôn duy nhất: chữ, số, gạch nối, gạch dưới, chấm; không '/', '\\', '..', không bắt đầu bằng chấm.
+SAFE_ID_RE = re.compile(r"^[A-Za-z0-9](?:[A-Za-z0-9_.-]{0,62}[A-Za-z0-9])?$")
+
+
+def safe_id(value, what: str = "mã") -> str:
+    """Trả lại `value` nếu dùng được làm một đoạn tên tệp; ngược lại ném ToolError."""
+    if not isinstance(value, str) or not SAFE_ID_RE.match(value) or ".." in value:
+        raise ToolError(f"{what} không hợp lệ: {str(value)[:60]!r} (chỉ chữ, số, '-', '_', '.'; không có '/' hay '..')")
+    return value
 
 
 def tool_root() -> Path:
@@ -59,6 +72,14 @@ def sha256_file(path: Path) -> str:
     with open(path, "rb") as f:
         for chunk in iter(lambda: f.read(1 << 20), b""):
             h.update(chunk)
+    return h.hexdigest()
+
+
+def tree_digest(d: Path) -> str:
+    """Một băm cho cả thư mục (tên tệp + nội dung), bỏ __pycache__. Dùng để chốt đúng bản dựng đã được kiểm thử."""
+    h = hashlib.sha256()
+    for f in sorted(x for x in Path(d).rglob("*") if x.is_file() and "__pycache__" not in x.parts):
+        h.update(f.relative_to(d).as_posix().encode("utf-8") + b"\0" + sha256_file(f).encode("ascii") + b"\n")
     return h.hexdigest()
 
 

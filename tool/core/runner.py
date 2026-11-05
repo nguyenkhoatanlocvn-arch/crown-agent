@@ -97,6 +97,12 @@ class Runner:
             elif r["exit_code"] != 0:
                 rec.update(status="ERROR", error=(r["stderr_tail"].strip() or f"mã thoát {r['exit_code']}")[-600:])
             else:
+                if dest is not None:  # xét quyền với TỪNG tệp kết quả (tên tệp do tool đặt) trước khi ghi bất kỳ tệp nào
+                    for relname in r["outputs"]:
+                        dec = self.access.decide(caller, dest / relname, "write", run_dir=run_dir)
+                        if not dec["allow"]:
+                            rec["access"].append(dec)
+                            raise AccessDenied(f"TỪ CHỐI: {caller} không được ghi {dec['path']} — {dec['rule']}")
                 keep = run_dir / "out"
                 keep.mkdir(parents=True, exist_ok=True)
                 for relname, src in r["outputs"].items():

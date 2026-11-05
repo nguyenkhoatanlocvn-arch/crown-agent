@@ -18,7 +18,7 @@ from typing import Callable
 
 from .identity import CHAIRMAN, Directory
 from .util import (ToolError, append_jsonl, atomic_write_json, iso, mutex, new_id, parse_iso, read_json,
-                   read_jsonl, tool_root, utc_now)
+                   read_jsonl, tool_root, tree_digest, utc_now)
 
 PIPELINE: list[tuple[str, str, str]] = [
     # (mã bước, nhánh chịu trách nhiệm, việc)
@@ -57,8 +57,8 @@ class JobStore:
 
     # ---------- đường dẫn & đọc ----------
     def job_dir(self, job_id: str) -> Path:
-        if not job_id or "/" in job_id or "\\" in job_id or job_id.startswith("."):
-            raise ToolError(f"Mã việc không hợp lệ: {job_id!r}")
+        if not isinstance(job_id, str) or not JOB_ID_RE.match(job_id):
+            raise ToolError(f"Mã việc không hợp lệ: {str(job_id)[:60]!r} (dạng TJ-YYYYMMDD-xxxxxx)")
         return self.wb / job_id
 
     def _path(self, job_id: str) -> Path:
@@ -219,6 +219,26 @@ class JobStore:
             if sub == builder:
                 raise ToolError(f"{sub} đã viết mã ở bước build — kiểm thử phải do Agent con khác làm")
 
+    def _check_sub(self, job: dict, step_id: str, sub: str) -> None:
+        """Agent con ghi ở một bước phải là Agent con THẬT của TOOL: có hồ sơ, đang chạy, được giao đúng việc này,
+        và (với build/test) thuộc đúng nhánh của bước. Nhờ đó "người kiểm thử khác người viết" không thể lách bằng
+        cách gõ cùng một Agent con dưới tên khác."""
+        who = self.dir.resolve(sub)
+        if step_id not in ("build", "test"):
+            return
+        if who["source"] != "tool-subagent":
+            raise ToolError(f"Bước {step_id} phải do một Agent con của TOOL làm — {sub} không phải Agent con của TOOL")
+        from .subagents import SubAgents
+        subs = SubAgents(self.root, self.dir, self.clock)
+        rec = subs.get(sub)
+        if not subs.is_live(sub):
+            raise ToolError(f"Agent con {sub} đã xong hoặc quá hạn — tạo Agent con mới cho bước {step_id}")
+        if rec.get("job_id") != job["job_id"]:
+            raise ToolError(f"Agent con {sub} được giao việc {rec.get('job_id')}, không phải {job['job_id']}")
+        branch = next(br for sid, br, _ in PIPELINE if sid == step_id)
+        if rec.get("branch") != branch:
+            raise ToolError(f"Bước {step_id} thuộc nhánh '{branch}' — {sub} thuộc nhánh '{rec.get('branch')}'")
+
     def step_start(self, job_id: str, step_id: str, actor: str, token: int, sub: str | None = None) -> dict:
         with mutex(self._path(job_id)):
             job = self.get(job_id)
@@ -230,9 +250,9 @@ class JobStore:
                 raise ToolError(f"Bước {step_id} đang chạy")
             if nxt["attempts"] >= MAX_ATTEMPTS:
                 raise ToolError(f"Bước {step_id} đã thử {nxt['attempts']} lần — cần Chủ tịch hoặc Agent điều hành quyết")
-            if sub:
-                self.dir.resolve(sub)
             self._independence(job, step_id, sub)
+            if sub:
+                self._check_sub(job, step_id, sub)
             nxt.update(status="RUNNING", attempts=nxt["attempts"] + 1, by=actor, sub=sub,
                        started_at=iso(self.clock()), note="")
             self._save(job)
@@ -263,6 +283,11 @@ class JobStore:
                 if not ev:
                     raise ToolError(f"Bước {step_id} xong phải có bằng chứng (đường dẫn tệp hoặc kết quả đo)")
                 self._independence(job, step_id, s["sub"])
+                if step_id == "test":  # chốt đúng bản dựng đã được kiểm: phát hành sẽ đối chiếu băm này
+                    build = self.job_dir(job_id) / "build"
+                    if not (build / "manifest.json").is_file():
+                        raise ToolError(f"Không thấy bản dựng đã kiểm tại workbench/{job_id}/build/")
+                    s["build_digest"] = tree_digest(build)
                 s.update(status="DONE", evidence=ev, note=note.strip(), finished_at=iso(self.clock()))
             self._save(job)
             self._event(job, actor, "step_skip" if skipped else "step_done",
@@ -287,6 +312,12 @@ class JobStore:
         bad = set(fields) - allowed
         if bad:
             raise ToolError(f"Không được sửa trường: {', '.join(sorted(bad))}")
+        if fields.get("tool_id") is not None or fields.get("version") is not None:
+            from .catalog import ID_RE, VER_RE
+            if fields.get("tool_id") is not None and not ID_RE.match(str(fields["tool_id"])):
+                raise ToolError(f"Mã tool không hợp lệ: {fields['tool_id']!r}")
+            if fields.get("version") is not None and not VER_RE.match(str(fields["version"])):
+                raise ToolError(f"Phiên bản không hợp lệ: {fields['version']!r}")
         with mutex(self._path(job_id)):
             job = self.get(job_id)
             self._held(job, actor, token)
@@ -320,6 +351,12 @@ class JobStore:
                     raise ToolError(f"Chưa xong các bước: {', '.join(todo)}")
                 if not job.get("tool_id") or not job.get("version"):
                     raise ToolError("VERIFIED_DONE cần mã tool và phiên bản đã phát hành")
+                from .catalog import Catalog  # việc chỉ xong khi kho chung THẬT SỰ có bản do chính việc này phát hành
+                cat = Catalog(self.root, self.dir, self.clock)
+                tid, ver = cat.resolve(f"{job['tool_id']}@{job['version']}")
+                rel = read_json(cat.version_dir(tid, ver) / "RELEASE.json")
+                if rel.get("job_id") != job_id:
+                    raise ToolError(f"{tid}@{ver} trong kho do việc {rel.get('job_id')} phát hành, không phải {job_id}")
             if to_state in ("BLOCKED", "WAITING_APPROVAL", "FAILED", "CANCELLED") and not note.strip():
                 raise ToolError(f"Chuyển sang {to_state} phải ghi lý do")
             for s in job["steps"]:

@@ -25,13 +25,18 @@ from pathlib import Path
 
 from .util import ToolError
 
-NETWORK_MODULES = {"socket", "ssl", "http", "urllib", "requests", "ftplib", "smtplib", "poplib", "imaplib",
+NETWORK_MODULES = {"socket", "ssl", "http", "urllib", "requests", "ftplib", "smtplib", "poplib", "imaplib", "nntplib",
                    "telnetlib", "xmlrpc", "websocket", "websockets", "aiohttp", "httpx", "asyncio", "socketserver",
-                   "selectors", "webbrowser"}
+                   "selectors", "webbrowser", "asyncore", "asynchat", "smtpd"}
 PROCESS_MODULES = {"subprocess", "multiprocessing", "pty", "concurrent"}
-NEVER_MODULES = {"ctypes", "importlib", "runpy", "code", "codeop", "pickle", "marshal", "shelve"}
-PROCESS_OS_CALLS = {"system", "popen", "fork", "forkpty", "kill", "killpg", "startfile"}
-NEVER_BUILTINS = {"eval", "exec", "compile", "__import__", "breakpoint"}
+NEVER_MODULES = {"ctypes", "importlib", "runpy", "code", "codeop", "pickle", "marshal", "shelve", "builtins", "gc", "inspect"}
+PROCESS_OS_CALLS = {"system", "popen", "fork", "forkpty", "kill", "killpg", "startfile", "posix_spawn", "posix_spawnp"}
+NEVER_BUILTINS = {"eval", "exec", "compile", "__import__", "breakpoint", "globals", "vars"}
+LIMIT_CAPS = {"timeout_s": 600, "memory_mb": 4096, "max_output_mb": 500}  # manifest không tự nới quá các mức này
+
+
+def _os_forbidden(attr: str) -> bool:
+    return attr in PROCESS_OS_CALLS or attr.startswith(("exec", "spawn"))
 
 
 def safe_rel(tool_dir: Path, rel: str) -> Path | None:
@@ -60,7 +65,13 @@ def symlinks_in(tool_dir: Path) -> list[str]:
 
 
 def lint_permissions(tool_dir: Path, manifest: dict) -> list[str]:
-    """Soát mã nguồn so với quyền khai trong manifest. Trả danh sách vi phạm (rỗng = đạt)."""
+    """Soát mã nguồn so với quyền khai trong manifest. Trả danh sách vi phạm (rỗng = đạt).
+
+    Soát theo TÊN ĐÃ PHÂN GIẢI chứ không theo chữ viết: `import os as o`, `from os import system`,
+    `getattr(os, ...)`, `sys.modules`, `os.posix_spawn` đều bị bắt. Mô-đun nội bộ của CPython (tên bắt đầu
+    bằng gạch dưới, vd. _socket, _posixsubprocess) bị cấm vì chúng là cửa sau của các mô-đun đã chặn.
+    Đây vẫn là bộ soát cho mã do bộ phận tự viết, không phải bằng chứng mã vô hại.
+    """
     tool_dir = Path(tool_dir)
     perms = manifest.get("permissions", {})
     allow_net = perms.get("network") is True
@@ -72,32 +83,59 @@ def lint_permissions(tool_dir: Path, manifest: dict) -> list[str]:
         relp = py.relative_to(tool_dir).as_posix()
         try:
             tree = ast.parse(py.read_text(encoding="utf-8"), filename=relp)
-        except SyntaxError as e:
-            out.append(f"{relp}: lỗi cú pháp dòng {e.lineno}")
+        except (SyntaxError, UnicodeDecodeError, ValueError) as e:
+            out.append(f"{relp}: không đọc được mã nguồn ({type(e).__name__})")
             continue
+        os_names, sys_names = set(), set()  # mọi tên trong tệp đang trỏ tới mô-đun os / sys
         for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                for a in node.names:
+                    top = a.name.split(".")[0]
+                    if top in ("os", "posix", "nt"):
+                        os_names.add(a.asname or top)
+                    if top == "sys":
+                        sys_names.add(a.asname or "sys")
+        for node in ast.walk(tree):
+            where = f"{relp}:{getattr(node, 'lineno', 0)}"
             mods: list[str] = []
             if isinstance(node, ast.Import):
                 mods = [a.name.split(".")[0] for a in node.names]
             elif isinstance(node, ast.ImportFrom):
                 mods = [] if node.level else [(node.module or "").split(".")[0]]
+                if not node.level and (node.module or "").split(".")[0] in ("os", "posix", "nt"):
+                    for a in node.names:
+                        if a.name == "*":
+                            out.append(f"{where}: cấm 'from os import *' (không soát được tên nào được dùng)")
+                        elif _os_forbidden(a.name) and not allow_proc:
+                            out.append(f"{where}: nhập os.{a.name} nhưng manifest không khai permissions.subprocess")
+                if not node.level and (node.module or "").split(".")[0] == "sys" and any(a.name == "modules" for a in node.names):
+                    out.append(f"{where}: cấm dùng sys.modules")
             for m in mods:
-                where = f"{relp}:{node.lineno}"
                 if m in NEVER_MODULES:
                     out.append(f"{where}: cấm dùng mô-đun '{m}'")
+                elif m.startswith("_") and m != "__future__" and m not in local:
+                    out.append(f"{where}: cấm dùng mô-đun nội bộ '{m}'")
                 elif m in NETWORK_MODULES and not allow_net:
                     out.append(f"{where}: dùng mạng ('{m}') nhưng manifest không khai permissions.network")
                 elif m in PROCESS_MODULES and not allow_proc:
                     out.append(f"{where}: gọi tiến trình ('{m}') nhưng manifest không khai permissions.subprocess")
                 elif m not in stdlib and m not in local:
                     out.append(f"{where}: mô-đun ngoài thư viện chuẩn '{m}' (chưa được thẩm định)")
-            if isinstance(node, ast.Call):
+            if isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
                 f = node.func
-                if isinstance(f, ast.Name) and f.id in NEVER_BUILTINS:
-                    out.append(f"{relp}:{node.lineno}: cấm gọi {f.id}()")
-                if isinstance(f, ast.Attribute) and isinstance(f.value, ast.Name) and f.value.id == "os":
-                    if (f.attr in PROCESS_OS_CALLS or f.attr.startswith(("exec", "spawn"))) and not allow_proc:
-                        out.append(f"{relp}:{node.lineno}: gọi os.{f.attr}() nhưng manifest không khai permissions.subprocess")
+                if f.id in NEVER_BUILTINS:
+                    out.append(f"{where}: cấm gọi {f.id}()")
+                if f.id in ("getattr", "setattr", "delattr") and node.args and isinstance(node.args[0], ast.Name) \
+                        and node.args[0].id in os_names | sys_names:
+                    out.append(f"{where}: cấm {f.id}() trên mô-đun {node.args[0].id} (che tên hàm được gọi)")
+            # Dùng thuộc tính của os dưới bất kỳ tên nào, dù có gọi ngay hay gán sang biến khác.
+            if isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name):
+                if node.value.id in os_names and _os_forbidden(node.attr) and not allow_proc:
+                    out.append(f"{where}: dùng os.{node.attr} nhưng manifest không khai permissions.subprocess")
+                if node.value.id in sys_names and node.attr == "modules":
+                    out.append(f"{where}: cấm dùng sys.modules")
+            if isinstance(node, ast.Name) and node.id == "__builtins__":
+                out.append(f"{where}: cấm dùng __builtins__")
     return out
 
 
@@ -121,8 +159,24 @@ def _limits(timeout_s: int, max_output_mb: int, memory_mb: int):
     return apply
 
 
-def clean_env(work: Path) -> dict:
-    env = {"PATH": os.environ.get("PATH", os.defpath), "LANG": "C.UTF-8", "LC_ALL": "C.UTF-8",
+def _bin_dir(work: Path, commands: list) -> Path:
+    """Thư mục PATH của lượt chạy: chỉ chứa đúng các lệnh ngoài mà manifest đã khai (permissions.subprocess)."""
+    b = work / "bin"
+    b.mkdir(exist_ok=True)
+    for c in commands or []:
+        if isinstance(c, str) and c and "/" not in c and "\\" not in c and not c.startswith("."):
+            real = shutil.which(c)
+            if real and not (b / c).exists():
+                try:
+                    os.symlink(real, b / c)
+                except OSError:
+                    pass
+    return b
+
+
+def clean_env(work: Path, commands: list | None = None) -> dict:
+    path = str(_bin_dir(work, commands or [])) if os.name == "posix" else os.environ.get("PATH", os.defpath)
+    env = {"PATH": path, "LANG": "C.UTF-8", "LC_ALL": "C.UTF-8",
            "PYTHONIOENCODING": "utf-8", "PYTHONUTF8": "1", "PYTHONDONTWRITEBYTECODE": "1",
            "HOME": str(work), "TMPDIR": str(work / "tmp"), "TEMP": str(work / "tmp"), "TMP": str(work / "tmp"),
            "TOOL_SANDBOX": "1"}
@@ -137,9 +191,9 @@ def execute(tool_dir: Path, manifest: dict, inputs: dict[str, Path], params: dic
     """Chạy một lượt trong vùng thử. Người gọi phải dọn `result['work']` bằng cleanup()."""
     tool_dir = Path(tool_dir)
     lim = manifest.get("limits", {})
-    timeout_s = int(timeout_s or lim.get("timeout_s", 30))
-    max_out = int(lim.get("max_output_mb", 50))
-    mem = int(lim.get("memory_mb", 2048))
+    timeout_s = max(1, min(int(timeout_s or lim.get("timeout_s", 30)), LIMIT_CAPS["timeout_s"]))
+    max_out = max(1, min(int(lim.get("max_output_mb", 50)), LIMIT_CAPS["max_output_mb"]))
+    mem = max(64, min(int(lim.get("memory_mb", 2048)), LIMIT_CAPS["memory_mb"]))
     entry = manifest.get("entry", "main.py")
     if safe_rel(tool_dir, entry) is None or not safe_rel(tool_dir, entry).is_file():
         raise ToolError(f"Tệp chạy '{entry}' không nằm trong thư mục tool")
@@ -166,11 +220,12 @@ def execute(tool_dir: Path, manifest: dict, inputs: dict[str, Path], params: dic
     cmd = [sys.executable, "-E", "-s", "-B", f"tool/{entry}", "request.json"]
     use_netns = manifest.get("permissions", {}).get("network") is not True and netns_available()
     if use_netns:
-        cmd = ["unshare", "-n", "--"] + cmd
+        cmd = [shutil.which("unshare") or "unshare", "-n", "--"] + cmd
     posix = os.name == "posix"
     t0 = time.monotonic()
     timed_out = False
-    proc = subprocess.Popen(cmd, cwd=work, env=clean_env(work), stdin=subprocess.DEVNULL,
+    proc = subprocess.Popen(cmd, cwd=work, env=clean_env(work, manifest.get("permissions", {}).get("subprocess")),
+                            stdin=subprocess.DEVNULL,
                             stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                             preexec_fn=_limits(timeout_s, max_out, mem) if posix else None,
                             start_new_session=posix)

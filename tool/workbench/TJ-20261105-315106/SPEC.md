@@ -5,6 +5,7 @@
 - Người viết: `tool-pt-01`. Người lập trình chỉ được dùng tệp này và thư mục `testdata/`.
 - Sửa đổi 2026-11-06 02:35 (Thiên Công, sau vòng kiểm thử 1 của `tool-kt-02`): mục 2 thêm khóa `ignored_timecodes` và luật lỗi khi không ghi được
   stdout; thêm mục 5b (G12–G21).
+- Kiểm thử độc lập vòng 2 (2026-11-06, `tool-kt-02`): PASS 72/72. Hai luật ở mục 2 không diễn đạt được bằng khuôn ca thử ("báo cáo không có khóa nào khác"; "không ghi được stdout thì thoát 2 và hủy tệp") đã được kiểm bằng tay ở cả hai vòng; chưa có ca tự động canh giữ.
 
 ## 1. Việc tool làm
 Nhận một tệp `.srt`, trả một tệp `.srt` cùng tên, trong đó số thứ tự các đoạn phụ đề được đánh lại 1, 2, 3, … theo thứ tự xuất hiện.
@@ -61,8 +62,7 @@ Người lập trình đã chọn cách hiểu chặt cho các chỗ đặc tả
 | G15 | Số có số 0 đứng đầu ("003", "01") được viết lại không có số 0 đầu và tính là đã đổi; `mapping` giữ nguyên chuỗi cũ | `s4-khoang-trang-quanh-so` |
 | G16 | Dòng số viết bằng chữ số không phải ASCII (vd. chữ số toàn chiều rộng) là dòng chữ, không phải dòng số (khi đó áp dụng G12) | ca `kt-` bổ sung ở vòng kiểm lại |
 | G17 | Thông tin vị trí sau giờ kết thúc phải cách bằng khoảng trắng; dính liền (vd. `00:00:02,000X1:40`) thì dòng đó không phải timecode | ca `kt-` bổ sung ở vòng kiểm lại |
-| G18 | `` đơn lẻ và `
-` cũng là ký tự xuống dòng và được giữ nguyên | `g2-cr-mac-cu`, `g2-crcrlf` |
+| G18 | Ký tự CR đơn lẻ (`\r`, kiểu Mac cũ) và chuỗi CR CR LF (`\r\r\n`) cũng là ký tự xuống dòng và được giữ nguyên | `g2-cr-mac-cu`, `g2-crcrlf` |
 | G19 | `start` phải là số nguyên JSON ≥ 0 (1.0, null, "5", true đều bị từ chối); tham số không có tên trong đặc tả bị từ chối, mã 2 | các ca `g10-*`, `tham-so-la` |
 | G20 | Tên tệp đầu vào có đuôi viết hoa (`.SRT`) được chấp nhận; tệp kết quả giữ nguyên tên | ca `kt-` bổ sung ở vòng kiểm lại |
 | G21 | Theo mục 4, một dòng chỉ gồm chữ số nằm ngay trước dòng timecode kế tiếp (không có dòng trống ngăn) là dòng số của đoạn sau và bị thay, kể cả khi người viết coi nó là lời thoại. Đây là giới hạn đã biết với tệp thiếu dòng trống giữa hai đoạn | `s4-thieu-dong-trong-giua-doan` |

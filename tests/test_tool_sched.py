@@ -6,6 +6,7 @@ import unittest
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+from tool.core.budget import Budget
 from tool.core.catalog import Catalog
 from tool.core.gitsync import GitSync, SyncConflict
 from tool.core.identity import Directory
@@ -13,7 +14,7 @@ from tool.core.jobs import JobStore
 from tool.core.scheduler import Scheduler, classify_trigger, fingerprint
 from tool.core.util import ToolError, read_json
 
-from .tool_fixtures import make_build, make_root
+from .tool_fixtures import make_build, make_root, publish_via_job
 
 T, AT = "agent-tool", "agent-tool-at"
 UTC = timezone.utc
@@ -63,7 +64,11 @@ class SessionTest(unittest.TestCase):
         b = self.s.begin(AT, marker="MANUAL: bấm lại")
         self.assertEqual(b["result"], "SKIPPED_OVERLAP")
         self.assertIn(a["run_id"], b["notes"][0])
-        self.s.end(a["run_id"], "NO_CHANGE", "không có thay đổi")
+        with self.assertRaisesRegex(ToolError, "không được kết thúc phiên này"):    # phiên của AT: người khác không nhả khóa hộ
+            self.s.end(a["run_id"], "NO_CHANGE", "x", agent=T)
+        with self.assertRaisesRegex(ToolError, "không được kết thúc phiên này"):
+            self.s.end(a["run_id"], "NO_CHANGE", "x")
+        self.s.end(a["run_id"], "NO_CHANGE", "không có thay đổi", agent=AT)
         self.clock.now += timedelta(minutes=55)
         self.assertIsNone(self.s.begin(AT)["result"])
 
@@ -85,17 +90,65 @@ class SessionTest(unittest.TestCase):
 
     def test_at_most_one_auto_release_per_session(self):
         a = self.s.begin(AT)
-        cat = Catalog(self.root, self.dir, self.clock)
-        tmp = self.root.parent.parent
-        cat.publish(make_build(tmp, version="1.0.0"), AT, session=self.s.get(a["run_id"]), auto=True)
-        self.s.register_release(a["run_id"], "upper-text", "1.0.0", "OK")
+        run = a["run_id"]
+        publish_via_job(self.root, AT, clock=self.clock, version="1.0.0", session_id=run, auto=True)
+        self.assertEqual([(r["version"], r["smoke"]) for r in self.s.get(run)["releases"]], [("1.0.0", None)])  # suất đã bị đếm ngay
+        # Hạn mức được đếm ở chính lệnh phát hành: bản thứ hai bị chặn dù phiên chưa "ghi sổ" bản đầu.
         with self.assertRaisesRegex(ToolError, "hết hạn mức của phiên"):
-            cat.publish(make_build(tmp, version="1.1.0"), AT, session=self.s.get(a["run_id"]), auto=True)
+            publish_via_job(self.root, AT, clock=self.clock, version="1.1.0", session_id=run, auto=True)
         with self.assertRaisesRegex(ToolError, "hết hạn mức của phiên"):
-            self.s.register_release(a["run_id"], "upper-text", "1.1.0", "OK")
-        self.assertEqual(self.s.end(a["run_id"], "RELEASED")["releases"][0]["version"], "1.0.0")
+            publish_via_job(self.root, AT, clock=self.clock, tool_id="tool-khac", session_id=run, auto=True)
+        self.assertEqual([v["version"] for v in Catalog(self.root, self.dir).tool("upper-text")["versions"]], ["1.0.0"])
+        with self.assertRaisesRegex(ToolError, "chưa phát hành"):
+            self.s.register_release(run, "upper-text", "1.1.0", "OK")
+        self.s.register_release(run, "upper-text", "1.0.0", "OK")
         with self.assertRaisesRegex(ToolError, "phải thuộc một phiên AT"):
-            cat.publish(make_build(tmp, version="1.2.0"), AT, auto=True)
+            publish_via_job(self.root, AT, clock=self.clock, version="1.2.0", auto=True)
+        with self.assertRaisesRegex(ToolError, "là của agent-tool-at"):           # Thiên Công không phát hành tự động trong phiên của AT
+            publish_via_job(self.root, T, clock=self.clock, version="1.3.0", session_id=run, auto=True)
+        self.assertEqual(self.s.end(run, "RELEASED", agent=AT)["releases"][0]["version"], "1.0.0")
+        with self.assertRaisesRegex(ToolError, "đã kết thúc"):                    # phiên đã đóng không phát hành tự động được nữa
+            publish_via_job(self.root, AT, clock=self.clock, version="1.4.0", session_id=run, auto=True)
+
+    def test_failed_auto_publish_gives_the_slot_back_and_paid_tools_never_auto_release(self):
+        run = self.s.begin(AT)["run_id"]
+        with self.assertRaisesRegex(ToolError, "Không đạt kiểm thử"):
+            publish_via_job(self.root, AT, clock=self.clock, broken=True, session_id=run, auto=True)
+        self.assertEqual(self.s.get(run)["releases"], [])
+        Budget(self.root).approve(5, "API thử", "KHO-DX-009", "CHAIRMAN")
+        with self.assertRaisesRegex(ToolError, "không phát hành tự động"):
+            publish_via_job(self.root, AT, clock=self.clock, cost=0.5, session_id=run, auto=True)
+        publish_via_job(self.root, AT, clock=self.clock, session_id=run, auto=True)
+        self.assertEqual(len(self.s.get(run)["releases"]), 1)
+
+    def test_pause_blocks_every_unmarked_session_and_trigger_names_are_checked(self):
+        self.s.set_schedule(T, paused=True)
+        self.clock.now = at_vn(9, 31)                                             # bắt đầu trễ, ngoài khung phút của lịch
+        late = self.s.begin(AT)
+        self.assertEqual((late["trigger"], late["result"]), ("manual", "PAUSED"))
+        with self.assertRaisesRegex(ToolError, "--trigger phải là"):
+            self.s.begin(AT, trigger="banana")
+        with self.assertRaisesRegex(ToolError, "phải kèm --marker"):
+            self.s.begin(AT, trigger="manual")
+        self.assertIsNone(self.s.begin(AT, marker="WEB: Chủ tịch bấm Chạy ngay")["result"])   # lệnh có dấu vẫn chạy khi tạm dừng
+
+    def test_marking_a_candidate_keeps_a_newer_pending_change(self):
+        up = self.root.parent.parent / "nguon"
+        up.mkdir()
+        git(up.parent, "init", "-q", "-b", "main", str(up))
+        src = [{"id": "nguon", "url": str(up), "mode": "head"}]
+        def commit(n):
+            (up / "f.txt").write_text(f"{n}\n"); git(up, "add", "-A"); git(up, "commit", "-q", "-m", f"c{n}")
+        commit(1); self.s.check_github(src)                                       # mốc gốc
+        commit(2); first = self.s.check_github(src)["changed"][0]
+        commit(3); second = self.s.check_github(src)["changed"][0]                # nguồn đổi tiếp trước khi xử lý xong bản 2
+        self.s.mark_candidate("nguon", first["key"], "REJECTED")
+        again = self.s.check_github(src)["changed"]
+        self.assertEqual([c["key"] for c in again], [second["key"]])              # bản 3 vẫn còn chờ xét
+        self.s.mark_candidate("nguon", second["key"], "REJECTED")
+        self.assertEqual(self.s.check_github(src)["changed"], [])
+        with self.assertRaisesRegex(ToolError, "Không có nguồn"):
+            self.s.mark_candidate("khong-co", "k", "REJECTED")
 
     def test_plan_prefers_backlog_then_new_source_then_no_change(self):
         a = self.s.begin(AT)
@@ -200,11 +253,10 @@ class TwoClonesTest(unittest.TestCase):
         self.assertEqual(self.gb.dirty(["tool"]), [])
 
     def test_two_sessions_publish_same_version_only_one_lands(self):
-        ca, cb = Catalog(self.a / "tool"), Catalog(self.b / "tool")
         self.ga.pull(); self.gb.pull()
         start_b = self.gb.head()
-        ca.publish(make_build(self.tmp / "ba"), T)
-        cb.publish(make_build(self.tmp / "bb"), AT)                    # cục bộ cả hai đều tưởng mình thắng
+        publish_via_job(self.a / "tool", T)
+        publish_via_job(self.b / "tool", AT)                           # cục bộ cả hai đều tưởng mình thắng
         self.ga.commit(["tool"], "A phát hành"); self.ga.push(self.ga.head(), ["tool"])
         self.gb.commit(["tool"], "B phát hành")
         with self.assertRaises(SyncConflict):

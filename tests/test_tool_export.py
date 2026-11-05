@@ -14,7 +14,7 @@ from tool.core.scheduler import Scheduler
 from tool.core.skills import Skills
 from tool.core.subagents import SubAgents
 
-from .tool_fixtures import make_build, make_root
+from .tool_fixtures import make_root, publish_via_job
 
 T, AT = "agent-tool", "agent-tool-at"
 
@@ -25,8 +25,8 @@ class ExportTest(unittest.TestCase):
         self.tmp = self.root.parent.parent
         self.addCleanup(shutil.rmtree, self.tmp, True)
         d = Directory(self.root)
-        Catalog(self.root, d).publish(make_build(self.tmp, version="1.0.0"), T)
-        Catalog(self.root, d).publish(make_build(self.tmp, version="1.1.0"), AT)
+        publish_via_job(self.root, T, version="1.0.0")
+        publish_via_job(self.root, AT, version="1.1.0")
         Catalog(self.root, d).rollback("upper-text", AT, "diễn tập quay lui")
         secret_text = "NỘI DUNG RIÊNG CỦA NGƯỜI GỌI\n"
         src = self.tmp / "repo" / "research" / "rieng.txt"
@@ -42,9 +42,9 @@ class ExportTest(unittest.TestCase):
         SubAgents(self.root, d).spawn(branch="pt", assigned_by=T, job_id=j["job_id"], output="OBSERVATION.md")
         now = [datetime.now(timezone.utc) - timedelta(minutes=10)]   # hai phiên cách nhau 5 phút, không trùng giây
         s = Scheduler(self.root, d, clock=lambda: now[0])
-        a = s.begin(AT, trigger="scheduler"); s.end(a["run_id"], "NO_CHANGE")
+        a = s.begin(AT, trigger="scheduler"); s.end(a["run_id"], "NO_CHANGE", agent=AT)
         now[0] += timedelta(minutes=5)
-        b = s.begin(AT, marker="MANUAL: thử"); s.end(b["run_id"], "NO_RELEASE")
+        b = s.begin(AT, marker="MANUAL: thử"); s.end(b["run_id"], "NO_RELEASE", agent=AT)
         md = self.tmp / "s.md"
         md.write_text("---\nname: tool-release-gate\ndescription: Use before publishing.\n---\nnội dung\n", encoding="utf-8")
         Skills(self.root, d).add(md, granted_by=T, actor=T, source="viết gốc", test_result="PASS", test_evidence="ca thử")
@@ -56,7 +56,7 @@ class ExportTest(unittest.TestCase):
         m = self.docs["main"]
         self.assertEqual(m["summary"]["tools_callable"], 1)
         self.assertEqual(m["summary"]["versions_total"], 2)
-        self.assertEqual(m["summary"]["jobs_open"], 1)
+        self.assertEqual(m["summary"]["jobs_open"], 3)        # việc mẫu + hai việc đang ở bước publish (phát hành qua sổ việc)
         self.assertEqual((m["summary"]["runs_24h"], m["summary"]["runs_denied_24h"]), (2, 1))
         self.assertEqual(m["summary"]["skills_current"], 1)
         ex = {e["id"]: e for e in m["agents"]["executives"]}
@@ -88,7 +88,8 @@ class ExportTest(unittest.TestCase):
         blob = json.dumps(self.docs, ensure_ascii=False)
         self.assertNotIn(self.secret, blob)                 # nội dung dữ liệu người gọi không lên web
         self.assertIn("rieng.txt", blob)                    # chỉ tên tệp + cỡ + băm
-        self.assertEqual(json.loads(blob)["jobs"]["jobs"][0]["holder"], T)
+        sample = next(j for j in json.loads(blob)["jobs"]["jobs"] if j["title"] == "Việc mẫu")
+        self.assertEqual(sample["holder"], T)
 
 
 if __name__ == "__main__":

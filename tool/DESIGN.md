@@ -35,6 +35,20 @@ Chủ tịch đưa một video, prompt, tệp, ZIP hoặc thư mục mẫu → n
 | T-10 | Lượt do lịch và lượt chạy tay phân biệt bằng dấu `MANUAL:`/`WEB:` + khung giờ phút 05–24 | Nền tảng không ghi ai bấm | Bấm tay trong ứng dụng đúng khung phút 05 mà không có dấu sẽ bị ghi là lượt lịch |
 | T-11 | Hạn mức CFO cho TOOL = 0 USD dịch vụ tính phí cho tới khi có khoản duyệt trên Kho Báu | `kho_rules/main`, D-006 | Nguồn cần API trả phí (vd. screenshot-to-code) chỉ để tham khảo |
 | T-12 | GitHub: theo dõi bản phát hành (tag) cho FFmpeg/jq, theo dõi đúng thư mục cho skill; lần đầu thấy là mốc gốc | Tránh mỗi giờ một "thay đổi" vô nghĩa | Thay đổi ngoài thư mục theo dõi sẽ không được thấy |
+| T-13 | Tool chỉ vào kho qua sổ việc: `publish` đòi việc RUNNING + token của người giữ + bước `test` của Agent con khác người viết + bản dựng không đổi từ lúc kiểm (băm chốt ở `job done test`) | Kiểm định 06/11: phát hành ngoài việc, sau khi việc bị hủy, hoặc sau khi sửa mã đều lọt | AT muốn tích hợp một nguồn GitHub cũng phải mở việc và đi đủ bước |
+| T-14 | Mọi mã định danh ghép vào đường dẫn (người gọi, Agent con, tin, phiên, việc, tool) qua một khuôn duy nhất; hồ sơ phải tự khai đúng ID của tên tệp | Kiểm định 06/11: `../sub/<id>` làm người viết tự kiểm bài; `msg close` ghi đè `job.json` | ID có ký tự lạ bị từ chối |
+| T-15 | Quyền dữ liệu tách ĐỌC và GHI; kiểm cả từng tệp kết quả; chặn thư mục hệ thống, mục ẩn trong thư mục nhà, mẫu riêng tư; kho/mã/cấu hình không nhận kết quả | Kiểm định 06/11: `--out ~/.ssh`, đọc `/proc/self/environ`, lãnh đạo ghi vào vùng cấp dưới, mọi Agent đọc `inbox/<việc>/private/` | Tệp làm việc đặt trong mục ẩn của thư mục nhà phải chuyển chỗ |
+| T-16 | Giao dịch git: việc dở được đẩy trước; bên thua bỏ đúng commit của mình bằng `reset --keep`, phần bị bỏ giữ ở `refs/tool-discarded/`; chỉ đồng bộ trên nhánh `master` | Kiểm định 06/11: bên thua kẹt ở bản cũ, mất tệp của Agent con, hai nhánh cùng cấp token 1 | `--sync` đẩy mọi commit đang có trên `master` của bản sao |
+| T-17 | Hạn mức phát hành tự động đếm ngay trong `publish --auto` dưới khóa phiên; tool tính phí không phát hành tự động; chỉ Chủ tịch ghi khoản duyệt chi | Kiểm định 06/11: ba bản tự động trong một phiên; `budget approve` không cần ai | Tool tính phí luôn cần Chủ tịch có mặt |
+| T-18 | Tự khôi phục chỉ thu hồi đúng phiên bản vừa gọi thử và chỉ khi chính tool chạy sai | Kiểm định 06/11: gõ sai đường dẫn ca thử làm thu hồi bản tốt duy nhất | Lỗi quyền/đầu vào khi gọi thử phải xử lý tay |
+| T-19 | Ảnh ghép khung hình nằm trong `frames/` (ngoài git); bộ phận mới phải có tên trong `EXPECTED_DEPARTMENTS` của `crown/registry.py` | Kiểm định 06/11: ảnh ghép của video riêng tư bị đẩy lên repo công khai; thả một tệp `dept_x.json` là có "bộ phận" ghi vào `crown/` | Lập bộ phận mới phải sửa mã có review |
+
+## Kiểm định độc lập 2026-11-06 (Agent kiểm định không thấy quá trình viết)
+4 lỗi nghiêm trọng, 11 lỗi quan trọng, 4 lỗi nhỏ — đều tái hiện được; đã sửa và có ca canh giữ trong `tests/test_tool_hardening.py`
+(25 ca; 9 ca đã thử bằng cách gỡ bản sửa để chắc ca bắt được lỗi). Không phá được: giành quyền phát hành `O_EXCL` (8 tiến trình),
+đúng-một-lần trên remote, hết hạn lease và từ chối token cũ, thứ tự bước, zip-slip, đường dẫn trong manifest/ca thử.
+Còn lại sau khi sửa (giới hạn, không phải lỗi mở): ID tự khai; bộ soát AST không phải bằng chứng mã vô hại; tool vẫn gọi được lệnh
+ngoài bằng đường dẫn tuyệt đối; khoản duyệt chi dựa vào quyền ghi của repo.
 
 ## Lỗ hổng đã tự rà và cách xử lý
 1. Hai Agent cùng phát hành một phiên bản → tệp đánh dấu `O_EXCL` (cùng máy) + xung đột `git push` (khác máy). Có test cả hai.

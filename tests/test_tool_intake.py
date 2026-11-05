@@ -29,22 +29,22 @@ class InboxTest(unittest.TestCase):
             f.writestr("doc/readme.md", "xin chào")
             f.writestr("../../thoat.txt", "zip-slip")
             f.writestr("auth_token.json", "{}")
-        self.ib.add("TJ-1", "Viết tool đánh lại số phụ đề từ 1", private=False)
-        self.ib.add("TJ-1", "https://example.com/huong-dan")
-        self.ib.add("TJ-1", src / "a.srt", private=False)
-        self.ib.add("TJ-1", src)                     # mặc định riêng tư
-        man = self.ib.add("TJ-1", z)
+        self.ib.add("TJ-20261105-0a1b2c", "Viết tool đánh lại số phụ đề từ 1", private=False)
+        self.ib.add("TJ-20261105-0a1b2c", "https://example.com/huong-dan")
+        self.ib.add("TJ-20261105-0a1b2c", src / "a.srt", private=False)
+        self.ib.add("TJ-20261105-0a1b2c", src)                     # mặc định riêng tư
+        man = self.ib.add("TJ-20261105-0a1b2c", z)
         kinds = sorted(i["kind"] for i in man["items"])
         self.assertEqual(kinds, ["file", "file", "file", "image", "prompt", "url"])
-        self.assertTrue((self.root / "inbox/TJ-1/files/a.srt").is_file())               # mẫu công khai → vào git
-        self.assertTrue((self.root / "inbox/TJ-1/private/mau/sub/b.png").is_file())     # mẫu riêng → ngoài git
-        self.assertTrue((self.root / "inbox/TJ-1/private/goi/doc/readme.md").is_file())
+        self.assertTrue((self.root / "inbox/TJ-20261105-0a1b2c/files/a.srt").is_file())               # mẫu công khai → vào git
+        self.assertTrue((self.root / "inbox/TJ-20261105-0a1b2c/private/mau/sub/b.png").is_file())     # mẫu riêng → ngoài git
+        self.assertTrue((self.root / "inbox/TJ-20261105-0a1b2c/private/goi/doc/readme.md").is_file())
         skipped = sorted(s["name"] for s in man["skipped"])
         self.assertEqual(skipped, sorted([".env", "../../thoat.txt", "auth_token.json"]))       # bí mật + zip-slip bị bỏ
         self.assertFalse((self.tmp / "thoat.txt").exists())
         self.assertFalse(any(i.get("fetched") for i in man["items"] if i["kind"] == "url"))
         self.assertTrue(all(len(i["sha256"]) == 64 for i in man["items"]))
-        self.assertEqual(read_json(self.root / "inbox/TJ-1/manifest.json")["job_id"], "TJ-1")
+        self.assertEqual(read_json(self.root / "inbox/TJ-20261105-0a1b2c/manifest.json")["job_id"], "TJ-20261105-0a1b2c")
 
 
 @unittest.skipUnless(shutil.which("ffmpeg") and shutil.which("ffprobe"), "máy không có FFmpeg")
@@ -73,7 +73,13 @@ class FramesTest(unittest.TestCase):
                               "-f", "rawvideo", "-pix_fmt", "rgb24", "-"], capture_output=True).stdout
               for f in meta["frames"]]
         self.assertEqual([max(range(3), key=lambda i: p[i]) for p in px], [0, 1, 2])   # đỏ, lục, lam đúng mốc
+        # Mặc định mẫu là riêng tư: ảnh ghép nằm trong frames/ (không vào git, không thuộc vùng dùng chung).
+        self.assertTrue((self.job / "frames" / "contact_sheet.jpg").is_file())
+        self.assertFalse((self.job / "samples").exists())
+        self.assertEqual((meta["private"], meta["contact_sheet"]), (True, "frames/contact_sheet.jpg"))
+        pub = video.extract_frames(self.video, self.job, at=[0.5], public=True)   # mẫu tự tạo: có bản ở samples/
         self.assertTrue((self.job / "samples" / "contact_sheet.jpg").is_file())
+        self.assertEqual((pub["private"], pub["contact_sheet"]), (False, "samples/contact_sheet.jpg"))
         self.assertEqual(read_json(self.job / "frames.json")["video_sha256"], meta["video_sha256"])
 
     def test_scene_detection_captures_each_screen_change(self):

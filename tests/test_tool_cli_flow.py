@@ -81,12 +81,43 @@ class CliFlowTest(unittest.TestCase):
         s4 = json.loads(self.tool(self.a, "--sync", "at", "begin", "--agent", "agent-tool-at", "--trigger", "scheduler").stdout)
         self.assertEqual(json.loads(self.tool(self.a, "at", "github", s4["run_id"]).stdout)["changed"], [])
 
+    def to_publish_step(self, clone, actor):
+        """Đúng chuỗi lệnh trong PLAYBOOK: tạo việc → nhận → từng bước có bằng chứng → Agent con viết ≠ Agent con kiểm.
+
+        Tạo Agent con luôn kèm --sync: sổ Agent con là dữ liệu chung (ID nối tiếp, hạn mức chạy đồng thời tính trên mọi máy).
+        """
+        t = lambda *a: self.tool(clone, *a).stdout
+        job = t("job", "new", "--title", "Viết hoa văn bản", "--prompt", "Viết tool viết hoa", "--by", "CHAIRMAN", "--to", actor).split()[0]
+        tok = t("job", "claim", job, actor).strip().rsplit(" ", 1)[1]
+        for st in ("intake", "research", "analyze", "spec"):
+            t("job", "start", job, st, actor, tok); t("job", "done", job, st, actor, tok, "--evidence", "bằng chứng thử")
+        lt = json.loads(t("--sync", "sub", "spawn", "--branch", "lt", "--by", actor, "--job", job, "--step", "build", "--output", "build/"))["id"]
+        t("job", "start", job, "build", actor, tok, "--sub", lt)
+        build = make_build(self.tmp, dest=clone / "tool" / "workbench" / job / "build")
+        t("job", "done", job, "build", actor, tok, "--evidence", "build/manifest.json")
+        t("sub", "finish", lt, "--by", actor, "--ok", "--result", "viết xong")
+        kt = json.loads(t("--sync", "sub", "spawn", "--branch", "kt", "--by", actor, "--job", job, "--step", "test", "--output", "TEST_REPORT.json"))["id"]
+        r = self.tool(clone, "job", "start", job, "test", actor, tok, "--sub", lt, ok=False)       # người viết không tự kiểm
+        self.assertIn("kiểm thử phải do Agent con khác làm", r.stderr)
+        t("job", "start", job, "test", actor, tok, "--sub", kt)
+        t("job", "done", job, "test", actor, tok, "--evidence", "TEST_REPORT.json")
+        t("sub", "finish", kt, "--by", actor, "--ok", "--result", "kiểm xong")
+        return job, tok, build
+
     def test_publish_find_run_and_duplicate_publish_across_machines(self):
-        b1 = make_build(self.tmp / "b1")
-        out = self.tool(self.a, "--sync", "publish", str(b1), "--actor", "agent-tool").stdout
+        job, tok, b1 = self.to_publish_step(self.a, "agent-tool")
+        r = self.tool(self.a, "publish", str(b1), "--actor", "agent-tool", "--job", job, "--token", tok, ok=False)
+        self.assertIn("chưa được agent-tool bắt đầu", r.stderr)                                    # phải mở bước publish trước
+        self.tool(self.a, "job", "start", job, "publish", "agent-tool", tok)
+        (b1 / "main.py").write_text((b1 / "main.py").read_text(encoding="utf-8") + "\n# sửa sau khi kiểm\n", encoding="utf-8")
+        r = self.tool(self.a, "publish", str(b1), "--actor", "agent-tool", "--job", job, "--token", tok, ok=False)
+        self.assertIn("đã thay đổi sau khi kiểm thử độc lập", r.stderr)                            # bản dựng bị sửa sau kiểm thử
+        make_build(self.tmp, dest=b1)                                                             # trả lại đúng bản đã kiểm
+        out = self.tool(self.a, "--sync", "publish", str(b1), "--actor", "agent-tool", "--job", job, "--token", tok).stdout
         self.assertIn("ĐÃ PHÁT HÀNH upper-text@1.0.0", out)
-        b2 = make_build(self.tmp / "b2")
-        r = self.tool(self.b, "--sync", "publish", str(b2), "--actor", "agent-tool-at", ok=False)   # máy B chưa kéo, phát hành trùng
+        job2, tok2, b2 = self.to_publish_step(self.b, "agent-tool-at")                             # máy B làm cùng phiên bản, không xem kho
+        self.tool(self.b, "job", "start", job2, "publish", "agent-tool-at", tok2)
+        r = self.tool(self.b, "--sync", "publish", str(b2), "--actor", "agent-tool-at", "--job", job2, "--token", tok2, ok=False)
         self.assertEqual(r.returncode, 1)
         self.assertIn("không phát hành trùng", r.stderr)
         self.assertIn("upper-text@1.0.0", self.tool(self.b, "find", "viet hoa").stdout)              # B đã nhận bản của A

@@ -9,7 +9,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from .identity import CHAIRMAN, Directory
-from .util import ToolError, atomic_write_json, iso, new_id, read_json, tool_root, vn
+from .util import ToolError, atomic_write_json, iso, new_id, read_json, safe_id, tool_root, vn
 
 
 class Mailbox:
@@ -41,10 +41,12 @@ class Mailbox:
         """Chỉ chủ hộp việc (hoặc Chủ tịch) đóng tin của mình."""
         if actor not in (agent, CHAIRMAN):
             raise ToolError(f"{actor} không đóng tin trong hộp việc của {agent}")
-        p = self._box(agent) / f"{msg_id}.json"
+        p = self._box(agent) / f"{safe_id(msg_id, 'Mã tin')}.json"
         if not p.is_file():
             raise ToolError(f"Không có tin {msg_id} trong hộp việc của {agent}")
         m = read_json(p)
+        if m.get("id") != msg_id or m.get("to") != agent:
+            raise ToolError(f"{msg_id} không phải tin trong hộp việc của {agent}")
         m.update(state="DONE", closed_at=iso(), closed_note=note.strip())
         atomic_write_json(p, m)
         return m

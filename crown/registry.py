@@ -18,6 +18,10 @@ EXPECTED_AGENT_IDS = [f"A{i:02d}" for i in range(1, 21)]
 # Lãnh đạo hợp lệ. Thêm lãnh đạo mới = thay đổi mô hình tổ chức → Chủ tịch quyết, sửa danh sách này có review.
 EXPECTED_LEADER_IDS = {"CHAIRMAN", "VUA_CEO", "CFO", "CMO-01", "CMO-02"}
 EXPECTED_LEGACY_COUNT = 25
+# Bộ phận có Agent đồng điều hành và vùng của nó. Lập bộ phận mới = thay đổi mô hình tổ chức → Chủ tịch quyết,
+# sửa danh sách này có review (cùng luật với EXPECTED_LEADER_IDS). Thả thêm một tệp dept_*.json là không đủ.
+EXPECTED_DEPARTMENTS = {"TOOL": "tool/"}
+EXEC_ID_RE = re.compile(r"[a-z][a-z0-9]*(-[a-z0-9]+){1,3}")
 
 
 class RegistryError(Exception):
@@ -292,6 +296,9 @@ def validate(reg: Registry) -> None:
         if dom is None:
             errors.append(f"Bộ phận {did}: 'domain' phải là đường dẫn sạch")
             continue
+        if EXPECTED_DEPARTMENTS.get(did) != dom:
+            errors.append(f"Bộ phận '{did}' với vùng '{dom}' chưa được Chủ tịch phê duyệt trong mô hình tổ chức")
+            continue
         if not d.get("decision_ref"):
             errors.append(f"Bộ phận {did}: thiếu decision_ref (lập bộ phận là quyết định của Chủ tịch)")
         if not d.get("executive_ids"):
@@ -305,6 +312,8 @@ def validate(reg: Registry) -> None:
         domains.append((did, dom))
         for eid in d.get("executive_ids", []):
             e = reg.executives[eid]
+            if not EXEC_ID_RE.fullmatch(eid):
+                errors.append(f"{eid!r}: ID Agent điều hành phải dạng chữ thường nối gạch (vd. agent-tool)")
             if eid in taken:
                 errors.append(f"{eid}: ID trùng với lãnh đạo/Agent đã có")
             for k in ("name", "role", "status", "tier", "peer_of", "peer_scope", "memory_ns", "write_scope", "out_of_scope"):
@@ -321,8 +330,9 @@ def validate(reg: Registry) -> None:
             elif e["tier"] == "SENSITIVE":
                 errors.append(f"{eid}: chỉ Chủ tịch giữ quyền SENSITIVE")
             peers = e.get("peer_of")
-            if not isinstance(peers, list) or not peers or any(p not in reg.leaders or p == "CHAIRMAN" for p in peers):
-                errors.append(f"{eid}: peer_of phải là danh sách lãnh đạo có thật, không gồm Chủ tịch")
+            if not isinstance(peers, list) or not peers or len(set(peers)) != len(peers) \
+                    or any(not isinstance(p, str) or p not in reg.leaders or p == "CHAIRMAN" for p in peers):
+                errors.append(f"{eid}: peer_of phải là danh sách lãnh đạo có thật, không trùng, không gồm Chủ tịch")
             else:
                 for p in peers:  # ngang quyền, không vượt quyền
                     pt = reg.leaders[p].get("tier")
@@ -348,10 +358,19 @@ def validate(reg: Registry) -> None:
             seen_b.add(bid)
             if b.get("tier") not in TIERS or b.get("tier") == "SENSITIVE":
                 errors.append(f"Bộ phận {did}: nhánh {bid} có mức quyền không hợp lệ")
+                continue
+            for eid in d.get("executive_ids", []):  # nhánh (và Agent con của nó) không vượt quyền người điều hành
+                et = reg.executives[eid].get("tier")
+                if et in TIERS and TIERS.index(b["tier"]) > TIERS.index(et):
+                    errors.append(f"Bộ phận {did}: nhánh {bid} ({b['tier']}) cao quyền hơn Agent điều hành {eid} ({et})")
         lim = d.get("limits", {})
-        if not isinstance(lim, dict) or not isinstance(lim.get("max_concurrent_subagents", 2), int) \
-                or lim.get("max_concurrent_subagents", 2) < 1:
-            errors.append(f"Bộ phận {did}: limits.max_concurrent_subagents phải là số nguyên ≥ 1")
+        if not isinstance(lim, dict):
+            errors.append(f"Bộ phận {did}: limits phải là object")
+        else:
+            for key, default, lo, hi in (("max_concurrent_subagents", 2, 1, 8), ("max_auto_releases_per_session", 1, 0, 3)):
+                v = lim.get(key, default)
+                if isinstance(v, bool) or not isinstance(v, int) or not lo <= v <= hi:
+                    errors.append(f"Bộ phận {did}: limits.{key} phải là số nguyên từ {lo} đến {hi}")
 
     if len(reg.legacy) != EXPECTED_LEGACY_COUNT:
         errors.append(f"Bảng mã cũ phải có đủ {EXPECTED_LEGACY_COUNT} đơn vị KING AI (đang có {len(reg.legacy)})")

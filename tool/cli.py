@@ -11,8 +11,8 @@ Làm tool (hai Agent điều hành: agent-tool, agent-tool-at):
   intake JOB MỤC... [--public]               Nhận mẫu: tệp, thư mục, ZIP, URL, prompt
   frames JOB VIDEO [--every S|--at t1,t2]    Lấy khung hình bằng FFmpeg cục bộ
   test BUILD_DIR                             Soát quyền + chạy ca thử trong vùng cách ly
-  publish BUILD_DIR --actor ID [--job J] [--auto --session RUN]
-  rollback TOOL --actor ID --reason "..." [--to X.Y.Z]
+  publish BUILD_DIR --actor ID --job J --token N [--auto --session RUN]   (chỉ qua sổ việc, sau kiểm thử độc lập)
+  rollback TOOL --actor ID --reason "..." [--version X.Y.Z] [--to X.Y.Z]
   skill add|list|rollback                    Kho skill TOOL có phiên bản và quay lui
   msg send|list|close · mem add              Hộp việc và bộ nhớ riêng của từng Agent
   at begin|github|plan|note|release|end|status   Phiên tự tích hợp của Thiên Công AT
@@ -124,16 +124,19 @@ def build_parser() -> argparse.ArgumentParser:
     a.add_argument("--pointer", help="con trỏ tới bản gốc (vd. mã asset trên web) để phiên khác tải lại")
     a = sub.add_parser("frames"); a.add_argument("job"); a.add_argument("video")
     a.add_argument("--every", type=float); a.add_argument("--at"); a.add_argument("--max", type=int, default=40)
+    a.add_argument("--public", action="store_true", help="mẫu tự tạo, không riêng tư: cho ảnh ghép vào samples/ (vào git)")
     a = sub.add_parser("test"); a.add_argument("build_dir"); a.add_argument("--json", action="store_true")
     a = sub.add_parser("publish"); a.add_argument("build_dir"); a.add_argument("--actor", required=True)
-    a.add_argument("--job"); a.add_argument("--auto", action="store_true"); a.add_argument("--session")
+    a.add_argument("--job", required=True); a.add_argument("--token", type=int, required=True)
+    a.add_argument("--auto", action="store_true"); a.add_argument("--session")
     a = sub.add_parser("smoke"); a.add_argument("tool"); a.add_argument("--caller", required=True)
     a.add_argument("--case", action="append", default=[], metavar="input=tệp,expect:tên=tệp",
                    help="dữ liệu khác mẫu: các cặp tên=tệp đầu vào, và expect:tên_kết_quả=tệp mong đợi")
     a.add_argument("--rollback-as", help="Agent điều hành: tự khôi phục bản tốt nếu gọi thử lỗi")
     a.add_argument("--session"); a.add_argument("--trigger", default="manual"); a.add_argument("--json", action="store_true")
     a = sub.add_parser("rollback"); a.add_argument("tool"); a.add_argument("--actor", required=True)
-    a.add_argument("--reason", required=True); a.add_argument("--to")
+    a.add_argument("--reason", required=True); a.add_argument("--to", help="bản tốt muốn quay về")
+    a.add_argument("--version", help="bản cần thu hồi (mặc định: bản hiện hành)")
 
     k = sub.add_parser("skill").add_subparsers(dest="kcmd", required=True)
     a = k.add_parser("add"); a.add_argument("path"); a.add_argument("--granted-by", required=True)
@@ -159,6 +162,7 @@ def build_parser() -> argparse.ArgumentParser:
     a = t.add_parser("release"); a.add_argument("run"); a.add_argument("tool"); a.add_argument("version"); a.add_argument("smoke")
     a = t.add_parser("candidate"); a.add_argument("source"); a.add_argument("key"); a.add_argument("outcome"); a.add_argument("--note", default="")
     a = t.add_parser("end"); a.add_argument("run"); a.add_argument("result"); a.add_argument("--note", default="")
+    a.add_argument("--agent", default="agent-tool-at", help="chủ phiên (chỉ chủ phiên hoặc Chủ tịch kết thúc được phiên)")
     t.add_parser("status")
 
     sc = sub.add_parser("schedule").add_subparsers(dest="sccmd", required=True)
@@ -168,6 +172,7 @@ def build_parser() -> argparse.ArgumentParser:
     b = sub.add_parser("budget").add_subparsers(dest="bcmd", required=True)
     b.add_parser("show")
     a = b.add_parser("approve"); a.add_argument("amount", type=float); a.add_argument("--what", required=True); a.add_argument("--ref", required=True)
+    a.add_argument("--actor", required=True, help="chỉ CHAIRMAN; Agent không tự duyệt ngân sách")
     a = sub.add_parser("export"); a.add_argument("--out", required=True)
     a = sub.add_parser("webver", help="version của 4 tài liệu tool_state trên web (dùng làm if_version)")
     a.add_argument("pairs", nargs="*", metavar="tên=version")
@@ -302,7 +307,9 @@ def dispatch(args, root: Path) -> int:
         return 0
     if c == "frames":
         at = [float(x) for x in args.at.split(",")] if args.at else None
-        meta = video.extract_frames(Path(args.video), jobs.job_dir(args.job), every=args.every, at=at, max_frames=args.max)
+        jobs.get(args.job)
+        meta = video.extract_frames(Path(args.video), jobs.job_dir(args.job), every=args.every, at=at, max_frames=args.max,
+                                    public=args.public)
         print(f"Video {meta['video']}: {meta['duration']} giây, {meta['width']}x{meta['height']}, {meta['fps']} hình/giây; cách lấy: {meta['method']}")
         for f in meta["frames"]:
             print(f"  {f['t']:>7.2f}s  {f['file']}")
@@ -323,10 +330,8 @@ def dispatch(args, root: Path) -> int:
             print(f"{'ĐẠT' if rep['ok'] else 'KHÔNG ĐẠT'}: {sum(x['ok'] for x in rep['cases'])}/{len(rep['cases'])} ca; cách ly: {rep['isolation']}")
         return 0 if rep["ok"] else 1
     if c == "publish":
-        sched = Scheduler(root, d)
-        job = jobs.get(args.job) if args.job else None
-        sess = sched.get(args.session) if args.session else None
-        rel = Catalog(root, d).publish(Path(args.build_dir), args.actor, job=job, session=sess, auto=args.auto)
+        rel = Catalog(root, d).publish(Path(args.build_dir), args.actor, job_id=args.job, token=args.token,
+                                       session_id=args.session, auto=args.auto)
         print(f"ĐÃ PHÁT HÀNH {rel['tool_id']}@{rel['version']} bởi {rel['published_by']} lúc {vn(rel['published_at'])} "
               f"({len(rel['files'])} tệp, {len(rel['test']['cases'])} ca thử đạt)")
         return 0
@@ -349,12 +354,14 @@ def dispatch(args, root: Path) -> int:
             for cs in res["cases"]:
                 print(f"  {'ĐẠT ' if cs['ok'] else 'TRƯỢT'} {cs['name']}  {cs['detail']}  [{cs['run_id']}]")
             print(f"{'GỌI THỬ TỪ KHO: ĐẠT' if res['ok'] else 'GỌI THỬ TỪ KHO: LỖI'} — {res['tool']}@{res['version']}, người gọi {res['caller']}")
+            if res["harness_error"] and not res["rolled_back"]:
+                print("  (lỗi thuộc bước gọi thử — quyền, đầu vào — chứ chưa phải bằng chứng tool hỏng: không thu hồi gì)")
             if res["rolled_back"]:
                 rb = res["rolled_back"]
                 print(f"ĐÃ KHÔI PHỤC: thu hồi {rb['withdrawn']}, bản hiện hành {rb['current_version'] or '(không còn)'}")
         return 0 if res["ok"] else 1
     if c == "rollback":
-        r = Catalog(root, d).rollback(args.tool, args.actor, args.reason, args.to)
+        r = Catalog(root, d).rollback(args.tool, args.actor, args.reason, args.to, version=args.version)
         print(f"Đã thu hồi {r['tool_id']}@{r['withdrawn']}; bản hiện hành: {r['current_version'] or '(không còn bản gọi được)'}")
         return 0
     if c == "skill":
@@ -398,11 +405,11 @@ def dispatch(args, root: Path) -> int:
         elif ac == "note":
             sched.note(args.run, args.text); print("Đã ghi.")
         elif ac == "release":
-            sched.register_release(args.run, args.tool, args.version, args.smoke); print("Đã ghi bản phát hành của phiên.")
+            sched.register_release(args.run, args.tool, args.version, args.smoke); print("Đã ghi kết quả gọi thử cho bản phát hành của phiên.")
         elif ac == "candidate":
             sched.mark_candidate(args.source, args.key, args.outcome, args.note); print("Đã ghi ứng viên.")
         elif ac == "end":
-            _j(sched.end(args.run, args.result, args.note))
+            _j(sched.end(args.run, args.result, args.note, agent=args.agent))
         else:
             _j({"schedule": sched.schedule(), "lock": read_json(sched.lock_path, default={"state": "FREE"}),
                 "last_sessions": [{k: s[k] for k in ("run_id", "trigger", "result", "started_at")} for s in sched.list(8)]})
@@ -422,7 +429,8 @@ def dispatch(args, root: Path) -> int:
     if c == "budget":
         b = Budget(root)
         if args.bcmd == "approve":
-            b.approve(args.amount, args.what, args.ref)
+            d.resolve(args.actor)
+            b.approve(args.amount, args.what, args.ref, args.actor)
         _j(dict(b.load(), remaining=b.remaining())); return 0
     if c == "export":
         for pth in export_mod.write(Path(args.out), root):

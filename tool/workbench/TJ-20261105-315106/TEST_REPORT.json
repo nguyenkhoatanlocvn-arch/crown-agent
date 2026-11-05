@@ -1,44 +1,120 @@
 {
  "tester": "tool-kt-02",
  "builder_cases": 45,
- "independent_cases": 20,
- "total_passed": 65,
- "total_cases": 65,
- "verdict": "FAIL",
+ "independent_cases": 27,
+ "total_passed": 72,
+ "total_cases": 72,
+ "verdict": "PASS",
  "coverage_gaps": [
-  "Counts: builder_cases = 44 in tests/cases.json + 1 manifest example (vi-du:phim_mau) that the harness adds; independent = 20 kt- cases; harness line: 'ĐẠT: 65/65 ca', netns=True.",
-  "No H1-H5 / G1-G11 / D1-D3 is without a meaningful developer case. Checked by reading every data file and by 28 single-behaviour mutants of main.py run on a scratch copy: every H/G-breaking mutant is caught by at least one developer case.",
-  "Gaps in the developer suite, now closed by kt- cases (each proven by a mutant that only the kt- case catches): G9 file cut mid-character at the last byte (kt-18); G10 large start must stay exact, no float round trip (kt-09); section 4 look-alikes: 4-digit hours and a timecode embedded in a sentence (kt-04); only CR/LF end a line, VT/FF/FS/GS/RS/NEL/U+2028/U+2029 inside dialogue must not split it (kt-20).",
-  "Also added: H4 with a file name containing spaces, brackets and Vietnamese letters (kt-17; developer names were ASCII only); G1+G2+G4 together with real changes (kt-03; developer's only such file had changed=0); mapping cap boundary at 201 cues (kt-15); 5,000 insertions with BOM+CRLF inside the 30 s limit (kt-16); NFC+NFD+non-canonical mark order in one file (kt-01); two digit lines before a timecode and orphan numbers (kt-14).",
-  "Still open because the case format cannot express them (checked by hand instead, see failures and permission_review): the report has no keys beyond SPEC section 2; exactly one stderr line and empty stdout on error; out/ holds only the one file on success; behaviour when stdout cannot be written."
+  "Counts: builder_cases = 44 in tests/cases.json + 1 manifest example (vi-du:phim_mau) that the harness adds; independent = 27 kt- cases (20 from round 1, 7 from round 2).",
+  "Every H1-H5, G1-G21 and D1-D3 has at least one meaningful case. Evidence: every data file read against the SPEC, plus 37 single-behaviour mutants over the two rounds run on scratch copies (36 caught; the one not caught is the stdout rule below). Rows judged by reading only, without a mutant: G6, G11, G15, G18, G21, D1.",
+  "Not expressible in the case format, checked by hand only: the report has no key beyond section 2; a stdout failure exits 2 and removes the output; exactly one stderr line and empty stdout on error; out/ holds only the one file on success."
  ],
- "failures": [
+ "failures": [],
+ "ambiguities": [
+  "The ten ambiguities of round 1 are now assumptions G12-G21 in SPEC section 5b.",
+  "Still unstated, minor, none blocks: (1) what besides position info may follow the end time: the build accepts any text after whitespace; (2) a run of three or more CR before LF, or a lone CR next to CRLF: the build reads any run of CR ending in LF as one line ending; (3) non-ASCII digits inside a timecode: the build does not treat the line as a timecode; (4) `\"params\": null` is read as no params; (5) G14 says Unicode whitespace: the build also treats U+001C-U+001F as whitespace (Python's definition)."
+ ],
+ "permission_review": "Round 2 state: clean. main.py imports only errno, json, os, re, sys; no network, subprocess, eval/exec/compile/__import__; lint_permissions returns []; manifest permissions {network:false, subprocess:[]} match; all runs netns=True. Writes only out_dir/<basename(input)>; removes only that same file (failed write, or failed report). Every error path tried by hand exits 2 with one Vietnamese stderr line and leaves out/ empty, including an unwritable stdout. Report line has exactly the six keys of SPEC section 2. Both round-1 findings are fixed. One documentation defect remains in SPEC.md row G18 (raw CR characters instead of the text escapes); it does not affect the tool.",
+ "command": "python3 -m tool test tool/workbench/TJ-20261105-315106/build",
+ "at": "2026-11-05T19:42:17Z",
+ "rounds": [
   {
-   "case": "review:report-shape (not a test case; the harness compares report keys one by one and cannot see extra keys)",
-   "expected": "last stdout line is {ok, cues, changed, inserted, mapping} as written in SPEC section 2",
-   "got": "{ok, cues, changed, inserted, mapping, ignored_timecodes}. The rule behind the sixth key (a timecode line directly after a non-blank, non-number line is not a cue: left as is, not counted; a file whose only timecodes are of that kind exits 2) is not in SPEC sections 4, 5 or 6; it exists only in main.py, manifest.interface.report and two developer cases.",
-   "spec_ref": "SPEC section 2 (report), section 5 header (every assumption must be listed with a case), PLAYBOOK section 4"
+   "round": 1,
+   "tester": "tool-kt-02",
+   "builder_cases": 45,
+   "independent_cases": 20,
+   "total_passed": 65,
+   "total_cases": 65,
+   "verdict": "FAIL",
+   "coverage_gaps": [
+    "Counts: builder_cases = 44 in tests/cases.json + 1 manifest example (vi-du:phim_mau) that the harness adds; independent = 20 kt- cases; harness line: 'ĐẠT: 65/65 ca', netns=True.",
+    "No H1-H5 / G1-G11 / D1-D3 is without a meaningful developer case. Checked by reading every data file and by 28 single-behaviour mutants of main.py run on a scratch copy: every H/G-breaking mutant is caught by at least one developer case.",
+    "Gaps in the developer suite, now closed by kt- cases (each proven by a mutant that only the kt- case catches): G9 file cut mid-character at the last byte (kt-18); G10 large start must stay exact, no float round trip (kt-09); section 4 look-alikes: 4-digit hours and a timecode embedded in a sentence (kt-04); only CR/LF end a line, VT/FF/FS/GS/RS/NEL/U+2028/U+2029 inside dialogue must not split it (kt-20).",
+    "Also added: H4 with a file name containing spaces, brackets and Vietnamese letters (kt-17; developer names were ASCII only); G1+G2+G4 together with real changes (kt-03; developer's only such file had changed=0); mapping cap boundary at 201 cues (kt-15); 5,000 insertions with BOM+CRLF inside the 30 s limit (kt-16); NFC+NFD+non-canonical mark order in one file (kt-01); two digit lines before a timecode and orphan numbers (kt-14).",
+    "Still open because the case format cannot express them (checked by hand instead, see failures and permission_review): the report has no keys beyond SPEC section 2; exactly one stderr line and empty stdout on error; out/ holds only the one file on success; behaviour when stdout cannot be written."
+   ],
+   "failures": [
+    {
+     "case": "review:report-shape (not a test case; the harness compares report keys one by one and cannot see extra keys)",
+     "expected": "last stdout line is {ok, cues, changed, inserted, mapping} as written in SPEC section 2",
+     "got": "{ok, cues, changed, inserted, mapping, ignored_timecodes}. The rule behind the sixth key (a timecode line directly after a non-blank, non-number line is not a cue: left as is, not counted; a file whose only timecodes are of that kind exits 2) is not in SPEC sections 4, 5 or 6; it exists only in main.py, manifest.interface.report and two developer cases.",
+     "spec_ref": "SPEC section 2 (report), section 5 header (every assumption must be listed with a case), PLAYBOOK section 4"
+    },
+    {
+     "case": "review:stdout-unwritable (not a test case; the harness always gives the tool a pipe)",
+     "expected": "any error: exit code 2, one Vietnamese line on stderr, no output file",
+     "got": "stdout closed: exit 1, 8-line Python traceback, out/a.srt left behind. stdout=/dev/full: exit 120, out/a.srt left behind. Cause: the report is printed at main.py line 238, outside the try/except of lines 230-237, after the file was written at line 216. Low severity: cannot happen through `python -m tool run`.",
+     "spec_ref": "SPEC section 2, 'Lỗi'"
+    }
+   ],
+   "ambiguities": [
+    "Timecode line directly after a text line or another timecode line: SPEC section 4 and G5 only cover 'index line before it' and 'file start / after a blank line'. Build skips it and counts ignored_timecodes; if no other timecode exists it exits 2, although G8 literally says 'no timecode line' (developer cases s4-timecode-sau-loi-thoai-bo-qua, g8-timecode-khong-mo-doan).",
+    "G5 says the inserted line uses the timecode line's own line ending; when that line is the last line and has none, build uses the last line ending seen, else LF (developer cases g5-timecode-cuoi-khong-xuong-dong, g5-chi-mot-dong-timecode).",
+    "What counts as whitespace / a blank line: build uses all Unicode whitespace (NBSP, U+3000, U+2028 ...) plus U+FEFF anywhere in the file, and treats a whitespace-only line as blank for G5 (developer cases s4-bom-giua-tep-ghep, g5-sau-dong-chi-co-dau-cach).",
+    "Leading zeros: '003' becomes '3' and mapping keeps '003' (developer case s4-khoang-trang-quanh-so). Whether '01' on cue 1 is 'already correct' under D3 is not stated; build rewrites it to '1' and counts it as changed.",
+    "Index line written with non-ASCII digits (e.g. full-width): build treats it as text, so the cue's timecode falls under the first ambiguity and is skipped.",
+    "Text after the end time: SPEC says position info may follow; build accepts any text after whitespace and rejects a suffix glued on without whitespace (e.g. '...02,000X1:40').",
+    "Line endings other than LF/CRLF: lone CR and CR CR LF are treated as line endings by the build (developer cases g2-cr-mac-cu, g2-crcrlf); G2 names only CRLF, LF and mixed.",
+    "start given as JSON 1.0, null or \"5\": build rejects all three with exit 2; an unknown parameter (e.g. 'star') is also rejected (developer case tham-so-la). SPEC only says 'negative or not an integer'.",
+    "Upper-case extension '.SRT' is accepted by main.py; manifest lists only '.srt'.",
+    "By the letter of section 4, a digit-only dialogue line that is directly followed (no blank line) by the next timecode is that cue's index line and is overwritten (developer case s4-thieu-dong-trong-giua-doan). This follows the SPEC text but sits uneasily with G6."
+   ],
+   "permission_review": "Permissions: clean. main.py imports only errno, json, os, re, sys; no network, no subprocess/os.system/exec*/spawn*, no eval/exec/compile/__import__; harness lint_permissions returns []; manifest permissions {network:false, subprocess:[]} match the code; all runs had netns=True. Writes: only os.makedirs(out_dir) and out_dir/<basename(input)> (plus os.remove of that same file after a failed write); '../' in the input path cannot escape (basename); refuses to write over the input (exit 2, input bytes unchanged). Errors: 12 direct error runs (missing file, wrong extension, bad UTF-8, empty file, broken request JSON, request not an object, no inputs, negative/null/1.0 start, out_dir = input dir, no argv) all gave exit 2, exactly one Vietnamese stderr line, empty stdout, nothing in out/. Success: one stdout line, one file in out/. Manifest id/version/category/name/keywords/example match SPEC section 8 and the example files are byte-identical to testdata/. Two contract deviations found (listed under failures): the report carries a sixth key not in SPEC section 2, and a failed stdout write exits 1/120 and leaves the output file. These two are the only reason the verdict is FAIL; all 65 cases pass.",
+   "command": "python3 -m tool test tool/workbench/TJ-20261105-315106/build",
+   "at": "2026-11-05T19:30:55Z"
   },
   {
-   "case": "review:stdout-unwritable (not a test case; the harness always gives the tool a pipe)",
-   "expected": "any error: exit code 2, one Vietnamese line on stderr, no output file",
-   "got": "stdout closed: exit 1, 8-line Python traceback, out/a.srt left behind. stdout=/dev/full: exit 120, out/a.srt left behind. Cause: the report is printed at main.py line 238, outside the try/except of lines 230-237, after the file was written at line 216. Low severity: cannot happen through `python -m tool run`.",
-   "spec_ref": "SPEC section 2, 'Lỗi'"
+   "round": 2,
+   "tester": "tool-kt-02",
+   "at": "2026-11-05T19:42:17Z",
+   "scope": "Re-test after fixes (commit df22c7b): SPEC sections 2 and 5b against main.py, the stdout-failure path, new cases for 5b. Not a full re-audit.",
+   "verdict": "PASS",
+   "builder_cases": 45,
+   "independent_cases": 27,
+   "total_passed": 72,
+   "total_cases": 72,
+   "new_cases": [
+    "kt-21-g16-chu-so-khong-phai-ascii-khong-la-dong-so",
+    "kt-22-g17-vi-tri-dinh-lien-gio-ket-thuc-khong-la-timecode",
+    "kt-23-g20-duoi-SRT-viet-hoa-giu-nguyen-ten",
+    "kt-24-g12-timecode-ngay-sau-timecode-khac",
+    "kt-25-g14-khoang-trang-unicode",
+    "kt-26-g19-start-1.0-bi-tu-choi",
+    "kt-27-g19-start-null-bi-tu-choi"
+   ],
+   "checked": [
+    "(a) main.py read line by line against G12-G21 and section 2: every row matches. G12 lines 82-85 and 104-107; G13 line 95; G14 lines 32, 38-39; G15 lines 89-92, 98; G16 line 38 ([0-9], ASCII only); G17 line 36 (suffix must start with whitespace); G18 lines 41, 48-60; G19 lines 166-171; G20 lines 156, 209 (and tool/core/runner.py line 79 compares the extension case-insensitively, so `tool run` also accepts .SRT); G21 lines 83-92. Report has exactly the six keys of section 2. 7 hand-written probes (G12, G13, G15, G16+G12, G18 twice, G21) run directly against main.py: 7 match, 0 mismatch.",
+    "(b) Finding 2 of round 1, retried by hand with out/ emptied before each run: stdout closed (>&-) -> exit 2, out/ empty, one stderr line 'Không ghi được báo cáo ra stdout (EBADF) — đã hủy tệp kết quả.'; stdout=/dev/full -> exit 2, out/ empty, one stderr line; reader closed the pipe -> exit 2, out/ empty; stdout and stderr both closed -> exit 2, out/ empty; /dev/full with a pre-existing out/a.srt -> exit 2, out/ empty. Normal run -> exit 0, one stdout line, out/a.srt byte-identical to the expected sample, input untouched.",
+    "(c) 7 new cases appended (the 64 existing cases are byte-identical): kt-21 G16, kt-22 G17, kt-23 G20 as asked; plus kt-24 (G12 'right after another timecode' had no case), kt-25 (G14 had no case with real Unicode whitespace: NBSP, U+3000, U+2003), kt-26 and kt-27 (G19 names 1.0 and null; developer cases had 1.5, \"5\", true, -1). Expected bytes hand-written from the SPEC as templates where only index lines differ. 9 mutants on a scratch copy: each 5b mutant is caught by its new kt- case, and none of them by a developer case except the G14 one.",
+    "(d) python3 -m tool test tool/workbench/TJ-20261105-315106/build -> 'ĐẠT: 72/72 ca', exit 0, netns=True.",
+    "Permissions re-checked on the changed main.py: imports still errno, json, os, re, sys; new calls are os.write(1, ...) for the report and os.remove(dst) of the tool's own output; lint_permissions returns []. manifest.json unchanged."
+   ],
+   "round1_findings": [
+    {
+     "case": "review:report-shape",
+     "status": "fixed",
+     "evidence": "SPEC section 2 now lists ignored_timecodes and says the report has no other key; G12 records the rule. Report keys observed: ok, cues, changed, inserted, mapping, ignored_timecodes."
+    },
+    {
+     "case": "review:stdout-unwritable",
+     "status": "fixed",
+     "evidence": "See checked (b): five failure modes all give exit 2 and an empty out/."
+    }
+   ],
+   "new_findings": [
+    {
+     "severity": "low, documentation only, does not block",
+     "what": "SPEC.md row G18 contains the raw control characters themselves (one lone CR, then CR CR LF) instead of the text `\\r` and `\\r\\r\\n`. The table row is cut in two (lines 64-65) and the two code spans render empty. The code and the cited cases g2-cr-mac-cu, g2-crcrlf match the evident meaning.",
+     "reproduce": "cd /home/claude/crown-agent && grep -n -a -A1 'G18' tool/workbench/TJ-20261105-315106/SPEC.md | cat -A   (shows `^M` and the row continuing on line 65);  tr -cd '\\r' < tool/workbench/TJ-20261105-315106/SPEC.md | wc -c   (prints 3)",
+     "fix": "Write the two escapes as plain text in that row."
+    },
+    {
+     "severity": "note, does not block",
+     "what": "No automated case guards two rules of section 2: 'no other report key' and 'stdout failure -> exit 2, output removed'. The harness compares report keys one by one and always gives the tool a pipe. A mutant that keeps the output file after a stdout failure passes all 72 cases. Both rules were checked by hand in this round.",
+     "reproduce": "In a scratch copy, replace `os.remove(dst)` at main.py line 252 with `pass` and run the suite: 72/72 still pass."
+    }
+   ]
   }
- ],
- "ambiguities": [
-  "Timecode line directly after a text line or another timecode line: SPEC section 4 and G5 only cover 'index line before it' and 'file start / after a blank line'. Build skips it and counts ignored_timecodes; if no other timecode exists it exits 2, although G8 literally says 'no timecode line' (developer cases s4-timecode-sau-loi-thoai-bo-qua, g8-timecode-khong-mo-doan).",
-  "G5 says the inserted line uses the timecode line's own line ending; when that line is the last line and has none, build uses the last line ending seen, else LF (developer cases g5-timecode-cuoi-khong-xuong-dong, g5-chi-mot-dong-timecode).",
-  "What counts as whitespace / a blank line: build uses all Unicode whitespace (NBSP, U+3000, U+2028 ...) plus U+FEFF anywhere in the file, and treats a whitespace-only line as blank for G5 (developer cases s4-bom-giua-tep-ghep, g5-sau-dong-chi-co-dau-cach).",
-  "Leading zeros: '003' becomes '3' and mapping keeps '003' (developer case s4-khoang-trang-quanh-so). Whether '01' on cue 1 is 'already correct' under D3 is not stated; build rewrites it to '1' and counts it as changed.",
-  "Index line written with non-ASCII digits (e.g. full-width): build treats it as text, so the cue's timecode falls under the first ambiguity and is skipped.",
-  "Text after the end time: SPEC says position info may follow; build accepts any text after whitespace and rejects a suffix glued on without whitespace (e.g. '...02,000X1:40').",
-  "Line endings other than LF/CRLF: lone CR and CR CR LF are treated as line endings by the build (developer cases g2-cr-mac-cu, g2-crcrlf); G2 names only CRLF, LF and mixed.",
-  "start given as JSON 1.0, null or \"5\": build rejects all three with exit 2; an unknown parameter (e.g. 'star') is also rejected (developer case tham-so-la). SPEC only says 'negative or not an integer'.",
-  "Upper-case extension '.SRT' is accepted by main.py; manifest lists only '.srt'.",
-  "By the letter of section 4, a digit-only dialogue line that is directly followed (no blank line) by the next timecode is that cue's index line and is overwritten (developer case s4-thieu-dong-trong-giua-doan). This follows the SPEC text but sits uneasily with G6."
- ],
- "permission_review": "Permissions: clean. main.py imports only errno, json, os, re, sys; no network, no subprocess/os.system/exec*/spawn*, no eval/exec/compile/__import__; harness lint_permissions returns []; manifest permissions {network:false, subprocess:[]} match the code; all runs had netns=True. Writes: only os.makedirs(out_dir) and out_dir/<basename(input)> (plus os.remove of that same file after a failed write); '../' in the input path cannot escape (basename); refuses to write over the input (exit 2, input bytes unchanged). Errors: 12 direct error runs (missing file, wrong extension, bad UTF-8, empty file, broken request JSON, request not an object, no inputs, negative/null/1.0 start, out_dir = input dir, no argv) all gave exit 2, exactly one Vietnamese stderr line, empty stdout, nothing in out/. Success: one stdout line, one file in out/. Manifest id/version/category/name/keywords/example match SPEC section 8 and the example files are byte-identical to testdata/. Two contract deviations found (listed under failures): the report carries a sixth key not in SPEC section 2, and a failed stdout write exits 1/120 and leaves the output file. These two are the only reason the verdict is FAIL; all 65 cases pass.",
- "command": "python3 -m tool test tool/workbench/TJ-20261105-315106/build",
- "at": "2026-11-05T19:30:55Z"
+ ]
 }

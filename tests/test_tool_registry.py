@@ -52,8 +52,38 @@ class DeptRegistryTest(unittest.TestCase):
 
     def test_write_scope_stays_inside_department_and_off_other_agents(self):
         self.assertBroken(lambda d: d["executives"][0].update(write_scope=["skills/"]), "vùng ghi phải nằm trong vùng bộ phận")
-        self.assertBroken(lambda d: d["department"].update(domain="skills/"), "chồng vùng ghi của A03")
         self.assertBroken(lambda d: d["executives"][0].update(memory_ns="agents/A03/"), "bộ nhớ phải nằm trong vùng bộ phận")
+        self.assertBroken(lambda d: d["department"].update(domain="skills/"), "chưa được Chủ tịch phê duyệt")
+
+    def test_new_department_needs_chairman_approved_entry_not_just_a_file(self):
+        base = json.loads(self.path.read_text(encoding="utf-8"))
+        for dom in ("crown/", "b02_btc/", ".git/", "tests/", "zz/"):          # thả thêm một tệp dept_*.json là không đủ
+            extra = dict(base, department={"id": "X", "domain": dom},
+                         executives=[dict(base["executives"][0], id="agent-x", memory_ns=dom + "m/", write_scope=[dom])])
+            extra["executives"][0].pop("clone_of", None)
+            (self.tmp / "reg" / "dept_x.json").write_text(json.dumps(extra, ensure_ascii=False), encoding="utf-8")
+            with self.assertRaisesRegex(R.RegistryError, "chưa được Chủ tịch phê duyệt", msg=dom):
+                R.load(self.tmp / "reg")
+
+    def test_executive_id_branch_tier_and_limits_are_validated(self):
+        for bad in ("../../crown", "", "A03.9", "Agent-Tool", "tool"):
+            d = json.loads(self.path.read_text(encoding="utf-8"))
+            d["executives"][0]["id"] = bad
+            self.path.write_text(json.dumps(d, ensure_ascii=False), encoding="utf-8")
+            with self.assertRaisesRegex(R.RegistryError, "ID Agent điều hành phải dạng", msg=bad):
+                R.load(self.tmp / "reg")
+        self.path.write_text(json.dumps(self.d, ensure_ascii=False), encoding="utf-8")
+        def weak_execs(d):
+            d["executives"][0]["tier"] = d["executives"][1]["tier"] = "READ"
+            d["branches"][2]["tier"] = "OPERATIONAL_WRITE"
+        self.assertBroken(weak_execs, "cao quyền hơn Agent điều hành")
+
+    def test_limits_reject_booleans_and_runaway_values(self):
+        self.assertBroken(lambda d: d["limits"].update(max_auto_releases_per_session=999), "max_auto_releases_per_session")
+        self.d["limits"]["max_auto_releases_per_session"] = 1
+        self.assertBroken(lambda d: d["limits"].update(max_concurrent_subagents=True), "max_concurrent_subagents")
+        self.d["limits"]["max_concurrent_subagents"] = 2
+        self.assertBroken(lambda d: d["executives"][0].update(peer_of=["VUA_CEO", "VUA_CEO"]), "không trùng")
 
     def test_ids_do_not_collide_and_decision_is_recorded(self):
         self.assertBroken(lambda d: d["executives"][0].update(id="A03"), "ID trùng với lãnh đạo/Agent đã có")
