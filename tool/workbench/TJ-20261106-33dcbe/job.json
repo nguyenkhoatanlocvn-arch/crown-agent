@@ -8,7 +8,7 @@
  "priority": 5,
  "idempotency_key": null,
  "state": "RUNNING",
- "state_version": 10,
+ "state_version": 12,
  "fencing_token": 1,
  "lease": {
   "holder": "agent-tool-at",
@@ -96,12 +96,17 @@
    "id": "test",
    "branch": "kt",
    "what": "Kiểm thử độc lập trong vùng cách ly",
-   "status": "PENDING",
-   "attempts": 0,
-   "by": null,
-   "sub": null,
-   "evidence": [],
-   "note": ""
+   "status": "DONE",
+   "attempts": 1,
+   "by": "agent-tool-at",
+   "sub": "tool-kt-03",
+   "evidence": [
+    "tool/workbench/TJ-20261106-33dcbe/TEST_a.txt"
+   ],
+   "note": "diễn tập (a): 72/72 ca đạt",
+   "started_at": "2026-11-05T20:10:08+00:00",
+   "build_digest": "6145443e8eb80e7358d8b5ec86656fa29a20f5bbee4971f91977b07e4d161273",
+   "finished_at": "2026-11-05T20:10:11+00:00"
   },
   {
    "id": "publish",
@@ -130,5 +135,5 @@
  "version": null,
  "result": null,
  "created_at": "2026-11-05T20:09:51+00:00",
- "updated_at": "2026-11-05T20:10:00+00:00"
+ "updated_at": "2026-11-05T20:10:11+00:00"
 }

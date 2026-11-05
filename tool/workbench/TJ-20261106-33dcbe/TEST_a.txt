@@ -1,0 +1,1 @@
+ĐẠT: 72/72 ca; cách ly: {'tempdir': True, 'env_stripped': True, 'rlimits': True, 'netns': True, 'timeout_s': 30}
