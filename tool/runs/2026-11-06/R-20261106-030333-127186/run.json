@@ -1,0 +1,82 @@
+{
+ "run_id": "R-20261106-030333-127186",
+ "tool": "srt-renumber",
+ "version": "1.0.0",
+ "caller": "A15",
+ "caller_kind": "agent",
+ "caller_auth": "danh bạ (ID tự khai, chưa có khóa riêng)",
+ "trigger": "manual",
+ "session": null,
+ "purpose": "gọi thử từ kho: ví dụ:phim_mau",
+ "started_at": "2026-11-05T20:03:33+00:00",
+ "finished_at": "2026-11-05T20:03:34+00:00",
+ "status": "OK",
+ "error": null,
+ "inputs": [
+  {
+   "name": "input",
+   "path": "/home/claude/crown-agent/tool/catalog/srt-renumber/1.0.0/examples/phim_mau.srt",
+   "bytes": 287,
+   "sha256": "1f7e459eed1dcb752ca5975d8e194db02f6805f2a5447470ec4a2eaf78fa074c"
+  }
+ ],
+ "outputs": [
+  {
+   "name": "phim_mau.srt",
+   "bytes": 286,
+   "sha256": "703df9dafa8f416ec859cb245d6c6574ea2be3ef61fe678caf320ed6949402ab",
+   "path": "/tmp/toolsmoke-536vw0gd/phim_mau.srt"
+  }
+ ],
+ "access": [
+  {
+   "path": "/home/claude/crown-agent/tool/catalog/srt-renumber/1.0.0/examples/phim_mau.srt",
+   "mode": "read",
+   "caller": "A15",
+   "allow": true,
+   "rule": "vùng dùng chung ('tool/catalog/')"
+  },
+  {
+   "path": "/tmp/toolsmoke-536vw0gd",
+   "mode": "write",
+   "caller": "A15",
+   "allow": true,
+   "rule": "tệp làm việc ngoài repo, không thuộc vùng bảo vệ"
+  }
+ ],
+ "report": {
+  "ok": true,
+  "cues": 4,
+  "changed": 4,
+  "inserted": 0,
+  "mapping": [
+   [
+    "3",
+    1
+   ],
+   [
+    "8",
+    2
+   ],
+   [
+    "8",
+    3
+   ],
+   [
+    "15",
+    4
+   ]
+  ],
+  "ignored_timecodes": 0
+ },
+ "isolation": {
+  "tempdir": true,
+  "env_stripped": true,
+  "rlimits": true,
+  "netns": true,
+  "timeout_s": 30
+ },
+ "exit_code": 0,
+ "duration_s": 0.033,
+ "record": "runs/2026-11-06/R-20261106-030333-127186/run.json"
+}
