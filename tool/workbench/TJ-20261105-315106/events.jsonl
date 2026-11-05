@@ -9,3 +9,5 @@
 {"at": "2026-11-05T16:35:07+00:00", "actor": "agent-tool", "action": "step_start", "detail": "spec · Agent con tool-pt-01", "state": "RUNNING", "token": 1}
 {"at": "2026-11-05T16:35:07+00:00", "actor": "agent-tool", "action": "step_done", "detail": "spec: 5 hành vi THẤY, 11 giả định cần ca thử, 3 quyết định thiết kế", "state": "RUNNING", "token": 1}
 {"at": "2026-11-05T16:35:07+00:00", "actor": "agent-tool", "action": "step_start", "detail": "build · Agent con tool-lt-01", "state": "RUNNING", "token": 1}
+{"at": "2026-11-05T16:50:07+00:00", "actor": "agent-tool", "action": "step_done", "detail": "build: tool-lt-01 viết từ SPEC + testdata; 45/45 ca tự kiểm đạt; kết quả mẫu đúng 250 ký tự", "state": "RUNNING", "token": 1}
+{"at": "2026-11-05T16:50:07+00:00", "actor": "agent-tool", "action": "step_start", "detail": "test · Agent con tool-kt-01", "state": "RUNNING", "token": 1}

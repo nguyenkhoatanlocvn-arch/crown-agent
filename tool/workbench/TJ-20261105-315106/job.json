@@ -8,7 +8,7 @@
  "priority": 5,
  "idempotency_key": "nghiem-thu-2026-11-05-srt",
  "state": "RUNNING",
- "state_version": 10,
+ "state_version": 12,
  "fencing_token": 1,
  "lease": {
   "holder": "agent-tool",
@@ -88,24 +88,30 @@
    "id": "build",
    "branch": "lt",
    "what": "Viết công cụ từ đặc tả và dữ liệu thử",
-   "status": "RUNNING",
+   "status": "DONE",
    "attempts": 1,
    "by": "agent-tool",
    "sub": "tool-lt-01",
-   "evidence": [],
-   "note": "",
-   "started_at": "2026-11-05T16:35:07+00:00"
+   "evidence": [
+    "tool/workbench/TJ-20261105-315106/build/manifest.json",
+    "tool/workbench/TJ-20261105-315106/build/main.py",
+    "tool/workbench/TJ-20261105-315106/build/tests/cases.json"
+   ],
+   "note": "tool-lt-01 viết từ SPEC + testdata; 45/45 ca tự kiểm đạt; kết quả mẫu đúng 250 ký tự",
+   "started_at": "2026-11-05T16:35:07+00:00",
+   "finished_at": "2026-11-05T16:50:07+00:00"
   },
   {
    "id": "test",
    "branch": "kt",
    "what": "Kiểm thử độc lập trong vùng cách ly",
-   "status": "PENDING",
-   "attempts": 0,
-   "by": null,
-   "sub": null,
+   "status": "RUNNING",
+   "attempts": 1,
+   "by": "agent-tool",
+   "sub": "tool-kt-01",
    "evidence": [],
-   "note": ""
+   "note": "",
+   "started_at": "2026-11-05T16:50:07+00:00"
   },
   {
    "id": "publish",
@@ -134,5 +140,5 @@
  "version": null,
  "result": null,
  "created_at": "2026-11-05T16:33:00+00:00",
- "updated_at": "2026-11-05T16:35:07+00:00"
+ "updated_at": "2026-11-05T16:50:07+00:00"
 }
