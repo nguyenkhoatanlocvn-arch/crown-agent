@@ -1,0 +1,74 @@
+{
+ "run_id": "R-20261106-031211-633d7c",
+ "tool": "srt-renumber",
+ "version": "1.0.0",
+ "caller": "A15",
+ "caller_kind": "agent",
+ "caller_auth": "danh bạ (ID tự khai, chưa có khóa riêng)",
+ "trigger": "manual",
+ "session": "AT-20261106-0309-c22d0b",
+ "purpose": "gọi thử từ kho: dữ liệu khác mẫu #2",
+ "started_at": "2026-11-05T20:12:11+00:00",
+ "finished_at": "2026-11-05T20:12:11+00:00",
+ "status": "OK",
+ "error": null,
+ "inputs": [
+  {
+   "name": "input",
+   "path": "/tmp/claude-0/-home-claude/5a62dd05-6fb7-58d5-884b-c6a32a280020/scratchpad/verify/a15_work/phu_de_tau_hue.srt",
+   "bytes": 223,
+   "sha256": "6523ea3a50e9858673ae425b11a1f5859bb36496ec8344afab54fd0784529394"
+  }
+ ],
+ "outputs": [
+  {
+   "name": "phu_de_tau_hue.srt",
+   "bytes": 222,
+   "sha256": "b94dd772e527f7d1c79884ea88e602c639e7f9611a9dd1acff32ab552a502abc",
+   "path": "/tmp/toolsmoke-ot6hbeej/phu_de_tau_hue.srt"
+  }
+ ],
+ "access": [
+  {
+   "path": "/tmp/claude-0/-home-claude/5a62dd05-6fb7-58d5-884b-c6a32a280020/scratchpad/verify/a15_work/phu_de_tau_hue.srt",
+   "mode": "read",
+   "caller": "A15",
+   "allow": true,
+   "rule": "tệp làm việc ngoài repo, không thuộc vùng bảo vệ"
+  },
+  {
+   "path": "/tmp/toolsmoke-ot6hbeej",
+   "mode": "write",
+   "caller": "A15",
+   "allow": true,
+   "rule": "tệp làm việc ngoài repo, không thuộc vùng bảo vệ"
+  }
+ ],
+ "report": {
+  "ok": true,
+  "cues": 2,
+  "changed": 2,
+  "inserted": 0,
+  "mapping": [
+   [
+    "7",
+    1
+   ],
+   [
+    "19",
+    2
+   ]
+  ],
+  "ignored_timecodes": 0
+ },
+ "isolation": {
+  "tempdir": true,
+  "env_stripped": true,
+  "rlimits": true,
+  "netns": true,
+  "timeout_s": 30
+ },
+ "exit_code": 0,
+ "duration_s": 0.037,
+ "record": "runs/2026-11-06/R-20261106-031211-633d7c/run.json"
+}

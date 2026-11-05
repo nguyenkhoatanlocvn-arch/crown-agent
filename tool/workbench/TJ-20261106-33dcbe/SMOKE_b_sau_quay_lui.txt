@@ -1,0 +1,4 @@
+  ĐẠT  ví dụ:phim_mau    [R-20261106-031211-9e5973]
+  ĐẠT  dữ liệu khác mẫu #1    [R-20261106-031211-ea70b4]
+  ĐẠT  dữ liệu khác mẫu #2    [R-20261106-031211-633d7c]
+GỌI THỬ TỪ KHO: ĐẠT — srt-renumber@1.0.0, người gọi A15
