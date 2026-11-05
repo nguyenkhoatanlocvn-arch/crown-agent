@@ -1,0 +1,1680 @@
+{
+ "cases": [
+  {
+   "name": "h1-h5-mau-tu-video",
+   "inputs": {
+    "input": "tests/data/h1_h5_mau_tu_video.srt"
+   },
+   "expect": {
+    "exit_code": 0,
+    "files": {
+     "h1_h5_mau_tu_video.srt": "tests/data/h1_h5_mau_tu_video.expected.srt"
+    },
+    "report": {
+     "ok": true,
+     "cues": 4,
+     "changed": 4,
+     "inserted": 0,
+     "mapping": [
+      [
+       "3",
+       1
+      ],
+      [
+       "8",
+       2
+      ],
+      [
+       "8",
+       3
+      ],
+      [
+       "15",
+       4
+      ]
+     ]
+    }
+   }
+  },
+  {
+   "name": "g1-bom",
+   "inputs": {
+    "input": "tests/data/g1_bom.srt"
+   },
+   "expect": {
+    "exit_code": 0,
+    "files": {
+     "g1_bom.srt": "tests/data/g1_bom.expected.srt"
+    },
+    "report": {
+     "cues": 2,
+     "changed": 2,
+     "inserted": 0,
+     "mapping": [
+      [
+       "7",
+       1
+      ],
+      [
+       "9",
+       2
+      ]
+     ]
+    }
+   }
+  },
+  {
+   "name": "g1-bom-thieu-so-dau-tep",
+   "inputs": {
+    "input": "tests/data/g1_bom_thieu_so_dau_tep.srt"
+   },
+   "expect": {
+    "exit_code": 0,
+    "files": {
+     "g1_bom_thieu_so_dau_tep.srt": "tests/data/g1_bom_thieu_so_dau_tep.expected.srt"
+    },
+    "report": {
+     "cues": 2,
+     "changed": 1,
+     "inserted": 1,
+     "mapping": [
+      [
+       null,
+       1
+      ],
+      [
+       "5",
+       2
+      ]
+     ]
+    }
+   }
+  },
+  {
+   "name": "g2-crlf",
+   "inputs": {
+    "input": "tests/data/g2_crlf.srt"
+   },
+   "expect": {
+    "exit_code": 0,
+    "files": {
+     "g2_crlf.srt": "tests/data/g2_crlf.expected.srt"
+    },
+    "report": {
+     "cues": 3,
+     "changed": 3,
+     "inserted": 0
+    }
+   }
+  },
+  {
+   "name": "g2-tron-crlf-lf",
+   "inputs": {
+    "input": "tests/data/g2_tron_crlf_lf.srt"
+   },
+   "expect": {
+    "exit_code": 0,
+    "files": {
+     "g2_tron_crlf_lf.srt": "tests/data/g2_tron_crlf_lf.expected.srt"
+    },
+    "report": {
+     "cues": 4,
+     "changed": 4,
+     "inserted": 0
+    }
+   }
+  },
+  {
+   "name": "g2-cr-mac-cu",
+   "inputs": {
+    "input": "tests/data/g2_cr_mac_cu.srt"
+   },
+   "expect": {
+    "exit_code": 0,
+    "files": {
+     "g2_cr_mac_cu.srt": "tests/data/g2_cr_mac_cu.expected.srt"
+    },
+    "report": {
+     "cues": 2,
+     "changed": 2,
+     "inserted": 0
+    }
+   }
+  },
+  {
+   "name": "g2-crcrlf",
+   "inputs": {
+    "input": "tests/data/g2_crcrlf.srt"
+   },
+   "expect": {
+    "exit_code": 0,
+    "files": {
+     "g2_crcrlf.srt": "tests/data/g2_crcrlf.expected.srt"
+    },
+    "report": {
+     "cues": 2,
+     "changed": 2,
+     "inserted": 0
+    }
+   }
+  },
+  {
+   "name": "g3-ba-dong-trong",
+   "inputs": {
+    "input": "tests/data/g3_ba_dong_trong.srt"
+   },
+   "expect": {
+    "exit_code": 0,
+    "files": {
+     "g3_ba_dong_trong.srt": "tests/data/g3_ba_dong_trong.expected.srt"
+    },
+    "report": {
+     "cues": 3,
+     "changed": 3,
+     "inserted": 0
+    }
+   }
+  },
+  {
+   "name": "g4-khong-xuong-dong-cuoi",
+   "inputs": {
+    "input": "tests/data/g4_khong_xuong_dong_cuoi.srt"
+   },
+   "expect": {
+    "exit_code": 0,
+    "files": {
+     "g4_khong_xuong_dong_cuoi.srt": "tests/data/g4_khong_xuong_dong_cuoi.expected.srt"
+    },
+    "report": {
+     "cues": 2,
+     "changed": 2
+    }
+   }
+  },
+  {
+   "name": "g4-nhieu-dong-trong-cuoi",
+   "inputs": {
+    "input": "tests/data/g4_nhieu_dong_trong_cuoi.srt"
+   },
+   "expect": {
+    "exit_code": 0,
+    "files": {
+     "g4_nhieu_dong_trong_cuoi.srt": "tests/data/g4_nhieu_dong_trong_cuoi.expected.srt"
+    },
+    "report": {
+     "cues": 2,
+     "changed": 2
+    }
+   }
+  },
+  {
+   "name": "g4-crlf-khong-xuong-dong-cuoi",
+   "inputs": {
+    "input": "tests/data/g4_crlf_khong_xuong_dong_cuoi.srt"
+   },
+   "expect": {
+    "exit_code": 0,
+    "files": {
+     "g4_crlf_khong_xuong_dong_cuoi.srt": "tests/data/g4_crlf_khong_xuong_dong_cuoi.expected.srt"
+    },
+    "report": {
+     "cues": 2,
+     "changed": 2
+    }
+   }
+  },
+  {
+   "name": "g5-doan-giua-thieu-so",
+   "inputs": {
+    "input": "tests/data/g5_doan_giua_thieu_so.srt"
+   },
+   "expect": {
+    "exit_code": 0,
+    "files": {
+     "g5_doan_giua_thieu_so.srt": "tests/data/g5_doan_giua_thieu_so.expected.srt"
+    },
+    "report": {
+     "cues": 3,
+     "changed": 1,
+     "inserted": 1,
+     "mapping": [
+      [
+       "1",
+       1
+      ],
+      [
+       null,
+       2
+      ],
+      [
+       "7",
+       3
+      ]
+     ]
+    }
+   }
+  },
+  {
+   "name": "g5-chen-theo-kieu-xuong-dong",
+   "inputs": {
+    "input": "tests/data/g5_chen_theo_kieu_xuong_dong.srt"
+   },
+   "expect": {
+    "exit_code": 0,
+    "files": {
+     "g5_chen_theo_kieu_xuong_dong.srt": "tests/data/g5_chen_theo_kieu_xuong_dong.expected.srt"
+    },
+    "report": {
+     "cues": 3,
+     "changed": 0,
+     "inserted": 1
+    }
+   }
+  },
+  {
+   "name": "g5-tep-khong-co-so-nao",
+   "inputs": {
+    "input": "tests/data/g5_tep_khong_co_so_nao.srt"
+   },
+   "expect": {
+    "exit_code": 0,
+    "files": {
+     "g5_tep_khong_co_so_nao.srt": "tests/data/g5_tep_khong_co_so_nao.expected.srt"
+    },
+    "report": {
+     "cues": 3,
+     "changed": 0,
+     "inserted": 3,
+     "mapping": [
+      [
+       null,
+       1
+      ],
+      [
+       null,
+       2
+      ],
+      [
+       null,
+       3
+      ]
+     ]
+    }
+   }
+  },
+  {
+   "name": "g5-timecode-cuoi-khong-xuong-dong",
+   "inputs": {
+    "input": "tests/data/g5_timecode_cuoi_khong_xuong_dong.srt"
+   },
+   "expect": {
+    "exit_code": 0,
+    "files": {
+     "g5_timecode_cuoi_khong_xuong_dong.srt": "tests/data/g5_timecode_cuoi_khong_xuong_dong.expected.srt"
+    },
+    "report": {
+     "cues": 2,
+     "changed": 1,
+     "inserted": 1
+    }
+   }
+  },
+  {
+   "name": "g5-chi-mot-dong-timecode",
+   "inputs": {
+    "input": "tests/data/g5_chi_mot_dong_timecode.srt"
+   },
+   "expect": {
+    "exit_code": 0,
+    "files": {
+     "g5_chi_mot_dong_timecode.srt": "tests/data/g5_chi_mot_dong_timecode.expected.srt"
+    },
+    "report": {
+     "cues": 1,
+     "changed": 0,
+     "inserted": 1
+    }
+   }
+  },
+  {
+   "name": "g5-sau-dong-chi-co-dau-cach",
+   "inputs": {
+    "input": "tests/data/g5_sau_dong_chi_co_dau_cach.srt"
+   },
+   "expect": {
+    "exit_code": 0,
+    "files": {
+     "g5_sau_dong_chi_co_dau_cach.srt": "tests/data/g5_sau_dong_chi_co_dau_cach.expected.srt"
+    },
+    "report": {
+     "cues": 2,
+     "changed": 1,
+     "inserted": 1
+    }
+   }
+  },
+  {
+   "name": "g5-so-roi-truoc-dong-trong",
+   "inputs": {
+    "input": "tests/data/g5_so_roi_truoc_dong_trong.srt"
+   },
+   "expect": {
+    "exit_code": 0,
+    "files": {
+     "g5_so_roi_truoc_dong_trong.srt": "tests/data/g5_so_roi_truoc_dong_trong.expected.srt"
+    },
+    "report": {
+     "cues": 1,
+     "changed": 0,
+     "inserted": 1,
+     "mapping": [
+      [
+       null,
+       1
+      ]
+     ]
+    }
+   }
+  },
+  {
+   "name": "g6-loi-thoai-chi-gom-so",
+   "inputs": {
+    "input": "tests/data/g6_loi_thoai_chi_gom_so.srt"
+   },
+   "expect": {
+    "exit_code": 0,
+    "files": {
+     "g6_loi_thoai_chi_gom_so.srt": "tests/data/g6_loi_thoai_chi_gom_so.expected.srt"
+    },
+    "report": {
+     "cues": 3,
+     "changed": 3,
+     "inserted": 0,
+     "mapping": [
+      [
+       "5",
+       1
+      ],
+      [
+       "6",
+       2
+      ],
+      [
+       "9",
+       3
+      ]
+     ]
+    }
+   }
+  },
+  {
+   "name": "g7-timecode-bien-the",
+   "inputs": {
+    "input": "tests/data/g7_timecode_bien_the.srt"
+   },
+   "expect": {
+    "exit_code": 0,
+    "files": {
+     "g7_timecode_bien_the.srt": "tests/data/g7_timecode_bien_the.expected.srt"
+    },
+    "report": {
+     "cues": 4,
+     "changed": 4,
+     "inserted": 0
+    }
+   }
+  },
+  {
+   "name": "g7-vi-du-trong-dac-ta",
+   "inputs": {
+    "input": "tests/data/g7_vi_du_trong_dac_ta.srt"
+   },
+   "expect": {
+    "exit_code": 0,
+    "files": {
+     "g7_vi_du_trong_dac_ta.srt": "tests/data/g7_vi_du_trong_dac_ta.expected.srt"
+    },
+    "report": {
+     "cues": 1,
+     "changed": 1,
+     "inserted": 0
+    }
+   }
+  },
+  {
+   "name": "s4-khoang-trang-quanh-so",
+   "inputs": {
+    "input": "tests/data/s4_khoang_trang_quanh_so.srt"
+   },
+   "expect": {
+    "exit_code": 0,
+    "files": {
+     "s4_khoang_trang_quanh_so.srt": "tests/data/s4_khoang_trang_quanh_so.expected.srt"
+    },
+    "report": {
+     "cues": 3,
+     "changed": 3,
+     "inserted": 0,
+     "mapping": [
+      [
+       "7",
+       1
+      ],
+      [
+       "12",
+       2
+      ],
+      [
+       "003",
+       3
+      ]
+     ]
+    }
+   }
+  },
+  {
+   "name": "s4-dong-giong-timecode-nhung-khong-phai",
+   "inputs": {
+    "input": "tests/data/s4_dong_giong_timecode_nhung_khong_phai.srt"
+   },
+   "expect": {
+    "exit_code": 0,
+    "files": {
+     "s4_dong_giong_timecode_nhung_khong_phai.srt": "tests/data/s4_dong_giong_timecode_nhung_khong_phai.expected.srt"
+    },
+    "report": {
+     "cues": 2,
+     "changed": 1,
+     "inserted": 0,
+     "mapping": [
+      [
+       "1",
+       1
+      ],
+      [
+       "5",
+       2
+      ]
+     ]
+    }
+   }
+  },
+  {
+   "name": "s4-thieu-dong-trong-giua-doan",
+   "inputs": {
+    "input": "tests/data/s4_thieu_dong_trong_giua_doan.srt"
+   },
+   "expect": {
+    "exit_code": 0,
+    "files": {
+     "s4_thieu_dong_trong_giua_doan.srt": "tests/data/s4_thieu_dong_trong_giua_doan.expected.srt"
+    },
+    "report": {
+     "cues": 2,
+     "changed": 2,
+     "inserted": 0
+    }
+   }
+  },
+  {
+   "name": "s4-timecode-sau-loi-thoai-bo-qua",
+   "inputs": {
+    "input": "tests/data/s4_timecode_sau_loi_thoai_bo_qua.srt"
+   },
+   "expect": {
+    "exit_code": 0,
+    "files": {
+     "s4_timecode_sau_loi_thoai_bo_qua.srt": "tests/data/s4_timecode_sau_loi_thoai_bo_qua.expected.srt"
+    },
+    "report": {
+     "cues": 2,
+     "changed": 2,
+     "inserted": 0,
+     "ignored_timecodes": 1,
+     "mapping": [
+      [
+       "4",
+       1
+      ],
+      [
+       "8",
+       2
+      ]
+     ]
+    }
+   }
+  },
+  {
+   "name": "s4-bom-giua-tep-ghep",
+   "inputs": {
+    "input": "tests/data/s4_bom_giua_tep_ghep.srt"
+   },
+   "expect": {
+    "exit_code": 0,
+    "files": {
+     "s4_bom_giua_tep_ghep.srt": "tests/data/s4_bom_giua_tep_ghep.expected.srt"
+    },
+    "report": {
+     "cues": 2,
+     "changed": 1,
+     "inserted": 0
+    }
+   }
+  },
+  {
+   "name": "g8-tep-rong",
+   "inputs": {
+    "input": "tests/data/g8_tep_rong.srt"
+   },
+   "expect": {
+    "exit_code": 2,
+    "stderr_contains": "rỗng",
+    "no_output": true
+   }
+  },
+  {
+   "name": "g8-chi-khoang-trang",
+   "inputs": {
+    "input": "tests/data/g8_chi_khoang_trang.srt"
+   },
+   "expect": {
+    "exit_code": 2,
+    "stderr_contains": "rỗng",
+    "no_output": true
+   }
+  },
+  {
+   "name": "g8-chi-co-bom",
+   "inputs": {
+    "input": "tests/data/g8_chi_co_bom.srt"
+   },
+   "expect": {
+    "exit_code": 2,
+    "stderr_contains": "rỗng",
+    "no_output": true
+   }
+  },
+  {
+   "name": "g8-khong-co-timecode",
+   "inputs": {
+    "input": "tests/data/g8_khong_co_timecode.srt"
+   },
+   "expect": {
+    "exit_code": 2,
+    "stderr_contains": "timecode",
+    "no_output": true
+   }
+  },
+  {
+   "name": "g8-timecode-khong-mo-doan",
+   "inputs": {
+    "input": "tests/data/g8_timecode_khong_mo_doan.srt"
+   },
+   "expect": {
+    "exit_code": 2,
+    "stderr_contains": "timecode",
+    "no_output": true
+   }
+  },
+  {
+   "name": "g9-utf16-ff-fe",
+   "inputs": {
+    "input": "tests/data/g9_utf16_ff_fe.srt"
+   },
+   "expect": {
+    "exit_code": 2,
+    "stderr_contains": "UTF-8",
+    "no_output": true
+   }
+  },
+  {
+   "name": "g9-bang-ma-cu-1-byte",
+   "inputs": {
+    "input": "tests/data/g9_bang_ma_cu_1_byte.srt"
+   },
+   "expect": {
+    "exit_code": 2,
+    "stderr_contains": "UTF-8",
+    "no_output": true
+   }
+  },
+  {
+   "name": "g10-start-100",
+   "inputs": {
+    "input": "tests/data/g10_start_100.srt"
+   },
+   "params": {
+    "start": 100
+   },
+   "expect": {
+    "exit_code": 0,
+    "files": {
+     "g10_start_100.srt": "tests/data/g10_start_100.expected.srt"
+    },
+    "report": {
+     "cues": 4,
+     "changed": 4,
+     "inserted": 0,
+     "mapping": [
+      [
+       "3",
+       100
+      ],
+      [
+       "8",
+       101
+      ],
+      [
+       "8",
+       102
+      ],
+      [
+       "15",
+       103
+      ]
+     ]
+    }
+   }
+  },
+  {
+   "name": "g10-start-0",
+   "inputs": {
+    "input": "tests/data/g10_start_0.srt"
+   },
+   "params": {
+    "start": 0
+   },
+   "expect": {
+    "exit_code": 0,
+    "files": {
+     "g10_start_0.srt": "tests/data/g10_start_0.expected.srt"
+    },
+    "report": {
+     "cues": 2,
+     "changed": 1,
+     "inserted": 0,
+     "mapping": [
+      [
+       "7",
+       0
+      ],
+      [
+       "1",
+       1
+      ]
+     ]
+    }
+   }
+  },
+  {
+   "name": "g10-start-am",
+   "inputs": {
+    "input": "tests/data/g10_start_am.srt"
+   },
+   "params": {
+    "start": -1
+   },
+   "expect": {
+    "exit_code": 2,
+    "stderr_contains": "start",
+    "no_output": true
+   }
+  },
+  {
+   "name": "g10-start-so-thuc",
+   "inputs": {
+    "input": "tests/data/g10_start_so_thuc.srt"
+   },
+   "params": {
+    "start": 1.5
+   },
+   "expect": {
+    "exit_code": 2,
+    "stderr_contains": "start",
+    "no_output": true
+   }
+  },
+  {
+   "name": "g10-start-chuoi",
+   "inputs": {
+    "input": "tests/data/g10_start_chuoi.srt"
+   },
+   "params": {
+    "start": "5"
+   },
+   "expect": {
+    "exit_code": 2,
+    "stderr_contains": "start",
+    "no_output": true
+   }
+  },
+  {
+   "name": "g10-start-true",
+   "inputs": {
+    "input": "tests/data/g10_start_true.srt"
+   },
+   "params": {
+    "start": true
+   },
+   "expect": {
+    "exit_code": 2,
+    "stderr_contains": "start",
+    "no_output": true
+   }
+  },
+  {
+   "name": "tham-so-la",
+   "inputs": {
+    "input": "tests/data/tham_so_la.srt"
+   },
+   "params": {
+    "star": 100
+   },
+   "expect": {
+    "exit_code": 2,
+    "stderr_contains": "Tham số không có",
+    "no_output": true
+   }
+  },
+  {
+   "name": "g11-5000-doan",
+   "inputs": {
+    "input": "tests/data/g11_5000_doan.srt"
+   },
+   "expect": {
+    "exit_code": 0,
+    "files": {
+     "g11_5000_doan.srt": "tests/data/g11_5000_doan.expected.srt"
+    },
+    "report": {
+     "ok": true,
+     "cues": 5000,
+     "changed": 5000,
+     "inserted": 0
+    }
+   }
+  },
+  {
+   "name": "h5-mapping-toi-da-200",
+   "inputs": {
+    "input": "tests/data/h5_mapping_toi_da_200.srt"
+   },
+   "expect": {
+    "exit_code": 0,
+    "files": {
+     "h5_mapping_toi_da_200.srt": "tests/data/h5_mapping_toi_da_200.expected.srt"
+    },
+    "report": {
+     "cues": 250,
+     "changed": 250,
+     "inserted": 0,
+     "mapping": [
+      [
+       "3",
+       1
+      ],
+      [
+       "6",
+       2
+      ],
+      [
+       "9",
+       3
+      ],
+      [
+       "12",
+       4
+      ],
+      [
+       "15",
+       5
+      ],
+      [
+       "18",
+       6
+      ],
+      [
+       "21",
+       7
+      ],
+      [
+       "24",
+       8
+      ],
+      [
+       "27",
+       9
+      ],
+      [
+       "30",
+       10
+      ],
+      [
+       "33",
+       11
+      ],
+      [
+       "36",
+       12
+      ],
+      [
+       "39",
+       13
+      ],
+      [
+       "42",
+       14
+      ],
+      [
+       "45",
+       15
+      ],
+      [
+       "48",
+       16
+      ],
+      [
+       "51",
+       17
+      ],
+      [
+       "54",
+       18
+      ],
+      [
+       "57",
+       19
+      ],
+      [
+       "60",
+       20
+      ],
+      [
+       "63",
+       21
+      ],
+      [
+       "66",
+       22
+      ],
+      [
+       "69",
+       23
+      ],
+      [
+       "72",
+       24
+      ],
+      [
+       "75",
+       25
+      ],
+      [
+       "78",
+       26
+      ],
+      [
+       "81",
+       27
+      ],
+      [
+       "84",
+       28
+      ],
+      [
+       "87",
+       29
+      ],
+      [
+       "90",
+       30
+      ],
+      [
+       "93",
+       31
+      ],
+      [
+       "96",
+       32
+      ],
+      [
+       "99",
+       33
+      ],
+      [
+       "102",
+       34
+      ],
+      [
+       "105",
+       35
+      ],
+      [
+       "108",
+       36
+      ],
+      [
+       "111",
+       37
+      ],
+      [
+       "114",
+       38
+      ],
+      [
+       "117",
+       39
+      ],
+      [
+       "120",
+       40
+      ],
+      [
+       "123",
+       41
+      ],
+      [
+       "126",
+       42
+      ],
+      [
+       "129",
+       43
+      ],
+      [
+       "132",
+       44
+      ],
+      [
+       "135",
+       45
+      ],
+      [
+       "138",
+       46
+      ],
+      [
+       "141",
+       47
+      ],
+      [
+       "144",
+       48
+      ],
+      [
+       "147",
+       49
+      ],
+      [
+       "150",
+       50
+      ],
+      [
+       "153",
+       51
+      ],
+      [
+       "156",
+       52
+      ],
+      [
+       "159",
+       53
+      ],
+      [
+       "162",
+       54
+      ],
+      [
+       "165",
+       55
+      ],
+      [
+       "168",
+       56
+      ],
+      [
+       "171",
+       57
+      ],
+      [
+       "174",
+       58
+      ],
+      [
+       "177",
+       59
+      ],
+      [
+       "180",
+       60
+      ],
+      [
+       "183",
+       61
+      ],
+      [
+       "186",
+       62
+      ],
+      [
+       "189",
+       63
+      ],
+      [
+       "192",
+       64
+      ],
+      [
+       "195",
+       65
+      ],
+      [
+       "198",
+       66
+      ],
+      [
+       "201",
+       67
+      ],
+      [
+       "204",
+       68
+      ],
+      [
+       "207",
+       69
+      ],
+      [
+       "210",
+       70
+      ],
+      [
+       "213",
+       71
+      ],
+      [
+       "216",
+       72
+      ],
+      [
+       "219",
+       73
+      ],
+      [
+       "222",
+       74
+      ],
+      [
+       "225",
+       75
+      ],
+      [
+       "228",
+       76
+      ],
+      [
+       "231",
+       77
+      ],
+      [
+       "234",
+       78
+      ],
+      [
+       "237",
+       79
+      ],
+      [
+       "240",
+       80
+      ],
+      [
+       "243",
+       81
+      ],
+      [
+       "246",
+       82
+      ],
+      [
+       "249",
+       83
+      ],
+      [
+       "252",
+       84
+      ],
+      [
+       "255",
+       85
+      ],
+      [
+       "258",
+       86
+      ],
+      [
+       "261",
+       87
+      ],
+      [
+       "264",
+       88
+      ],
+      [
+       "267",
+       89
+      ],
+      [
+       "270",
+       90
+      ],
+      [
+       "273",
+       91
+      ],
+      [
+       "276",
+       92
+      ],
+      [
+       "279",
+       93
+      ],
+      [
+       "282",
+       94
+      ],
+      [
+       "285",
+       95
+      ],
+      [
+       "288",
+       96
+      ],
+      [
+       "291",
+       97
+      ],
+      [
+       "294",
+       98
+      ],
+      [
+       "297",
+       99
+      ],
+      [
+       "300",
+       100
+      ],
+      [
+       "303",
+       101
+      ],
+      [
+       "306",
+       102
+      ],
+      [
+       "309",
+       103
+      ],
+      [
+       "312",
+       104
+      ],
+      [
+       "315",
+       105
+      ],
+      [
+       "318",
+       106
+      ],
+      [
+       "321",
+       107
+      ],
+      [
+       "324",
+       108
+      ],
+      [
+       "327",
+       109
+      ],
+      [
+       "330",
+       110
+      ],
+      [
+       "333",
+       111
+      ],
+      [
+       "336",
+       112
+      ],
+      [
+       "339",
+       113
+      ],
+      [
+       "342",
+       114
+      ],
+      [
+       "345",
+       115
+      ],
+      [
+       "348",
+       116
+      ],
+      [
+       "351",
+       117
+      ],
+      [
+       "354",
+       118
+      ],
+      [
+       "357",
+       119
+      ],
+      [
+       "360",
+       120
+      ],
+      [
+       "363",
+       121
+      ],
+      [
+       "366",
+       122
+      ],
+      [
+       "369",
+       123
+      ],
+      [
+       "372",
+       124
+      ],
+      [
+       "375",
+       125
+      ],
+      [
+       "378",
+       126
+      ],
+      [
+       "381",
+       127
+      ],
+      [
+       "384",
+       128
+      ],
+      [
+       "387",
+       129
+      ],
+      [
+       "390",
+       130
+      ],
+      [
+       "393",
+       131
+      ],
+      [
+       "396",
+       132
+      ],
+      [
+       "399",
+       133
+      ],
+      [
+       "402",
+       134
+      ],
+      [
+       "405",
+       135
+      ],
+      [
+       "408",
+       136
+      ],
+      [
+       "411",
+       137
+      ],
+      [
+       "414",
+       138
+      ],
+      [
+       "417",
+       139
+      ],
+      [
+       "420",
+       140
+      ],
+      [
+       "423",
+       141
+      ],
+      [
+       "426",
+       142
+      ],
+      [
+       "429",
+       143
+      ],
+      [
+       "432",
+       144
+      ],
+      [
+       "435",
+       145
+      ],
+      [
+       "438",
+       146
+      ],
+      [
+       "441",
+       147
+      ],
+      [
+       "444",
+       148
+      ],
+      [
+       "447",
+       149
+      ],
+      [
+       "450",
+       150
+      ],
+      [
+       "453",
+       151
+      ],
+      [
+       "456",
+       152
+      ],
+      [
+       "459",
+       153
+      ],
+      [
+       "462",
+       154
+      ],
+      [
+       "465",
+       155
+      ],
+      [
+       "468",
+       156
+      ],
+      [
+       "471",
+       157
+      ],
+      [
+       "474",
+       158
+      ],
+      [
+       "477",
+       159
+      ],
+      [
+       "480",
+       160
+      ],
+      [
+       "483",
+       161
+      ],
+      [
+       "486",
+       162
+      ],
+      [
+       "489",
+       163
+      ],
+      [
+       "492",
+       164
+      ],
+      [
+       "495",
+       165
+      ],
+      [
+       "498",
+       166
+      ],
+      [
+       "501",
+       167
+      ],
+      [
+       "504",
+       168
+      ],
+      [
+       "507",
+       169
+      ],
+      [
+       "510",
+       170
+      ],
+      [
+       "513",
+       171
+      ],
+      [
+       "516",
+       172
+      ],
+      [
+       "519",
+       173
+      ],
+      [
+       "522",
+       174
+      ],
+      [
+       "525",
+       175
+      ],
+      [
+       "528",
+       176
+      ],
+      [
+       "531",
+       177
+      ],
+      [
+       "534",
+       178
+      ],
+      [
+       "537",
+       179
+      ],
+      [
+       "540",
+       180
+      ],
+      [
+       "543",
+       181
+      ],
+      [
+       "546",
+       182
+      ],
+      [
+       "549",
+       183
+      ],
+      [
+       "552",
+       184
+      ],
+      [
+       "555",
+       185
+      ],
+      [
+       "558",
+       186
+      ],
+      [
+       "561",
+       187
+      ],
+      [
+       "564",
+       188
+      ],
+      [
+       "567",
+       189
+      ],
+      [
+       "570",
+       190
+      ],
+      [
+       "573",
+       191
+      ],
+      [
+       "576",
+       192
+      ],
+      [
+       "579",
+       193
+      ],
+      [
+       "582",
+       194
+      ],
+      [
+       "585",
+       195
+      ],
+      [
+       "588",
+       196
+      ],
+      [
+       "591",
+       197
+      ],
+      [
+       "594",
+       198
+      ],
+      [
+       "597",
+       199
+      ],
+      [
+       "600",
+       200
+      ]
+     ]
+    }
+   }
+  },
+  {
+   "name": "d2-khong-sap-xep-khong-chuan-hoa",
+   "inputs": {
+    "input": "tests/data/d2_khong_sap_xep_khong_chuan_hoa.srt"
+   },
+   "expect": {
+    "exit_code": 0,
+    "files": {
+     "d2_khong_sap_xep_khong_chuan_hoa.srt": "tests/data/d2_khong_sap_xep_khong_chuan_hoa.expected.srt"
+    },
+    "report": {
+     "cues": 3,
+     "changed": 2,
+     "inserted": 0,
+     "mapping": [
+      [
+       "9",
+       1
+      ],
+      [
+       "2",
+       2
+      ],
+      [
+       "2",
+       3
+      ]
+     ]
+    }
+   }
+  },
+  {
+   "name": "d3-so-da-dung",
+   "inputs": {
+    "input": "tests/data/d3_so_da_dung.srt"
+   },
+   "expect": {
+    "exit_code": 0,
+    "files": {
+     "d3_so_da_dung.srt": "tests/data/d3_so_da_dung.srt"
+    },
+    "report": {
+     "ok": true,
+     "cues": 3,
+     "changed": 0,
+     "inserted": 0,
+     "mapping": [
+      [
+       "1",
+       1
+      ],
+      [
+       "2",
+       2
+      ],
+      [
+       "3",
+       3
+      ]
+     ]
+    }
+   }
+  }
+ ]
+}

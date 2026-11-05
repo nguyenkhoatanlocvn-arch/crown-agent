@@ -152,7 +152,9 @@ def build(root: Path | None = None) -> dict[str, dict]:
                     "versions": [{k: v.get(k) for k in ("version", "granted_by", "recorded_by", "source", "status", "at",
                                                         "test", "description", "note", "path")} for v in s["versions"]],
                     "history": s.get("history", [])} for s in sorted(reg["skills"].values(), key=lambda x: x["name"])],
-        "sources": [dict(s, watch=watch["sources"].get(s.get("id"))) for s in sources.get("sources", [])],
+        "sources": [{k: s.get(k) for k in ("id", "repo", "url", "commit", "license", "function_to_take", "integration",
+                                            "cost", "checked_at", "vi")} | {"watch": watch["sources"].get(s.get("id"))}
+                    for s in sources.get("sources", [])],
         "sources_checked_at": sources.get("checked_at"),
         "categories": CATEGORIES,
     }

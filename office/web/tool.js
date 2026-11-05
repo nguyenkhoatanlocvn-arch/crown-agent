@@ -273,9 +273,9 @@ function vSkill(){
   h+=card("Skill của bộ phận TOOL",body||`<div class="tl-empty">Chưa có skill nào.</div>`);
   h+=card("Nguồn GitHub",`<p class="muted">Khảo sát chỉ đọc lúc ${vnT(M.sources_checked_at)}: không cài, không chạy mã trong repo. “Bọc mã” chỉ áp dụng cho giấy phép cho phép, có ghi công.</p>
     <div class="tw"><table><thead><tr><th>Nguồn</th><th>Commit</th><th>Giấy phép</th><th>Lấy gì</th><th>Cách tích hợp</th><th>Chi phí</th><th>Ca thử</th><th>AT theo dõi</th></tr></thead><tbody>
-    ${src.map(s=>`<tr><td><a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.repo||s.id)}</a></td><td><code>${esc(String(s.commit||"").slice(0,7))}</code></td><td>${esc(s.license)}</td><td>${esc(s.function_to_take)}</td>
+    ${src.map(s=>`<tr><td><a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.repo||s.id)}</a></td><td><code>${esc(String(s.commit||"").slice(0,7))}</code></td><td>${esc(s.license)}</td><td>${esc((s.vi&&s.vi.lay_gi)||s.function_to_take)}</td>
       <td>${esc({"system-binary":"Gọi lệnh đã cài","adapter":"Bọc mã được phép","rewrite-from-spec":"Viết lại từ đặc tả","reference-only":"Chỉ tham khảo","reject":"Không dùng"}[s.integration]||s.integration)}</td>
-      <td>${esc(s.cost)}</td><td>${esc(typeof s.test_case==="string"?s.test_case:(s.test_case&&(s.test_case.summary||s.test_case.description||JSON.stringify(s.test_case))))}</td>
+      <td>${esc((s.vi&&s.vi.chi_phi)||s.cost)}</td><td>${esc((s.vi&&s.vi.ca_thu)||"—")}</td>
       <td>${s.watch?`${esc(String(s.watch.fingerprint||"").slice(0,22))}<br><span class="muted">${vnT(s.watch.seen_at)}</span>`:"không"}</td></tr>`).join("")}</tbody></table></div>`);
   return h;
 }

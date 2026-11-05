@@ -88,7 +88,12 @@
     "https://github.com/storytold/craft-anything",
     "git ls-remote https://github.com/storytold/craft-anything HEAD",
     "git ls-remote --tags --refs https://github.com/storytold/craft-anything"
-   ]
+   ],
+   "vi": {
+    "lay_gi": "Ý tưởng: bản ghi bằng chứng có mức tin cậy (thấy tận mắt / suy ra / đoán), giới hạn, câu hỏi còn mở; vòng Khảo sát → Dựng → Kiểm → Sửa. Không có công cụ tách khung video.",
+    "chi_phi": "Miễn phí để tham khảo; phần Dựng tiêu hạn mức Claude Code; fal.ai tùy chọn, có phí",
+    "ca_thu": "Nhật ký quan sát của ta: mỗi dòng có mức chắc chắn hợp lệ; sửa một trường thì mã băm của bản ghi đổi. Chưa chạy."
+   }
   },
   {
    "id": "site-replica-skill",
@@ -149,7 +154,12 @@
    "evidence": [
     "https://github.com/jatidevelopments/site-replica-skill",
     "git ls-remote https://github.com/jatidevelopments/site-replica-skill HEAD"
-   ]
+   ],
+   "vi": {
+    "lay_gi": "Bước ghép khung hình trong scripts/assets.py: ffmpeg lấy khoảng 1 khung mỗi 1,2 giây rồi ghép thành một ảnh tổng hợp; cổng kiểm “0 lỗi trang”.",
+    "chi_phi": "Miễn phí",
+    "ca_thu": "Clip thử 6 giây 320×240 → đúng 5 khung 360×270 và 1 ảnh ghép 1088×544 (đã xác nhận bằng ffmpeg 6.1.1 trong máy cloud)."
+   }
   },
   {
    "id": "anthropic-webapp-testing",
@@ -201,7 +211,12 @@
    "evidence": [
     "https://github.com/anthropics/skills",
     "git ls-remote https://github.com/anthropics/skills HEAD"
-   ]
+   ],
+   "vi": {
+    "lay_gi": "scripts/with_server.py: bật máy chủ, chờ cổng mở, chạy lệnh thử, luôn tắt máy chủ; mẫu Playwright “xem trước rồi mới thao tác”.",
+    "chi_phi": "Miễn phí",
+    "ca_thu": "Bật python3 -m http.server 8765, lệnh thử in 200, mã thoát 0, sau đó cổng 8765 đóng. Chưa chạy."
+   }
   },
   {
    "id": "anthropic-mcp-builder",
@@ -252,7 +267,12 @@
    "evidence": [
     "https://github.com/anthropics/skills",
     "git ls-remote https://github.com/anthropics/skills HEAD"
-   ]
+   ],
+   "vi": {
+    "lay_gi": "Bảng kiểm khi đưa tool ra thành máy chủ MCP: đặt tên, schema vào/ra, nhãn chỉ-đọc, lỗi có hướng dẫn; mẫu 10 câu đánh giá.",
+    "chi_phi": "Tài liệu miễn phí; evaluation.py cần API Anthropic có phí",
+    "ca_thu": "Máy chủ MCP tối thiểu có 1 tool chỉ-đọc: tools/list trả đúng 1 tool, tham số sai trả lỗi nêu tên trường. Chưa chạy."
+   }
   },
   {
    "id": "anthropic-skill-creator",
@@ -307,7 +327,12 @@
    "evidence": [
     "https://github.com/anthropics/skills",
     "git ls-remote https://github.com/anthropics/skills HEAD"
-   ]
+   ],
+   "vi": {
+    "lay_gi": "quick_validate.py (kiểm phần đầu SKILL.md) và package_skill.py (đóng gói .skill) làm cổng xuất bản skill.",
+    "chi_phi": "Miễn phí; vòng tối ưu mô tả tiêu hạn mức Claude Code, chưa rõ bao nhiêu",
+    "ca_thu": "Tên frame-extractor → “Skill is valid!”, thoát 0; tên Frame_Extractor → thoát 1, báo phải kebab-case. Chưa chạy."
+   }
   },
   {
    "id": "screenshot-to-code",
@@ -369,7 +394,12 @@
    "evidence": [
     "https://github.com/abi/screenshot-to-code",
     "git ls-remote https://github.com/abi/screenshot-to-code HEAD"
-   ]
+   ],
+   "vi": {
+    "lay_gi": "Ý tưởng: đưa cả video quay màn hình cho mô hình để dựng lại; tự chụp trang vừa sinh để tự kiểm. Bản này không tách khung tại máy.",
+    "chi_phi": "Cần API có phí: OpenAI / Anthropic / Gemini (video bắt buộc Gemini)",
+    "ca_thu": "Bước tự chụp của ta: trang mẫu → PNG 1280×720, 0 lỗi; trang có lỗi JS → báo 1 lỗi, thoát khác 0. Chưa chạy."
+   }
   },
   {
    "id": "ffmpeg",
@@ -422,7 +452,12 @@
     "git ls-remote https://github.com/FFmpeg/FFmpeg HEAD",
     "git ls-remote --tags --refs https://github.com/FFmpeg/FFmpeg 'refs/tags/n*'",
     "local: ffmpeg -version, ffmpeg -h full, ffmpeg -filters, ffmpeg -encoders (installed 6.1.1)"
-   ]
+   ],
+   "vi": {
+    "lay_gi": "Lệnh ffmpeg tách khung hình, ghép ảnh tổng hợp, dò lúc màn hình đổi; ffprobe lấy thông số video.",
+    "chi_phi": "Miễn phí",
+    "ca_thu": "Nguồn thử 5 giây 25 hình/giây, lấy mỗi khung thứ 25 → đúng 5 ảnh 320×240 (đã xác nhận trong máy cloud)."
+   }
   },
   {
    "id": "jq",
@@ -480,7 +515,12 @@
     "git ls-remote https://github.com/jqlang/jq HEAD",
     "git ls-remote --tags --refs https://github.com/jqlang/jq",
     "local: jq --version (installed 1.7)"
-   ]
+   ],
+   "vi": {
+    "lay_gi": "Lệnh jq -e để kiểm và truy vấn JSON trong ca thử và cổng phát hành; dự phòng bằng json của Python.",
+    "chi_phi": "Miễn phí",
+    "ca_thu": "Lọc mẫu → in đúng [\"a\"], thoát 0; jq -e '.sources|length==8' thoát 0. Đã chạy, đạt."
+   }
   }
  ],
  "note": "Chỉ đọc: không cài, không build, không chạy mã nào trong các repo. Commit lấy bằng git ls-remote."
