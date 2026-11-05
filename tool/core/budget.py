@@ -6,6 +6,7 @@ TOOL chỉ dùng dịch vụ tính phí khi đã có khoản được duyệt gh
 """
 from __future__ import annotations
 
+import copy
 from pathlib import Path
 
 from .util import ToolError, atomic_write_json, iso, mutex, read_json, tool_root
@@ -26,7 +27,8 @@ class Budget:
         self.path = self.root / "config" / "budget.json"
 
     def load(self) -> dict:
-        return dict(DEFAULT, **read_json(self.path, default={}))
+        # Sao chép sâu: danh sách approved/spent mặc định không được dùng chung giữa các lần gọi.
+        return dict(copy.deepcopy(DEFAULT), **read_json(self.path, default={}))
 
     def remaining(self) -> float:
         b = self.load()

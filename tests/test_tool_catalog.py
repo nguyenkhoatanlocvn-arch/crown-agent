@@ -85,6 +85,9 @@ class PublishGateTest(Base):
             self.cat.publish(b, T)
         Budget(self.root).approve(2.0, "API thử", "KHO-DX-001")
         self.cat.publish(b, T)
+        other = make_root()                                # khoản duyệt của kho này không lọt sang kho khác
+        self.addCleanup(shutil.rmtree, other.parent.parent, True)
+        self.assertEqual(Budget(other).remaining(), 0)
 
     def test_manifest_must_carry_examples_source_permissions(self):
         b = make_build(self.tmp)
