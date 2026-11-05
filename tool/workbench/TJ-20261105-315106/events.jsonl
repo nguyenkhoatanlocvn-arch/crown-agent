@@ -21,3 +21,4 @@
 {"at": "2026-11-05T20:02:22+00:00", "actor": "agent-tool", "action": "step_start", "detail": "verify · Agent con tool-th-01", "state": "RUNNING", "token": 2}
 {"at": "2026-11-05T20:03:38+00:00", "actor": "agent-tool", "action": "step_done", "detail": "verify: Agent thường A15 tự tìm theo chức năng và gọi từ kho chung; tệp phu_de_tau_hue.srt (khác mẫu): số 7 và 19 → 1 và 2, timecode + từng dòng lời thoại giống hệt, trùng từng byte bản mong đợi viết tay; gọi thử từ kho 3/3 ca đạt (gồm tệp CRLF)", "state": "RUNNING", "token": 2}
 {"at": "2026-11-05T20:03:38+00:00", "actor": "agent-tool", "action": "set", "detail": "tool_id='srt-renumber', version='1.0.0'", "state": "RUNNING", "token": 2}
+{"at": "2026-11-05T20:03:41+00:00", "actor": "agent-tool", "action": "move", "detail": "RUNNING → VERIFIED_DONE: srt-renumber@1.0.0 đã phát hành và được Agent thường gọi thử đạt", "state": "VERIFIED_DONE", "token": 2}
