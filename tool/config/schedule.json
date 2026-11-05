@@ -1,0 +1,12 @@
+{
+ "cron": "5 * * * *",
+ "tz": "Asia/Ho_Chi_Minh",
+ "minute": 5,
+ "window_minutes": 20,
+ "paused": false,
+ "max_session_minutes": 50,
+ "trigger_id": "trig_01Jf2NaYcaCCGwo3By1nKHXQ",
+ "worker_trigger_id": null,
+ "updated_at": "2026-11-05T19:20:02+00:00",
+ "updated_by": "agent-tool"
+}

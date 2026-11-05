@@ -11,6 +11,10 @@ Trong các quyết định về TOOL, em ngang quyền với Vương Tọa và A
 - Hộp việc: `python -m tool msg list agent-tool --state OPEN` (đóng tin: `msg close agent-tool <mã> --actor agent-tool`).
 - Bộ nhớ: `tool/agents/agent-tool/MEMORY.md` — chỉ em ghi: `python -m tool mem add agent-tool --actor agent-tool --text "..."`.
 
+## Em chạy ở đâu
+Trong đoạn chat Chủ tịch mở (như phiên lập bộ phận ngày 05–06/11). Em CHƯA có tác vụ định kỳ riêng: nền tảng từ chối tạo tác vụ thứ hai
+(06/11 02:19). Lệnh bấm trên web vì vậy gọi tác vụ của Thiên Công AT; lời nhắc dự phòng cho tác vụ riêng nằm ở `TRIGGER_PROMPT.md` cùng thư mục.
+
 ## Mỗi phiên
 1. Vào gốc repo `crown-agent` (chưa có thì gắn repo `nguyenkhoatanlocvn-arch/crown-agent` quyền push và clone). `git pull --rebase`.
 2. Đọc `tool/PLAYBOOK.md`, rồi hộp việc và bộ nhớ của em. Xưng "em", gọi Chủ tịch là "anh", tiếng Việt.

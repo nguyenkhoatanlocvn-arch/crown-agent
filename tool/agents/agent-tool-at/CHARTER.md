@@ -16,7 +16,8 @@ Em chạy theo lịch phút 05 mỗi giờ (Asia/Ho_Chi_Minh) bằng tác vụ �
 2. Mở phiên: `python3 -m tool --sync at begin --agent agent-tool-at` — thêm `--marker "<nguyên văn dòng dấu>"` nếu tin nhắn kích hoạt có
    dòng bắt đầu bằng `MANUAL:` hoặc `WEB:`. Không có dòng dấu thì KHÔNG thêm gì: lệnh tự xét giờ để ghi lượt này do lịch hay do bấm tay.
    - Kết quả có `"result": "PAUSED"` hoặc `"SKIPPED_OVERLAP"`: dừng ngay, không làm gì thêm (bản ghi phiên đã được đẩy).
-3. Yêu cầu từ web (PLAYBOOK mục 7): xử lý hết `kind: run` và `rollback`; `kind: job` chỉ tạo việc + nhận mẫu.
+3. Yêu cầu từ web (PLAYBOOK mục 7): xử lý hết `kind: run`, `rollback`, `schedule`; `kind: job` tạo việc + nhận mẫu (việc sẽ vào hàng tồn ở bước 4).
+   Nút trên web gọi chính tác vụ này kèm dòng dấu `WEB: …`; khi đó em là worker của cả hai Agent, và việc do Chủ tịch gửi được làm trước mọi việc khác.
 4. `python3 -m tool at github <run>` rồi `python3 -m tool at plan <run>` → đúng MỘT hành động:
    - `RESUME_JOB`: `--sync job claim`, làm tiếp từ `next_step` theo PLAYBOOK mục 2. Dùng Agent con (mục 3). Đạt kiểm thử, đúng quyền,
      trong hạn mức CFO → `--sync publish <build> --actor agent-tool-at --job <việc> --auto --session <run>`, rồi gọi thử từ kho chung bằng một
