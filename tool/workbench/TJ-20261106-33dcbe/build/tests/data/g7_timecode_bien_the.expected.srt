@@ -1,0 +1,15 @@
+1
+0:00:01.2 --> 0:00:02.5 X1:40
+Dấu chấm, giờ một chữ số, có vị trí.
+
+2
+00:00:03,000-->00:00:04,000
+Không có khoảng trắng quanh mũi tên.
+
+3
+100:00:05,000   -->	100:00:06,000  X1:40 X2:600 Y1:20 Y2:80
+Giờ ba chữ số, nhiều khoảng trắng.
+
+4
+  00:00:07,5 --> 00:00:08,25 	
+Khoảng trắng hai đầu dòng timecode.

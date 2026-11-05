@@ -1,0 +1,19 @@
+2
+999:59:58,9 --> 999:59:59.99
+Giờ ba chữ số, phần nghìn một và hai chữ số.
+
+4
+0:00:03.5	-->0:00:04.25
+Giờ một chữ số, dấu chấm, tab trước mũi tên.
+
+6
+00:00:05,000-->   00:00:06,000
+Khoảng trắng lệch quanh mũi tên.
+
+8
+00:00:07,123 --> 00:00:08,456 X1:100 X2:620 Y1:400 Y2:460
+Có thông tin vị trí.
+
+10
+	 12:34:56.7 --> 123:45:07,89 	
+Khoảng trắng hai đầu dòng timecode.

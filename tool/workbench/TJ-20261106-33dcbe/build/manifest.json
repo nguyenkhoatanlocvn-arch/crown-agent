@@ -1,0 +1,46 @@
+{
+ "id": "srt-renumber",
+ "version": "1.0.0",
+ "name": "Đánh lại số phụ đề SRT",
+ "category": "data-files",
+ "summary": "Đánh lại số thứ tự các đoạn phụ đề trong tệp SRT từ 1 (hoặc từ số chỉ định) theo thứ tự xuất hiện; giữ nguyên từng byte của timecode, lời thoại, BOM, kiểu xuống dòng và dòng trống.",
+ "keywords": ["srt", "phụ đề", "subtitle", "đánh số", "đánh lại số", "renumber", "số thứ tự", "timecode"],
+ "runtime": "python",
+ "entry": "main.py",
+ "interface": {
+  "inputs": [
+   {"name": "input", "type": "file", "ext": [".srt"], "required": true,
+    "desc": "Tệp phụ đề SRT mã hóa UTF-8 (có hoặc không có BOM; xuống dòng LF, CRLF hoặc trộn)."}
+  ],
+  "outputs": [
+   {"name": "output", "type": "file",
+    "desc": "Tệp SRT cùng tên tệp đầu vào, số thứ tự các đoạn đã đánh lại liên tục; mọi byte khác giữ nguyên. Đoạn thiếu dòng số được chèn dòng số."}
+  ],
+  "params": [
+   {"name": "start", "type": "integer", "required": false, "default": 1, "min": 0,
+    "desc": "Số của đoạn đầu tiên (số nguyên ≥ 0, mặc định 1)."}
+  ],
+  "report": {
+   "ok": "true khi thành công",
+   "cues": "số đoạn phụ đề đã đánh số",
+   "changed": "số dòng số thật sự bị đổi",
+   "inserted": "số dòng số được chèn cho đoạn thiếu số",
+   "mapping": "tối đa 200 cặp đầu [số cũ dạng chuỗi hoặc null, số mới]",
+   "ignored_timecodes": "số dòng timecode đứng ngay sau một dòng chữ nên không được coi là đầu đoạn (để nguyên, không đánh số)"
+  }
+ },
+ "permissions": {"network": false, "subprocess": []},
+ "examples": [
+  {"name": "phim_mau", "inputs": {"input": "examples/phim_mau.srt"},
+   "expected": {"phim_mau.srt": "examples/phim_mau.expected.srt"}}
+ ],
+ "source": {
+  "kind": "sample-spec",
+  "job_id": "TJ-20261105-315106",
+  "sample": "tool/inbox/TJ-20261105-315106/files/mau_danh_lai_so_srt.mp4",
+  "spec": "tool/workbench/TJ-20261105-315106/SPEC.md",
+  "third_party": []
+ },
+ "limits": {"timeout_s": 30, "max_output_mb": 50},
+ "cost_usd_per_run": 0
+}

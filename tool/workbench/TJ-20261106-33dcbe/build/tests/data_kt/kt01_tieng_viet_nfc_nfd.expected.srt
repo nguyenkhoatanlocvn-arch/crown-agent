@@ -1,0 +1,21 @@
+1
+00:00:01,200 --> 00:00:04,000
+Chào buổi sáng cả nhà.
+
+2
+00:00:04,350 --> 00:00:07,900
+<i>Tiếng Việt có dấu: ngã, hỏi, nặng, sắc, huyền.</i>
+Đường về quê hương xa lắm.
+
+3
+00:00:08,100 --> 00:00:10,750
+- Ở đâu thế?
+- Ở chợ Bến Thành, lúc 7 giờ.
+
+4
+00:00:11,000 --> 00:00:13,400
+Phở bò Việt Nam giá 10 000 đồng 🎬 ♪  
+
+5
+00:00:14,000 --> 00:00:16,000
+{\an8}Hẹn gặp lại quý vị ở tập sau!
