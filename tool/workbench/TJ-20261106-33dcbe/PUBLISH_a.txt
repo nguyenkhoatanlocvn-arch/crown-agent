@@ -1,0 +1,2 @@
+TỪ CHỐI: srt-renumber@1.0.0 đã được phát hành hoặc đang được phát hành bởi: agent-tool 2026-11-05T20:01:52+00:00 — không phát hành trùng. Dùng số phiên bản mới.
+rc=1

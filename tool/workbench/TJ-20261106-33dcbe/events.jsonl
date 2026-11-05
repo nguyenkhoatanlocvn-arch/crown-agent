@@ -12,3 +12,4 @@
 {"at": "2026-11-05T20:10:08+00:00", "actor": "agent-tool-at", "action": "step_start", "detail": "test · Agent con tool-kt-03", "state": "RUNNING", "token": 1}
 {"at": "2026-11-05T20:10:11+00:00", "actor": "agent-tool-at", "action": "step_done", "detail": "test: diễn tập (a): 72/72 ca đạt", "state": "RUNNING", "token": 1}
 {"at": "2026-11-05T20:10:38+00:00", "actor": "agent-tool-at", "action": "step_start", "detail": "publish", "state": "RUNNING", "token": 1}
+{"at": "2026-11-05T20:11:04+00:00", "actor": "agent-tool-at", "action": "reopen", "detail": "build, test, publish: diễn tập (b): 1.0.0 đã có trong kho → đổi sang 1.0.1, bản CỐ Ý lỗi để thử quay lui", "state": "RUNNING", "token": 1}
