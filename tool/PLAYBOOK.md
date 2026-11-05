@@ -47,7 +47,7 @@ Cổng phát hành — không có đường nào vào kho ngoài sổ việc:
 - việc đang RUNNING, người phát hành đang giữ quyền ghi (đúng token, lease còn hạn), bước `publish` đã được chính họ bắt đầu;
 - bước `test` đã xong bởi một Agent con của nhánh Kiểm thử, khác Agent con đã viết mã, cả hai được giao đúng việc này;
 - bản dựng là `tool/workbench/<việc>/build/` và KHÔNG đổi một byte nào kể từ lúc bước `test` xong (băm được chốt ở `job done ... test`).
-  Sửa bản dựng sau kiểm thử → phải `job fail ... test`, sửa, kiểm lại;
+  Sửa bản dựng sau kiểm thử → `job reopen <việc> build <agent> <token> --note "lý do"` rồi viết và kiểm lại (bước build, test và các bước sau trở về PENDING);
 - toàn bộ ca thử được chạy lại trong vùng cách ly ngay lúc phát hành.
 
 Gọi thử từ kho sau khi phát hành: `python -m tool smoke <tool>[@X.Y.Z] --caller <Agent thường> --case input=<tệp>,expect:<tên kết quả>=<tệp mong đợi> --rollback-as <agent>`.

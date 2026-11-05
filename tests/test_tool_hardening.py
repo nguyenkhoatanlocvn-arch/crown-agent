@@ -162,6 +162,30 @@ class PublishGateTest(Base):
             self.cat.publish(build, T, job_id=jid, token=tok)
         self.assertEqual(self.cat.tools(), [])
 
+    def test_changed_build_must_go_back_through_build_and_independent_test(self):
+        jid, tok, build = job_at_publish(self.root)
+        m = read_json(build / "manifest.json")
+        m["version"] = "1.0.1"
+        (build / "manifest.json").write_text(json.dumps(m, ensure_ascii=False), encoding="utf-8")
+        with self.assertRaisesRegex(ToolError, "đã thay đổi sau khi kiểm thử độc lập"):
+            self.cat.publish(build, T, job_id=jid, token=tok)
+        with self.assertRaisesRegex(ToolError, "token cũ hoặc khác người"):
+            self.jobs.reopen(jid, "build", AT, tok, "không phải người giữ")
+        with self.assertRaisesRegex(ToolError, "phải ghi lý do"):
+            self.jobs.reopen(jid, "build", T, tok, " ")
+        job = self.jobs.reopen(jid, "build", T, tok, "đổi sang 1.0.1")
+        self.assertEqual([s["status"] for s in job["steps"]][4:], ["PENDING"] * 4)
+        self.assertNotIn("build_digest", next(s for s in job["steps"] if s["id"] == "test"))
+        with self.assertRaisesRegex(ToolError, "Chưa có bước kiểm thử độc lập đạt|chưa được agent-tool bắt đầu|Bước kế tiếp"):
+            self.jobs.step_start(jid, "publish", T, tok)
+        lt = self.subs.spawn(branch="lt", assigned_by=T, job_id=jid, output="build/")["id"]
+        self.jobs.step_start(jid, "build", T, tok, sub=lt); self.jobs.step_done(jid, "build", T, tok, ["build/manifest.json"])
+        self.subs.finish(lt, T, True, "xong")
+        kt = self.subs.spawn(branch="kt", assigned_by=T, job_id=jid, output="TEST_REPORT.json")["id"]
+        self.jobs.step_start(jid, "test", T, tok, sub=kt); self.jobs.step_done(jid, "test", T, tok, ["TEST_REPORT.json"])
+        self.jobs.step_start(jid, "publish", T, tok)
+        self.assertEqual(self.cat.publish(build, T, job_id=jid, token=tok)["version"], "1.0.1")
+
     def test_crashed_publish_does_not_block_the_version_forever(self):
         tdir = self.root / "catalog" / "upper-text"
         (tdir / ".stage-1.0.0").mkdir(parents=True)

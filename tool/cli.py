@@ -6,7 +6,7 @@ Tìm và gọi tool (mọi Agent trong danh bạ):
   run TOOL --caller ID --in tên=tệp [--out THƯ_MỤC] [--param k=v]
 
 Làm tool (hai Agent điều hành: agent-tool, agent-tool-at):
-  job new|list|show|backlog|claim|release|heartbeat|start|done|skip|fail|set|move
+  job new|list|show|backlog|claim|release|heartbeat|start|done|skip|fail|reopen|set|move
   sub spawn|finish|list                      Agent con theo 5 nhánh (tối đa 2 chạy đồng thời)
   intake JOB MỤC... [--public]               Nhận mẫu: tệp, thư mục, ZIP, URL, prompt
   frames JOB VIDEO [--every S|--at t1,t2]    Lấy khung hình bằng FFmpeg cục bộ
@@ -105,6 +105,8 @@ def build_parser() -> argparse.ArgumentParser:
     a.add_argument("--evidence", action="append", default=[]); a.add_argument("--note", default="")
     a = j.add_parser("skip"); a.add_argument("job"); a.add_argument("step"); a.add_argument("actor"); a.add_argument("token", type=int); a.add_argument("--note", required=True)
     a = j.add_parser("fail"); a.add_argument("job"); a.add_argument("step"); a.add_argument("actor"); a.add_argument("token", type=int); a.add_argument("--note", required=True)
+    a = j.add_parser("reopen", help="mở lại một bước đã xong và mọi bước sau nó (vd. đổi bản dựng sau kiểm thử)")
+    a.add_argument("job"); a.add_argument("step"); a.add_argument("actor"); a.add_argument("token", type=int); a.add_argument("--note", required=True)
     a = j.add_parser("set"); a.add_argument("job"); a.add_argument("actor"); a.add_argument("token", type=int)
     a.add_argument("--tool-id"); a.add_argument("--version")
     a = j.add_parser("move"); a.add_argument("job"); a.add_argument("state"); a.add_argument("actor")
@@ -275,6 +277,9 @@ def dispatch(args, root: Path) -> int:
             jobs.step_done(args.job, args.step, args.actor, args.token, [], args.note, skipped=True); print(f"Bỏ qua bước {args.step}.")
         elif jc == "fail":
             jobs.step_fail(args.job, args.step, args.actor, args.token, args.note); print(f"Ghi lỗi bước {args.step}.")
+        elif jc == "reopen":
+            job = jobs.reopen(args.job, args.step, args.actor, args.token, args.note)
+            print(f"Đã mở lại từ bước {args.step}. Bước kế: {JobStore.next_step(job)['id']}.")
         elif jc == "set":
             f = {k: v for k, v in (("tool_id", args.tool_id), ("version", args.version)) if v}
             jobs.set_fields(args.job, args.actor, args.token, **f); print("Đã ghi.")

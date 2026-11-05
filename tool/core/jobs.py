@@ -306,6 +306,32 @@ class JobStore:
             self._event(job, actor, "step_fail", f"{step_id}: {s['note']}")
             return job
 
+    def reopen(self, job_id: str, step_id: str, actor: str, token: int, note: str) -> dict:
+        """Mở lại một bước đã xong VÀ mọi bước sau nó (vd. đổi bản dựng sau khi kiểm thử → phải viết/kiểm lại).
+
+        Chỉ người đang giữ việc; phải ghi lý do. Bằng chứng cũ được giữ trong nhật ký sự kiện, không giữ trên bước.
+        """
+        if not note or not note.strip():
+            raise ToolError("Mở lại bước phải ghi lý do")
+        with mutex(self._path(job_id)):
+            job = self.get(job_id)
+            self._held(job, actor, token)
+            idx = next((i for i, s in enumerate(job["steps"]) if s["id"] == step_id), None)
+            if idx is None:
+                raise ToolError(f"Không có bước '{step_id}' (các bước: {', '.join(STEP_IDS)})")
+            if job["steps"][idx]["status"] not in ("DONE", "SKIPPED", "FAILED"):
+                raise ToolError(f"Bước {step_id} chưa xong (đang {job['steps'][idx]['status']}) — không có gì để mở lại")
+            reopened = []
+            for s in job["steps"][idx:]:
+                if s["status"] != "PENDING":
+                    reopened.append(s["id"])
+                    s.update(status="PENDING", evidence=[], note=f"mở lại: {note.strip()}", attempts=0)
+                    s.pop("build_digest", None)
+            job.update(tool_id=None, version=None)
+            self._save(job)
+            self._event(job, actor, "reopen", f"{', '.join(reopened)}: {note.strip()}")
+            return job
+
     # ---------- trạng thái & trường ----------
     def set_fields(self, job_id: str, actor: str, token: int, **fields) -> dict:
         allowed = {"tool_id", "version", "result", "inputs"}
