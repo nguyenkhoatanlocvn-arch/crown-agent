@@ -5,7 +5,7 @@
  "branch_name": "Lập trình",
  "kind": "agent",
  "status": "ACTIVE",
- "state": "ACTIVE",
+ "state": "DONE",
  "assigned_by": "agent-tool-at",
  "job_id": "TJ-20261106-33dcbe",
  "step": "build",
@@ -22,7 +22,9 @@
  "worker": "session",
  "created_at": "2026-11-05T20:09:58+00:00",
  "expires_at": "2026-11-05T20:29:58+00:00",
- "finished_at": null,
- "result": null,
- "evidence": []
+ "finished_at": "2026-11-05T20:10:03+00:00",
+ "result": "chép nguyên văn bản 1.0.0 từ kho",
+ "evidence": [
+  "tool/workbench/TJ-20261106-33dcbe/build/manifest.json"
+ ]
 }
