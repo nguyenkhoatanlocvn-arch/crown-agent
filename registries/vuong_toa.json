@@ -4,7 +4,9 @@
   "principals": {
     "CHAIRMAN": {
       "role": "Vương Tọa — Chủ tịch Nguyễn Khoa Tấn Lộc",
-      "scopes": ["*"],
+      "scopes": [
+        "*"
+      ],
       "can_stop": true,
       "can_approve": true
     },
@@ -15,8 +17,11 @@
       "can_approve": false
     },
     "VUA_CEO": {
-      "role": "Vương Tọa AI (phiên VUA). Chưa có văn bản ủy nhiệm phạm vi đặt mục tiêu; giữ rỗng tới khi Chủ tịch ghi scopes.",
-      "scopes": [],
+      "role": "Vương Tọa AI (phiên VUA). Chủ tịch ủy nhiệm trong chat 05/11/2026 23:39 ('anh cấp quyền admin cho em sửa'): chỉ SKILL và DOCS. MONEY luôn chỉ Chủ tịch; WEB/CODE chưa ủy nhiệm.",
+      "scopes": [
+        "SKILL",
+        "DOCS"
+      ],
       "can_stop": true,
       "can_approve": false
     }
@@ -28,5 +33,7 @@
     "CODE": "Mã CROWN trên nhánh/worktree riêng",
     "MONEY": "Bất cứ gì chạm tiền thật, bot BTC, ví, mua dịch vụ"
   },
-  "chairman_only_domains": ["MONEY"]
+  "chairman_only_domains": [
+    "MONEY"
+  ]
 }

@@ -130,7 +130,7 @@ function check(scn, name, cond, seen) { rows.push({ scenario: scn, check: name, 
 
 // 5. Quyền Vương Tọa, việc cần duyệt, Hội đồng
 {
-  const r = await runWorkflow(WF, base('VT-TEST-AUTH', { issued_by: 'VUA_CEO' }))
+  const r = await runWorkflow(WF, base('VT-TEST-AUTH', { issued_by: 'VUA_CEO', scope: { domain: 'WEB' } }))
   check('5 quyền & duyệt', 'Vương Tọa AI chưa ủy nhiệm → từ chối', r.result?.stop === 'TỪ_CHỐI_NHẬN_LỆNH', r.result?.reason)
   const plan = [{ ...PLAN[0], needs_approval: true, needs_council: true }]
   const a = base('VT-TEST-APPROVE', { plan })

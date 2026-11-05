@@ -46,7 +46,9 @@ class VuaTest(unittest.TestCase):
     # --- quyền Vương Tọa ---
     def test_only_delegated_principal_can_issue(self):
         with self.assertRaisesRegex(TaskError, "chưa được ủy nhiệm"):
-            self.v.intake(**{**REQ, "issued_by": "VUA_CEO"})
+            self.v.intake(**{**REQ, "issued_by": "VUA_CEO", "scope": {"domain": "WEB"}})
+        ok = self.v.intake(**{**REQ, "issued_by": "VUA_CEO", "request_id": "VT-TEST-VUA-SKILL"})  # ủy nhiệm 05/11 23:39
+        self.assertFalse(ok["duplicate"])
         with self.assertRaisesRegex(TaskError, "không có quyền"):
             self.v.intake(**{**REQ, "issued_by": "A03"})
         with self.assertRaisesRegex(TaskError, "chỉ Chủ tịch"):
