@@ -133,13 +133,17 @@ class BrokenModelsTest(Base):
 
     def test_paid_api_stays_off_while_budget_is_zero(self):
         def m(d):
-            self._model(d, "gpt").update(status="VERIFIED", evidence="thử", verified_at="2026-11-06", billing="paid_api")
+            # Giả sử GPT đã nối xong và được xếp ưu tiên nhất: vẫn không được chọn khi chưa bật khoản chi.
+            self._model(d, "gpt").update(status="VERIFIED", evidence="thử", verified_at="2026-11-06",
+                                         billing="paid_api", preference=0)
         mm = copy.deepcopy(self.models)
         m(mm)
         rt = M.Router(self.reg, mm, self.cy)
         self.assertEqual(self.reg.tn_config["budget"]["usd_per_day"], 0)
         for _ in range(6):
-            self.assertNotEqual(rt.assign("ARCHITECTURE", "LOW", day=DAY)["model"], "gpt")
+            d = rt.assign("ARCHITECTURE", "LOW", day=DAY)
+            self.assertNotEqual(d["model"], "gpt")
+            self.assertNotIn("gpt", d["fallback"])
 
 
 if __name__ == "__main__":
