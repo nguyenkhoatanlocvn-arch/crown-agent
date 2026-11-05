@@ -75,7 +75,7 @@ class VuaTest(unittest.TestCase):
         with self.assertRaisesRegex(TaskError, "vòng phụ thuộc"):
             self.v.plan(request_id=REQ["request_id"], subtasks=cyc)
         with self.assertRaisesRegex(TaskError, "chưa kích hoạt"):
-            self.v.plan(request_id=REQ["request_id"], subtasks=[{**PLAN[0], "owner": "A01"}])
+            self.v.plan(request_id=REQ["request_id"], subtasks=[{**PLAN[0], "owner": "A05"}])  # A05 chưa kích hoạt (A01 đã nắm ghế TN-01 từ 05/11)
 
     def test_plan_is_reused_and_dependency_enforced(self):
         self.v.intake(**REQ)
@@ -217,7 +217,7 @@ class VuaTest(unittest.TestCase):
         self.assertEqual(self.v.doors(["A03"])["A03"]["activity"], "IDLE")
         self.assertEqual(self.v.lookup(tid)["evidence"], ["link@sha"])
         self.assertEqual(self.v.lookup(self.v.status(rid)["root"]["task_id"])["request_id"], rid)
-        self.assertEqual(self.v.doors(["A01"])["A01"]["door"], "phòng tối — ngủ đông")
+        self.assertEqual(self.v.doors(["A05"])["A05"]["door"], "phòng tối — ngủ đông")
 
 
 class VuaCliTest(unittest.TestCase):

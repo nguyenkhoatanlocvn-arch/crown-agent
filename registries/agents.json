@@ -1,5 +1,5 @@
 {
-  "version": "2026-11-04.1",
+  "version": "2026-11-05.1",
   "note": "Đăng ký 20 Agent KHÔNG có nghĩa 20 phiên đang chạy. status: ACTIVE = được giao việc ở M1; REGISTERED = có hồ sơ, chưa kích hoạt.",
   "agents": [
     {
@@ -7,7 +7,7 @@
       "name": "Royal Brain — Bộ não chính",
       "leader": "VUA_CEO",
       "cluster": "Bộ não và tri thức",
-      "status": "REGISTERED",
+      "status": "ACTIVE",
       "tier": "SANDBOX_WRITE",
       "mission": "Mục tiêu, ưu tiên, sổ quyết định, bản tin CEO, phát hiện mục tiêu bị trôi",
       "skills": [
@@ -26,7 +26,7 @@
       "name": "Distributed Brain — Bộ não phân quyền",
       "leader": "VUA_CEO",
       "cluster": "Bộ não và tri thức",
-      "status": "REGISTERED",
+      "status": "ACTIVE",
       "tier": "SANDBOX_WRITE",
       "mission": "Kiến trúc bộ nhớ theo namespace, truy xuất, xử lý xung đột dữ kiện",
       "skills": [
@@ -66,7 +66,7 @@
       "name": "Tool & App Observatory — Kho công cụ",
       "leader": "VUA_CEO",
       "cluster": "Nền tảng và vận hành",
-      "status": "REGISTERED",
+      "status": "ACTIVE",
       "tier": "READ",
       "mission": "Danh mục công cụ free/trả phí/mã nguồn mở; so sánh dùng sẵn, tự viết, mua",
       "skills": [
@@ -168,7 +168,7 @@
       "name": "Orchestration & Automation — Điều phối",
       "leader": "VUA_CEO",
       "cluster": "Nền tảng và vận hành",
-      "status": "REGISTERED",
+      "status": "ACTIVE",
       "tier": "SANDBOX_WRITE",
       "mission": "Hàng đợi, khóa nhận việc, retry, lịch, bàn giao có xác nhận",
       "skills": [
@@ -206,7 +206,7 @@
       "name": "Token & Cost Intelligence — Tiết kiệm token",
       "leader": "CFO",
       "cluster": "Vốn và hiệu suất",
-      "status": "REGISTERED",
+      "status": "ACTIVE",
       "tier": "READ",
       "mission": "Đo và tối ưu chi phí model/token có số liệu thật",
       "skills": [

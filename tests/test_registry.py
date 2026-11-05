@@ -22,7 +22,9 @@ class RealRegistryTest(unittest.TestCase):
 
     def test_decisions_reflected(self):
         # D-001 Vua kiêm CEO; D-003 Agent 3 dưới Vua; Kiểm soát độc lập báo thẳng Chủ tịch.
-        self.assertEqual(self.reg.leaders["VUA_CEO"]["supervisor"], "CHAIRMAN")
+        # 2026-11-05: Chủ tịch chốt Thiên Não điều hành tất cả → Vua báo cáo Thiên Não.
+        self.assertEqual(self.reg.leaders["VUA_CEO"]["supervisor"], "THIEN_NAO")
+        self.assertEqual(self.reg.leaders["THIEN_NAO"]["supervisor"], "CHAIRMAN")
         self.assertEqual(self.reg.agents["A03"]["leader"], "VUA_CEO")
         self.assertEqual(self.reg.agents["A17"]["leader"], "CHAIRMAN")
         self.assertEqual(self.reg.agents["A20"]["leader"], "CHAIRMAN")
@@ -30,7 +32,8 @@ class RealRegistryTest(unittest.TestCase):
 
     def test_only_m1_core_active(self):
         active = sorted(a for a, v in self.reg.agents.items() if v["status"] == "ACTIVE")
-        self.assertEqual(active, ["A03", "A11", "A17", "A18", "A20"])  # 2026-11-04: B02_BTC kich hoat A11/A17/A18/A20
+        # 2026-11-04: B02_BTC kích hoạt A11/A17/A18/A20. 2026-11-05: A01/A02/A04/A10/A12 nắm ghế TN-01/09/08/02/11.
+        self.assertEqual(active, ["A01", "A02", "A03", "A04", "A10", "A11", "A12", "A17", "A18", "A20"])
 
     def test_legacy_25_units_all_mapped(self):
         self.assertEqual(len(self.reg.legacy), 25)
@@ -130,7 +133,7 @@ class SubagentTest(unittest.TestCase):
     def test_real_subagents_load_and_chain(self):
         reg = R.load()
         self.assertEqual(sorted(reg.subagents), ["A03.1", "A03.2", "A03.3"])
-        self.assertEqual(reg.chain("A03.2"), ["A03.2", "A03", "VUA_CEO", "CHAIRMAN"])
+        self.assertEqual(reg.chain("A03.2"), ["A03.2", "A03", "VUA_CEO", "THIEN_NAO", "CHAIRMAN"])
     def test_scope_outside_parent_rejected(self):
         self.sub["subagents"][0]["write_scope"] = ["companies/BTC/"]; self._write()
         with self.assertRaises(R.RegistryError): R.load(self.tmp)

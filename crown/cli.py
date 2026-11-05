@@ -42,7 +42,14 @@ def cmd_org(reg: R.Registry) -> None:
         for cid, c in sorted(reg.companies.items()):
             if c["owner"] == lid:
                 print("  " * (depth + 1) + f"▣ Công ty {cid} — {c['status']}")
-        order = {"VUA_CEO": 0, "CFO": 1, "CMO-01": 2, "CMO-02": 3}
+        for uid, u in sorted(reg.units.items()):
+            if u.get("supervisor") == lid:
+                via = " (không qua " + ", ".join(u["bypass"]) + ")" if u.get("bypass") else ""
+                print("  " * (depth + 1) + f"◆ {uid} — {u['name']} [{u['tier']}]{via}")
+        for sid, st in sorted(reg.tn_seats.items()):
+            if not st.get("holder") and st.get("leader") == lid:
+                print("  " * (depth + 1) + f"{STATUS_ICON.get(st['status'], '?')} {sid} {st['name']} [{st['tier']}]")
+        order = {"THIEN_NAO": 0, "VUA_CEO": 1, "CFO": 2, "CMO-01": 3, "CMO-02": 4}
         for sub in sorted((x for x, v in reg.leaders.items() if v.get("supervisor") == lid),
                           key=lambda x: (order.get(x, 9), x)):
             leader_line(sub, depth + 1)

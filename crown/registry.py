@@ -1,4 +1,4 @@
-"""Sổ đăng ký tổ chức CROWN AGENT: Chủ tịch, 3C, 20 Agent, công ty con.
+"""Sổ đăng ký tổ chức CROWN AGENT: Chủ tịch, Thiên Não, 3C, 20 Agent, ghế TN, công ty con.
 
 Nạp file JSON trong registries/ và kiểm tra các luật tổ chức của master prompt
 (mục 04-08). Không dùng mạng, không đọc secret.
@@ -16,7 +16,14 @@ TIERS = ["READ", "SANDBOX_WRITE", "OPERATIONAL_WRITE", "SENSITIVE"]
 AGENT_STATUSES = {"ACTIVE", "REGISTERED", "DISABLED"}
 EXPECTED_AGENT_IDS = [f"A{i:02d}" for i in range(1, 21)]
 # Lãnh đạo hợp lệ. Thêm lãnh đạo mới = thay đổi mô hình tổ chức → Chủ tịch quyết, sửa danh sách này có review.
-EXPECTED_LEADER_IDS = {"CHAIRMAN", "VUA_CEO", "CFO", "CMO-01", "CMO-02"}
+# 2026-11-05: thêm THIEN_NAO theo lệnh DRAGON SINGULARITY V1.0 và quyết định Chủ tịch ~23:35.
+EXPECTED_LEADER_IDS = {"CHAIRMAN", "THIEN_NAO", "VUA_CEO", "CFO", "CMO-01", "CMO-02"}
+EXPECTED_TN_SEATS = [f"TN-{i:02d}" for i in range(1, 13)]
+MODEL_TIERS = ["RULE", "FAST", "BALANCED", "CODING", "ADVANCED"]
+UNIT_KINDS = {"rule_engine", "autonomous_agent"}
+SEAT_REQUIRED = ("name", "mission", "limits", "system_instruction", "memory_ns", "skills", "tools",
+                 "model_tier", "reasoning", "budget", "reports_to", "receives_from")
+SEAT_BUDGET_REQUIRED = ("max_tokens_per_task", "max_usd_per_day", "max_minutes_per_task", "max_ai_calls_per_day")
 EXPECTED_LEGACY_COUNT = 25
 
 
@@ -31,6 +38,9 @@ class Registry:
     companies: dict[str, dict]
     legacy: dict[str, dict] = field(default_factory=dict)
     subagents: dict[str, dict] = field(default_factory=dict)   # 2026-11-05: Agent con (A03.1...) thuộc một Agent cha
+    tn_seats: dict[str, dict] = field(default_factory=dict)    # 2026-11-05: 12 ghế Thiên Não TN-01…TN-12
+    units: dict[str, dict] = field(default_factory=dict)       # đơn vị dưới Thiên Não: bộ máy luật, Agent tự trị
+    tn_config: dict = field(default_factory=dict)              # lịch, ngân sách, cầu dao của Thiên Não
 
     def member(self, member_id: str) -> dict:
         if member_id in self.leaders:
@@ -39,13 +49,30 @@ class Registry:
             return self.agents[member_id]
         if member_id in self.subagents:
             return self.subagents[member_id]
+        if member_id in self.units:
+            return self.units[member_id]
+        seat = self.tn_seats.get(member_id)
+        if seat is not None and not seat.get("holder"):   # ghế mới tự là thành viên; ghế có người giữ thì không
+            return seat
         raise KeyError(member_id)
+
+    def has_member(self, member_id: str) -> bool:
+        try:
+            self.member(member_id)
+            return True
+        except KeyError:
+            return False
 
     def boss_of(self, member_id: str) -> str | None:
         m = self.member(member_id)
         if member_id in self.leaders: return m.get("supervisor")
         if member_id in self.subagents: return m.get("parent")
+        if member_id in self.units: return m.get("supervisor")
         return m.get("leader")
+
+    def seat_owner(self, seat_id: str) -> str:
+        """Ai đứng tên nhiệm vụ của một ghế TN: Agent đang giữ ghế, hoặc chính ghế nếu là ghế mới."""
+        return self.tn_seats[seat_id].get("holder") or seat_id
 
     def chain(self, member_id: str) -> list[str]:
         """Chuỗi chỉ huy từ member lên Chủ tịch."""
@@ -127,13 +154,20 @@ def load(reg_dir: Path = REG_DIR) -> Registry:
     companies = _index(_items(co, "companies", "companies.json", errors), "companies.json", errors)
     sub_path = reg_dir / "subagents.json"
     subagents = _index(_items(_load_json(sub_path), "subagents", "subagents.json", errors), "subagents.json", errors) if sub_path.exists() else {}
+    tn_path = reg_dir / "thien_nao.json"
+    tn = _load_json(tn_path) if tn_path.exists() else None
+    seats = _index(_items(tn, "seats", "thien_nao.json", errors), "thien_nao.json", errors) if tn is not None else {}
+    units = _index(_items(tn, "units", "thien_nao.json", errors), "thien_nao.json", errors) if tn is not None else {}
+    tn_config = {k: tn[k] for k in ("schedule", "budget", "breaker") if isinstance(tn, dict) and isinstance(tn.get(k), dict)}
     legacy = lg.get("units") if isinstance(lg, dict) else None
     if not isinstance(legacy, dict) or not all(isinstance(v, dict) for v in legacy.values()):
         errors.append("legacy_map.json: 'units' phải là object mã → {maps_to: [...]}")
         legacy = {}
     if errors:
         raise RegistryError("Sổ đăng ký không hợp lệ:\n- " + "\n- ".join(errors))
-    reg = Registry(leaders=leaders, agents=agents, companies=companies, legacy=legacy, subagents=subagents)
+    reg = Registry(leaders=leaders, agents=agents, companies=companies, legacy=legacy, subagents=subagents,
+                   tn_seats=seats, units=units, tn_config=tn_config)
+    reg.has_tn_file = tn is not None
     validate(reg)
     return reg
 
@@ -261,6 +295,8 @@ def validate(reg: Registry) -> None:
         if clean_path(sa.get("memory_ns", "")) is None or not clean_path(sa.get("memory_ns", "")).startswith(clean_path(reg.agents[par]["memory_ns"]) or "-"):
             errors.append(f"{sid}: bộ nhớ phải nằm trong {reg.agents[par].get('memory_ns')}")
 
+    errors += _validate_thien_nao(reg)
+
     if len(reg.legacy) != EXPECTED_LEGACY_COUNT:
         errors.append(f"Bảng mã cũ phải có đủ {EXPECTED_LEGACY_COUNT} đơn vị KING AI (đang có {len(reg.legacy)})")
     for code, u in reg.legacy.items():
@@ -273,3 +309,110 @@ def validate(reg: Registry) -> None:
 
     if errors:
         raise RegistryError("Sổ đăng ký không hợp lệ:\n- " + "\n- ".join(errors))
+
+
+def _num(v) -> bool:
+    return isinstance(v, (int, float)) and not isinstance(v, bool) and v >= 0
+
+
+def _validate_thien_nao(reg: Registry) -> list[str]:
+    """Luật cho ghế TN và đơn vị dưới Thiên Não (lệnh DRAGON SINGULARITY mục 02, 04)."""
+    errors: list[str] = []
+    if not getattr(reg, "has_tn_file", bool(reg.tn_seats or reg.units)):
+        return errors
+    core = set(reg.leaders) | set(reg.agents) | set(reg.subagents)
+
+    # Ghế: đúng TN-01…TN-12, đủ trường của mục 04.
+    if sorted(reg.tn_seats) != EXPECTED_TN_SEATS:
+        missing = sorted(set(EXPECTED_TN_SEATS) - set(reg.tn_seats))
+        extra = sorted(set(reg.tn_seats) - set(EXPECTED_TN_SEATS))
+        errors.append(f"Ghế Thiên Não phải là TN-01..TN-12. Thiếu {missing}, thừa {extra}")
+    vua_tier = reg.leaders.get("VUA_CEO", {}).get("tier")
+    for sid, s in reg.tn_seats.items():
+        for f in SEAT_REQUIRED:
+            if f not in s or s[f] in ("", None):
+                errors.append(f"{sid}: thiếu trường '{f}'")
+        b = s.get("budget")
+        if not isinstance(b, dict) or not all(_num(b.get(k)) for k in SEAT_BUDGET_REQUIRED):
+            errors.append(f"{sid}: budget phải có đủ {list(SEAT_BUDGET_REQUIRED)} là số không âm")
+        elif b["max_usd_per_day"] > 0 and not str(s.get("spend_approval_ref", "")).strip():
+            errors.append(f"{sid}: bật khoản chi (max_usd_per_day > 0) cần mã phê duyệt của Chủ tịch (spend_approval_ref)")
+        if s.get("model_tier") not in MODEL_TIERS:
+            errors.append(f"{sid}: model_tier '{s.get('model_tier')}' không hợp lệ")
+        if s.get("reports_to") != "VUA_CEO":
+            errors.append(f"{sid}: phải báo cáo cho Agent Vua (reports_to=VUA_CEO)")
+        if s.get("receives_from") != "THIEN_NAO":
+            errors.append(f"{sid}: phải nhận việc từ Thiên Não (receives_from=THIEN_NAO)")
+        for k in ("skills", "tools"):
+            if not isinstance(s.get(k, []), list):
+                errors.append(f"{sid}: {k} phải là danh sách")
+        ns = clean_path(s.get("memory_ns"))
+        holder = s.get("holder")
+        if holder:
+            if holder not in core:
+                errors.append(f"{sid}: người giữ ghế '{holder}' không có trong sổ đăng ký")
+                continue
+            hns = clean_path(reg.member(holder).get("memory_ns") or f"agents/{holder}/")
+            if ns is None or not ns.startswith(hns):
+                errors.append(f"{sid}: bộ nhớ phải nằm trong {hns} của {holder}")
+        else:
+            if sid in core:
+                errors.append(f"{sid}: ID trùng với thành viên khác")
+            if s.get("status") not in AGENT_STATUSES:
+                errors.append(f"{sid}: ghế mới cần trạng thái hợp lệ")
+            if s.get("leader") != "VUA_CEO":
+                errors.append(f"{sid}: ghế mới phải thuộc Agent Vua (leader=VUA_CEO)")
+            t = s.get("tier")
+            if t not in TIERS or t == "SENSITIVE" or (vua_tier in TIERS and TIERS.index(t) > TIERS.index(vua_tier)):
+                errors.append(f"{sid}: mức quyền '{t}' không hợp lệ (không SENSITIVE, không vượt Agent Vua)")
+            if ns is None or not ns.startswith(f"agents/{sid}/"):
+                errors.append(f"{sid}: bộ nhớ phải nằm trong agents/{sid}/")
+            if not isinstance(s.get("write_scope"), list) or not all(clean_path(x) for x in s.get("write_scope", [])):
+                errors.append(f"{sid}: ghế mới cần write_scope là danh sách đường dẫn sạch")
+
+    # Đơn vị: dưới Thiên Não, không SENSITIVE, có giới hạn cứng.
+    tn_tier = reg.leaders.get("THIEN_NAO", {}).get("tier")
+    for uid, u in reg.units.items():
+        if uid in core or uid in reg.tn_seats:
+            errors.append(f"Đơn vị '{uid}': ID trùng với thành viên khác trong sổ đăng ký")
+            continue
+        if u.get("kind") not in UNIT_KINDS:
+            errors.append(f"{uid}: kind phải thuộc {sorted(UNIT_KINDS)}")
+        if u.get("supervisor") != "THIEN_NAO":
+            errors.append(f"{uid}: đơn vị phải thuộc Thiên Não (supervisor=THIEN_NAO)")
+        if u.get("status") not in AGENT_STATUSES:
+            errors.append(f"{uid}: trạng thái không hợp lệ")
+        t = u.get("tier")
+        if t not in TIERS or t == "SENSITIVE" or (tn_tier in TIERS and TIERS.index(t) > TIERS.index(tn_tier)):
+            errors.append(f"{uid}: mức quyền '{t}' không hợp lệ (không SENSITIVE, không vượt Thiên Não)")
+        if not str(u.get("mission", "")).strip():
+            errors.append(f"{uid}: thiếu mission")
+        if not isinstance(u.get("hard_limits"), list) or not u["hard_limits"]:
+            errors.append(f"{uid}: phải có hard_limits (giới hạn cứng) không rỗng")
+        if not isinstance(u.get("bypass", []), list) or any(x not in reg.leaders for x in u.get("bypass", [])):
+            errors.append(f"{uid}: bypass phải là danh sách lãnh đạo có trong sổ")
+        if "write_scope" in u and (not isinstance(u["write_scope"], list) or not all(clean_path(x) for x in u["write_scope"])):
+            errors.append(f"{uid}: write_scope phải là danh sách đường dẫn sạch")
+
+    # Vùng ghi của ghế mới và đơn vị không chồng vùng Agent khác.
+    mine = [(sid, clean_path(x)) for sid, s in reg.tn_seats.items() if not s.get("holder")
+            for x in (s.get("write_scope") if isinstance(s.get("write_scope"), list) else []) if clean_path(x)]
+    mine += [(uid, clean_path(x)) for uid, u in reg.units.items()
+             for x in (u.get("write_scope") if isinstance(u.get("write_scope"), list) else []) if clean_path(x)]
+    others = [(aid, clean_path(x)) for aid, a in reg.agents.items()
+              if isinstance(a.get("write_scope"), list) for x in a["write_scope"] if clean_path(x)]
+    for i, (m1, s1) in enumerate(mine):
+        for m2, s2 in others + mine[i + 1:]:
+            if m1 != m2 and scopes_overlap(s1, s2):
+                errors.append(f"Vùng ghi chồng nhau: {m1}:{s1} và {m2}:{s2}")
+
+    # Chuỗi chỉ huy của ghế mới và đơn vị phải về Chủ tịch.
+    if not errors:
+        for mid in [sid for sid, s in reg.tn_seats.items() if not s.get("holder")] + list(reg.units):
+            try:
+                c = reg.chain(mid)
+                if c[-1] != "CHAIRMAN":
+                    errors.append(f"{mid}: chuỗi chỉ huy không về Chủ tịch ({' -> '.join(c)})")
+            except (RegistryError, KeyError) as e:
+                errors.append(f"{mid}: chuỗi chỉ huy hỏng ({e})")
+    return errors
