@@ -50,6 +50,15 @@ export async function runWorkflow(file, args, fx = {}) {
     if (dead) throw new Killed(n)
     if (fx.killAt && n === fx.killAt) { dead = true; throw new Killed(n) }
     const cmd = (prompt.match(/<<CMD>>\n([\s\S]*?)\n<<END>>/) || [])[1]
+    if (fx.live && !label.startsWith('sổ:')) {
+      // CHẠY THẬT từng bước: vai Rồng/người kiểm/đồng bộ do Agent thật trả lời (ghi trong answers),
+      // chưa có câu trả lời → dừng lượt, ghi prompt ra pending để Agent Vua giao đúng prompt này.
+      const ans = existsSync(fx.live.answers) ? JSON.parse(readFileSync(fx.live.answers, 'utf8')) : {}
+      if (ans[label]) { calls[calls.length - 1].answered_by = ans[label].answered_by; return ans[label].output }
+      writeFileSync(fx.live.pending, JSON.stringify({ label, prompt, schema: opts.schema || null, model: opts.model || null }, null, 2))
+      dead = true
+      const e = new Killed(n); e.pending = label; throw e
+    }
     if (label.startsWith('nghiệm thu')) {
       const r = await runCmd(cmd)
       const s = JSON.parse(r.stdout).result
@@ -108,7 +117,7 @@ export async function runWorkflow(file, args, fx = {}) {
   let result, error
   try { result = await fn(agent, parallel, pipeline, phase, log, args, budget, null, guardedDate(), guardedMath(), undefined, undefined) }
   catch (e) { error = e }
-  return { meta, result, error: error && { message: error.message, killed: !!error.killed }, calls, logs }
+  return { meta, result, error: error && { message: error.message, killed: !!error.killed, pending: error.pending }, calls, logs }
 }
 
 function localFile(op) { return path.join(REPO, 'runtime', 'hoang_thanh_local', `${op.replace(/[^\w.-]/g, '_')}.json`) }
