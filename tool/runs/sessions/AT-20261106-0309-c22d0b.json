@@ -4,8 +4,8 @@
  "trigger": "manual",
  "trigger_basis": "có dấu chạy tay: MANUAL: diễn tập nghiệm thu mục 8 (hai Agent cùng phát hành một phiên bản + bản ",
  "started_at": "2026-11-05T20:09:29+00:00",
- "finished_at": null,
- "result": null,
+ "finished_at": "2026-11-05T20:12:42+00:00",
+ "result": "ROLLED_BACK",
  "plan": null,
  "releases": [
   {
@@ -16,6 +16,8 @@
    "smoke_at": "2026-11-05T20:12:37+00:00"
   }
  ],
- "notes": [],
+ "notes": [
+  "Diễn tập nghiệm thu mục 8: AT phát hành trùng 1.0.0 bị từ chối; 1.0.1 cố ý lỗi phát hành tự động rồi bị thu hồi sau khi A15 gọi thử lỗi; 1.0.0 gọi thử lại đạt"
+ ],
  "github": null
 }
