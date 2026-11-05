@@ -1,1 +1,2 @@
 {"at": "2026-11-05T20:09:51+00:00", "actor": "CHAIRMAN", "action": "create", "detail": "giao cho agent-tool-at; nguồn nghiem-thu", "state": "READY", "token": 0}
+{"at": "2026-11-05T20:09:54+00:00", "actor": "agent-tool-at", "action": "claim", "detail": "nhận việc", "state": "RUNNING", "token": 1}
