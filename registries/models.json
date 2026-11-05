@@ -1,0 +1,41 @@
+{
+  "version": "2026-11-05.1",
+  "note": "Sổ mô hình của Thiên Não. status: VERIFIED = đã gọi thật, có bằng chứng · REPORTED = phiên khác báo đã dùng, chưa kiểm lại · LISTED = có trong danh sách chọn, chưa gọi thử · NOT_CONNECTED = chưa có kết nối · NOT_SURVEYED = chưa khảo sát. Chỉ Chủ tịch gộp thay đổi tệp này. id của Claude là bí danh dùng khi giao Agent con (haiku / sonnet / opus / fable).",
+  "tiers": ["RULE", "FAST", "BALANCED", "CODING", "ADVANCED"],
+  "statuses": ["VERIFIED", "REPORTED", "LISTED", "NOT_CONNECTED", "NOT_SURVEYED"],
+  "models": [
+    {"id": "rule-engine", "provider": "local", "label": "Bộ luật (không AI)", "tier": "RULE", "billing": "none",
+     "status": "VERIFIED", "verified_at": "2026-11-05", "evidence": "crown/cycle.py + bộ test trong repo"},
+    {"id": "haiku", "provider": "anthropic", "label": "Claude Haiku", "tier": "FAST", "billing": "plan",
+     "status": "LISTED", "verified_at": null, "evidence": "Có trong danh sách chọn mô hình cho Agent con; chưa gọi thử"},
+    {"id": "sonnet", "provider": "anthropic", "label": "Claude Sonnet", "tier": "BALANCED", "also": ["CODING"], "billing": "plan",
+     "status": "REPORTED", "verified_at": null, "evidence": "A03-NB báo dùng sonnet làm Agent kiểm (Project: claude/VUONG_TOA/reports/A03-NB.md, 05/11/2026)"},
+    {"id": "opus", "provider": "anthropic", "label": "Claude Opus", "tier": "ADVANCED", "billing": "plan", "preference": 1,
+     "status": "VERIFIED", "verified_at": "2026-11-05", "evidence": "2 tác vụ định kỳ chạy claude-opus-5-5; lượt 05/11/2026 15:26Z và 15:42Z thành công (list_triggers)"},
+    {"id": "fable", "provider": "anthropic", "label": "Claude Fable", "tier": "ADVANCED", "billing": "plan", "preference": 2,
+     "status": "VERIFIED", "verified_at": "2026-11-05", "evidence": "Phiên dựng Thiên Não chạy claude-fable-5-1 (05/11/2026). Chưa đo chi phí so với Opus → xếp sau Opus"},
+    {"id": "gpt", "provider": "openai", "label": "GPT qua API", "tier": "ADVANCED", "billing": "paid_api", "preference": 9,
+     "status": "NOT_CONNECTED", "verified_at": null, "evidence": "Chưa có khóa; cầu nối crown_council chưa được app nạp (get_device_info 05/11/2026)"},
+    {"id": "gemini", "provider": "google", "label": "Gemini", "tier": "BALANCED", "billing": "paid_api", "preference": 9,
+     "status": "NOT_CONNECTED", "verified_at": null, "evidence": "Chưa có khóa (HOI_DONG_AI_HANDOFF 05/11/2026)"},
+    {"id": "deepseek", "provider": "deepseek", "label": "DeepSeek", "tier": "FAST", "billing": "paid_api", "preference": 9,
+     "status": "NOT_CONNECTED", "verified_at": null, "evidence": "Chưa có khóa (HOI_DONG_AI_HANDOFF 05/11/2026)"},
+    {"id": "grok", "provider": "xai", "label": "Grok", "tier": "BALANCED", "billing": "paid_api", "preference": 9,
+     "status": "NOT_CONNECTED", "verified_at": null, "evidence": "Chưa có khóa (HOI_DONG_AI_HANDOFF 05/11/2026)"},
+    {"id": "local-oss", "provider": "local", "label": "Mô hình mã nguồn mở chạy local", "tier": "FAST", "billing": "none", "preference": 9,
+     "status": "NOT_SURVEYED", "verified_at": null, "evidence": "Chưa khảo sát laptop (cần shell trên máy)"}
+  ],
+  "routing": {
+    "LOG_TRIAGE": {"tier": "FAST", "desc": "Đọc log, phân loại"},
+    "PERIODIC_CHECK": {"tier": "RULE", "escalate_to": "FAST", "desc": "Kiểm tra định kỳ: luật trước, AI khi cần"},
+    "RESEARCH": {"tier": "BALANCED", "desc": "Nghiên cứu thông thường"},
+    "CODE": {"tier": "CODING", "desc": "Viết và sửa code"},
+    "ARCHITECTURE": {"tier": "ADVANCED", "desc": "Thiết kế kiến trúc"},
+    "SECURITY_AUDIT": {"tier": "ADVANCED", "independent_review": true, "desc": "Kiểm toán bảo mật"},
+    "MAJOR_UPGRADE": {"tier": "ADVANCED", "desc": "Phân tích nâng cấp lớn"}
+  },
+  "measurements": {
+    "note": "QUALITY / LATENCY / COST / CONTEXT chưa có số đo. Router dùng thứ tự bậc và hạn mức lượt gọi cho tới khi Evolution Lab đo được.",
+    "by_model": {}
+  }
+}

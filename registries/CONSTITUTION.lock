@@ -4,7 +4,8 @@
     "crown/policy.py": "65a474a86262cc0568a897dd76ecc70af988b5f6b885c597ec8ba713ece5ac5a",
     "registries/approvals.json": "b43d90b7f36524ac9f91f77f1c64224a02d101a943b073ee79c22bb382a0a443",
     "registries/leaders.json": "b927f620ae74066659eb94d443fceaa23f4867e1244950d9657bde4787d8c0bb",
-    "registries/permissions.json": "ee3203e44d853edb648c918d94628ee97abf8a5be9a5d2be7f50b9187e59d2d0",
+    "registries/models.json": "85d0c6bdc03d8a982910185fb97977c86dd98f56d387c05f98fd856838bebb72",
+    "registries/permissions.json": "c8ad632f10926c74198f4fe1dd4a63752f4981818b45f2ad6f484e16d0f51cfb",
     "registries/thien_nao.json": "7fcbffef9d907e33e7c290a4e6afb50d917b71e4f83ef6545cae2162c8c78520",
     "registries/vuong_toa.json": "626f0a965e1eb8a5248b0bbf8a39484c168a28a4e71a057c2a404e994d100865"
   }
