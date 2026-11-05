@@ -79,8 +79,18 @@ class SlotTest(unittest.TestCase):
 
     def test_ai_lane_has_four_slots_per_day(self):
         ids = sorted({C.slot_id(C.current_slot("ai", vn(2026, 11, 6, h, 50), self.cfg)) for h in range(24)})
-        self.assertEqual(ids, ["2026-11-05T19:47+07:00", "2026-11-06T01:47+07:00", "2026-11-06T07:47+07:00",
-                               "2026-11-06T13:47+07:00", "2026-11-06T19:47+07:00"])
+        self.assertEqual(ids, ["2026-11-06T00:47+07:00", "2026-11-06T06:47+07:00", "2026-11-06T12:47+07:00",
+                               "2026-11-06T18:47+07:00"])
+
+    def test_lanes_cannot_collide_when_triggers_are_on_time(self):
+        # Phiên AI giữ khóa tối đa lock_ttl; phiên luật làm tối đa cycle_time_budget. Lịch phải chừa đủ chỗ cho cả hai.
+        self.assertEqual(C.schedule_conflicts(self.cfg), [])
+        bad = {**self.cfg, "ai_lane": {"times": ["01:47", "06:47"]}}          # 01:47 + 40 phút khóa = 02:27 > mốc luật 02:17
+        got = C.schedule_conflicts(bad)
+        self.assertEqual(len(got), 1)
+        self.assertIn("01:47", got[0])
+        tight = {**self.cfg, "ai_lane": {"times": ["00:20"]}}                 # phiên luật 00:17 còn có thể đang chạy
+        self.assertIn("00:20", C.schedule_conflicts(tight)[0])
 
     def test_slots_between_is_exclusive_inclusive(self):
         a, b = vn(2026, 11, 6, 0, 17), vn(2026, 11, 6, 6, 17)
@@ -194,6 +204,18 @@ class MissedSlotTest(Base):
         self.assertEqual(len(b["missed"]), cap)
         self.assertEqual(b["missed_not_recorded"], 10 * 12 - 1 - cap)
         self.assertEqual(len(self.cy.runs()), cap + 2)
+
+    def test_a_stopped_slot_does_not_hide_the_slots_missed_before_it(self):
+        self.run_ok()                                             # 00:17
+        self.clock.tick(hours=6)                                  # 02:17 và 04:17 không ai chạy
+        b = self.cy.begin("rule", external_stop="dừng")           # 06:17 bị dừng khẩn cấp
+        self.assertEqual(b["reason"], "ESTOP")
+        self.assertEqual(sorted(b["missed"]), ["rule-2026-11-06T02:17+07:00", "rule-2026-11-06T04:17+07:00"])
+        self.clock.tick(hours=2)
+        self.run_ok()                                             # 08:17 chạy lại
+        st = {r["run_id"][-11:-6]: r["status"] for r in self.cy.runs("rule")}
+        self.assertEqual(st, {"00:17": "SUCCEEDED", "02:17": "MISSED", "04:17": "MISSED", "06:17": "SKIPPED", "08:17": "SUCCEEDED"})
+        self.assertEqual(self.cy.metrics()["rule"]["missed"], 2)
 
     def test_first_run_ever_has_nothing_to_catch_up(self):
         self.assertEqual(self.cy.begin("rule")["missed"], [])

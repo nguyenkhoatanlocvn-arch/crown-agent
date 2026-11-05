@@ -62,9 +62,28 @@ class Runner:
         self.session_file = Path(str(self.db_path) + ".session.json")   # nối các lệnh của một phiên AI (nhiều tiến trình)
 
     # ---------- đọc / ghi nhánh trạng thái ----------
+    def _open_session(self, files: dict | None) -> dict | None:
+        """Máy này đang giữ một phiên đã nhận khóa mà chưa đóng? (lần ghi gần nhất là lần nhận phiên, khóa còn hạn,
+        và database trên kho vẫn đúng là bản đó). Nạp lại lúc này sẽ xóa việc đang làm dở trong database cục bộ."""
+        if not self.session_file.exists() or not self.db_path.exists() or files is None:
+            return None
+        try:
+            sess = json.loads(self.session_file.read_text(encoding="utf-8"))
+            if not sess.get("open") or datetime.fromisoformat(sess["lock_expires_at"]) <= self.clock().astimezone(timezone.utc):
+                return None
+            if _sha(S.unpack(files)) != sess.get("base_sha"):
+                return None
+        except (ValueError, KeyError, TypeError, OSError):
+            return None
+        return sess
+
     def load(self) -> None:
         """Đọc nhánh trạng thái và dựng lại database cục bộ. Trạng thái hỏng → StateError, không làm gì thêm."""
         files = self.state.pull()
+        sess = self._open_session(files)
+        if sess:
+            raise RunnerError(f"Máy này đang mở phiên {sess['run_id']} (khóa tới {sess['lock_expires_at']}). Không nạp lại để khỏi xóa "
+                              f"việc đang làm dở: hãy đóng phiên bằng ai-finish, hoặc chờ khóa hết hạn.")
         for suffix in ("", "-wal", "-shm", "-journal"):
             q = Path(str(self.db_path) + suffix)
             if q.exists():
@@ -92,8 +111,10 @@ class Runner:
         if self.state.push(files, message):
             self._base_sha = _sha(dump)
             self.last_report = files.get("state/REPORT.md")
-            self.session_file.write_text(json.dumps({"run_id": run_id, "base_sha": self._base_sha, "head": self.state.parent}),
-                                         encoding="utf-8")
+            lock = tn.cycle.lock()
+            self.session_file.write_text(json.dumps({
+                "run_id": run_id, "base_sha": self._base_sha, "head": self.state.parent,
+                "open": lock["run_id"] == run_id, "lock_expires_at": lock["expires_at"]}), encoding="utf-8")
             return True
         return False
 

@@ -136,11 +136,56 @@ class AiCliTest(CliSandbox):
         self.assertIn("không ghi đè", out["error"])
         self.assertEqual(git(self.remote, "rev-list", "--count", "refs/heads/tn-state"), n)
 
+    def test_claiming_again_on_the_same_machine_does_not_wipe_work_in_progress(self):
+        import sqlite3
+        code, brief = self.cli("ai", "ai-claim", "--trigger", "manual")
+        r = brief["result"]
+        db = self.tmp / "ai.db"
+        con = sqlite3.connect(db)
+        con.execute("CREATE TABLE viec_dang_do(x)")
+        con.execute("INSERT INTO viec_dang_do VALUES ('bằng chứng chưa đẩy')")
+        con.commit(); con.close()
+        code, again = self.cli("ai", "ai-claim", "--trigger", "manual")       # Agent gọi lại để "xem lại bản giao việc"
+        self.assertEqual((code, again["ok"]), (2, False))
+        self.assertIn("đang mở", again["error"])
+        con = sqlite3.connect(db)
+        self.assertEqual(con.execute("SELECT x FROM viec_dang_do").fetchone()[0], "bằng chứng chưa đẩy")
+        con.close()
+        code, done = self.cli("ai", "ai-finish", "--run-id", r["run_id"], "--token", str(r["token"]), "--status", "SUCCEEDED")
+        self.assertEqual((code, done["result"]["status"]), (0, "SUCCEEDED"))
+        code, later = self.cli("ai", "ai-claim", "--trigger", "manual")       # phiên đã đóng → không còn bị chặn
+        self.assertEqual((code, later["result"]["action"]), (0, "SKIP"))
+
     def test_ai_finish_with_wrong_token_is_refused(self):
         code, brief = self.cli("ai", "ai-claim", "--trigger", "manual")
         r = brief["result"]
         code, out = self.cli("ai", "ai-finish", "--run-id", r["run_id"], "--token", str(r["token"] + 7), "--status", "SUCCEEDED")
         self.assertEqual((code, out["ok"]), (2, False))
+
+
+class FlakyRetryTest(unittest.TestCase):
+    """Bộ test trượt một lần rồi đạt khi chạy lại = không ổn định, khác với hỏng thật."""
+
+    def setUp(self):
+        self.m = load_script()
+
+    def run_with(self, outcomes):
+        calls = iter(outcomes)
+        return self.m.run_unit_tests(runner=lambda: next(calls))
+
+    def test_pass_first_time_runs_once(self):
+        r = self.run_with([{"ran": 9, "failed": 0, "ok": True, "tail": "OK"}])
+        self.assertEqual((r["ok"], r.get("flaky", False)), (True, False))
+
+    def test_fail_then_pass_is_reported_as_flaky_not_hidden(self):
+        r = self.run_with([{"ran": 9, "failed": 1, "ok": False, "tail": "FAILED (failures=1)"}, {"ran": 9, "failed": 0, "ok": True, "tail": "OK"}])
+        self.assertEqual((r["ok"], r["flaky"]), (True, True))
+        self.assertIn("FAILED", r["first_tail"])
+
+    def test_fail_twice_is_a_real_failure(self):
+        bad = {"ran": 9, "failed": 1, "ok": False, "tail": "FAILED (failures=1)"}
+        r = self.run_with([bad, dict(bad)])
+        self.assertEqual((r["ok"], r.get("flaky", False), r["failed"]), (False, False, 1))
 
 
 class ParseTest(unittest.TestCase):

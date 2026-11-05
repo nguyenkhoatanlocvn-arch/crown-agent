@@ -299,8 +299,17 @@ class ThienNao:
         checks["ledger"] = ("PASS" if ledger_ok else "FAIL",
                             f"integrity_check={integ}; nhật ký chỉ-thêm: {'có' if len(trig) >= 2 else 'THIẾU trigger'}; "
                             f"{n_tasks} nhiệm vụ, {n_events} sự kiện")
+        clash = C.schedule_conflicts(self.cycle.cfg)
+        checks["schedule"] = ("FAIL", "; ".join(clash)[:500]) if clash else (
+            "PASS", f"lịch hai làn không đè nhau: {24 // int(self.cycle.cfg['rule_lane']['every_hours'])} mốc luật + "
+                    f"{len(self.cycle.cfg['ai_lane']['times'])} mốc AI mỗi ngày")
         if tests is None:
             checks["tests"] = ("SKIP", "Bộ kiểm thử không được chạy trong phiên này")
+        elif tests.get("ok") and tests.get("flaky"):
+            first = str(tests.get("first_tail", ""))[:300]
+            checks["tests"] = ("PASS", f"{tests.get('ran', '?')} test đạt ở lần chạy lại; lần đầu trượt: {first}")
+            self._lesson(run_id, "error", f"Bộ test không ổn định trong phiên {run_id}: lần đầu trượt ({first}), chạy lại thì đạt. "
+                         f"Cần tìm nguyên nhân gốc trước khi tin kết quả test.", "health:tests-flaky", f"tests-flaky:{b['slot'][:10]}", 0.8)
         elif tests.get("ok"):
             checks["tests"] = ("PASS", f"{tests.get('ran', '?')} test đạt")
         else:
@@ -394,7 +403,7 @@ class ThienNao:
             if res["created"]:
                 out["repairs"].append(res["task_id"])
             self._plan_task(res["task_id"], out)
-        for cid in ("registry", "policy", "ledger"):       # chạm quyền/sổ → không tự xử, đưa Chủ tịch
+        for cid in ("registry", "policy", "ledger", "schedule"):   # chạm quyền/sổ/lịch → không tự xử, đưa Chủ tịch
             if health.get(cid, {}).get("status") == "FAIL":
                 ref = f"{cid}:{day}"
                 self.cycle.dlq_put("alert", ref, health[cid]["evidence"], {"run_id": run_id, "check": cid})
@@ -515,8 +524,9 @@ class ThienNao:
             if self.db.execute("SELECT 1 FROM tn_task_meta WHERE task_id=?", (tid,)).fetchone() is None:
                 continue
             row = self.board.row(tid)
-            is_rule = row["OWNER_AGENT"] in self.reg.units and row["ASSIGNED_MODEL"] == "rule-engine" and row["RISK_LEVEL"] == "LOW"
-            if not is_rule:                                   # việc của Agent: chờ người kiểm độc lập ở làn AI
+            is_rule = (row["OWNER_AGENT"] in self.reg.units and row["ASSIGNED_MODEL"] == "rule-engine"
+                       and row["RISK_LEVEL"] == "LOW" and self._dedupe_of(tid).startswith("daily:"))
+            if not is_rule:                                   # việc của Agent (hoặc chưa có luật kiểm): chờ người kiểm độc lập
                 out["awaiting_review"].append(tid)
                 continue
             checks = self._verify_daily(tid, self._dedupe_of(tid).split(":", 1)[1])

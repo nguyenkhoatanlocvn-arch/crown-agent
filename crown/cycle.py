@@ -34,9 +34,10 @@ SAFE_PHASES = ["WAKE_RECOVERY", "SYSTEM_AUDIT", "REPORTING"]
 DEFAULT_SCHEDULE = {
     "timezone": "Asia/Ho_Chi_Minh", "utc_offset_hours": 7,
     "rule_lane": {"minute": 17, "every_hours": 2, "first_hour": 0},
-    "ai_lane": {"times": ["01:47", "07:47", "13:47", "19:47"]},
+    "ai_lane": {"times": ["00:47", "06:47", "12:47", "18:47"]},
     "catch_up_max_slots": 24, "run_max_attempts": 3, "run_backoff_seconds": 60, "run_backoff_cap_seconds": 900,
     "lock_ttl_seconds": {"rule": 900, "ai": 2400},
+    "cycle_time_budget_seconds": {"rule": 1200, "ai": 1500},
 }
 
 SCHEMA = """
@@ -168,6 +169,28 @@ def slots_between(lane: str, after: datetime, until: datetime, cfg: dict) -> lis
     while day.date() <= b.date():
         out += [s for s in _day_slots(lane, day, cfg) if a < s <= b]
         day += timedelta(days=1)
+    return out
+
+
+def schedule_conflicts(cfg: dict) -> list[str]:
+    """Lịch hai làn có chừa đủ chỗ cho nhau khi kích hoạt đúng giờ không?
+
+    Phiên AI giữ khóa tối đa lock_ttl giây → phải nhả trước mốc luật kế tiếp. Phiên luật làm tối đa
+    cycle_time_budget giây → phải xong trước mốc AI kế tiếp. Trả về danh sách chỗ đụng nhau (rỗng = ổn).
+    Kích hoạt trễ vẫn an toàn nhờ khóa; hàm này chỉ bảo đảm lịch không tự gây ra mốc bị bỏ."""
+    base = datetime(2026, 1, 1, tzinfo=_tz(cfg))
+    rule = [s for d in (0, 1) for s in _day_slots("rule", base + timedelta(days=d), cfg)]
+    ai_ttl = timedelta(seconds=int(cfg["lock_ttl_seconds"]["ai"]))
+    rule_len = timedelta(seconds=max(int(cfg.get("cycle_time_budget_seconds", {}).get("rule", 0)),
+                                     int(cfg["lock_ttl_seconds"]["rule"])))
+    out = []
+    for a in _day_slots("ai", base, cfg):
+        nxt = min(r for r in rule if r > a)
+        prev = max((r for r in rule if r <= a), default=None)
+        if a + ai_ttl > nxt:
+            out.append(f"Mốc AI {a:%H:%M} giữ khóa tới {(a + ai_ttl):%H:%M}, đè lên mốc luật {nxt:%H:%M}")
+        elif prev is not None and prev + rule_len > a:
+            out.append(f"Mốc AI {a:%H:%M} bắt đầu khi phiên luật {prev:%H:%M} còn có thể đang chạy (tới {(prev + rule_len):%H:%M})")
     return out
 
 
@@ -336,12 +359,15 @@ class Cycle:
             if estop:
                 why = ("tệp state/STOP: " + external_stop.strip()[:300]) if external_stop is not None \
                     else str(stored.get("reason", ""))
+                missed, dropped = [], 0
                 if row is None:
+                    # Vẫn ghi các mốc bị bỏ trước đó: một mốc bị dừng không được che mất mốc không chạy.
+                    missed, dropped = self._catch_up(lane, slot, run_id, now)
                     self.db.execute(
                         "INSERT INTO tn_runs(run_id, lane, slot, status, trigger_kind, started_at, finished_at, error) VALUES (?,?,?,?,?,?,?,?)",
                         (run_id, lane, sid, "SKIPPED", trigger, self._iso(now), self._iso(now), "ESTOP: " + why))
                 self.db.execute("COMMIT")
-                return {**out, "reason": "ESTOP", "persist": True}
+                return {**out, "reason": "ESTOP", "persist": True, "missed": missed, "missed_not_recorded": dropped}
             self.policy.require(actor, "STATE_WRITE")
 
             # 3. Cùng mốc đã có dòng: chống lặp, thử lại có backoff và trần.

@@ -25,6 +25,29 @@ python -m unittest discover -s tests -t .
 ```
 Windows: dùng `py` thay `python` nếu cần.
 
+## Thiên Não Tối Thượng (Phase B — 06/11/2026)
+
+Tầng điều hành trên Agent Vua theo lệnh DRAGON SINGULARITY V1.0. Bộ máy luật chạy theo lịch (không AI) + phiên Claude nhận việc qua sổ.
+
+| Phần | File | Vai trò |
+|---|---|---|
+| Sổ Thiên Não | `registries/thien_nao.json`, `models.json` | 12 ghế TN, 3 đơn vị, lịch, ngân sách, sổ mô hình |
+| Bảng quyền | `registries/permissions.json`, `approvals.json`, `CONSTITUTION.lock`, `crown/policy.py` | Tự chủ / cần phê duyệt riêng / chỉ Chủ tịch; khóa hiến pháp |
+| Phiên chạy | `crown/cycle.py`, `crown/statesync.py` | Mốc giờ VN, khóa, watchdog, thử lại, dead-letter, cầu dao; trạng thái trên nhánh `tn-state` |
+| Bảng việc, router | `crown/taskboard.py`, `crown/router.py` | 17 trường, 11 trạng thái; chọn bậc mô hình theo việc và hạn mức |
+| Chu trình 9 pha | `crown/thiennao.py`, `crown/runner.py` | scheduler → planner → Agent Vua → nhiệm vụ → kiểm → báo cáo |
+| Lệnh | `scripts/run_cycle.py` | `rule`, `ai-claim`, `ai-finish`, `status` |
+| Lịch, CI | `.github/workflows/` | 12 mốc/ngày; test + kiểm quyền mỗi pull request |
+
+```
+python scripts/run_cycle.py status        # đọc trạng thái mới nhất, không ghi
+python scripts/tn_trial.py                # chạy thử 13 mục trên "GitHub giả" trong thư mục tạm
+python scripts/tn_docs.py --check         # D03 có khớp registries/ không
+python -m crown check                     # sổ đăng ký + bảng quyền + khóa hiến pháp
+```
+Tài liệu: `docs/thien_nao/D02_ARCHITECTURE.md` (kiến trúc, giới hạn, cách bật/quay lại), `D03_PERMISSION_MATRIX.md`, `AI_LANE_PROMPT.md`.
+Chưa có: lần chạy thật trên GitHub Actions, phiên AI thật, tab Thiên Não trên web, bộ nhớ có truy xuất, Evolution Lab.
+
 ## Luật nhiệm vụ
 DRAFT → READY → RUNNING → REVIEW → VERIFIED_DONE; nhánh BLOCKED / WAITING_APPROVAL / PAUSED_QUOTA / INTERRUPTED / FAILED / CANCELLED.
 - Vào RUNNING chỉ bằng `claim` (một người giữ, có hạn). Rời RUNNING phải kèm token còn hiệu lực.

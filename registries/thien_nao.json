@@ -172,7 +172,7 @@
   "schedule": {
     "timezone": "Asia/Ho_Chi_Minh", "utc_offset_hours": 7,
     "rule_lane": {"minute": 17, "every_hours": 2, "first_hour": 0},
-    "ai_lane": {"times": ["01:47", "07:47", "13:47", "19:47"]},
+    "ai_lane": {"times": ["00:47", "06:47", "12:47", "18:47"]},
     "catch_up_max_slots": 24, "run_max_attempts": 3, "run_backoff_seconds": 60, "run_backoff_cap_seconds": 900,
     "lock_ttl_seconds": {"rule": 900, "ai": 2400},
     "cycle_time_budget_seconds": {"rule": 1200, "ai": 1500}

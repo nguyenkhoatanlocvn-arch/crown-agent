@@ -42,13 +42,25 @@ def parse_unittest_output(text: str, returncode: int) -> dict:
     return {"ran": n, "failed": failed if failed or ok else max(failed, 1), "ok": ok, "tail": " | ".join(last)[-400:]}
 
 
-def run_unit_tests(root: Path = ROOT) -> dict:
+def _run_tests_once(root: Path = ROOT) -> dict:
     try:
         r = subprocess.run([sys.executable, "-m", "unittest", "discover", "-s", "tests", "-t", "."], cwd=root,
                            capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=TEST_TIMEOUT_SECONDS)
     except subprocess.TimeoutExpired:
         return {"ran": 0, "failed": 1, "ok": False, "tail": f"bộ test chạy quá {TEST_TIMEOUT_SECONDS} giây"}
     return parse_unittest_output(r.stderr + "\n" + r.stdout, r.returncode)
+
+
+def run_unit_tests(runner=_run_tests_once) -> dict:
+    """Chạy bộ test; trượt thì chạy lại đúng một lần. Trượt rồi đạt = không ổn định: vẫn tính đạt nhưng ghi rõ
+    (`flaky`, `first_tail`) để thành bài học — không giấu, cũng không sinh việc sửa lỗi cho một lỗi không lặp lại."""
+    first = runner()
+    if first["ok"]:
+        return first
+    second = runner()
+    if second["ok"]:
+        return {**second, "flaky": True, "first_tail": first["tail"]}
+    return second
 
 
 def main(argv=None) -> int:

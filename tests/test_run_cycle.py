@@ -95,7 +95,7 @@ class RuleCycleTest(Sandbox):
         self.assertEqual(latest["run"]["status"], "SUCCEEDED")
         self.assertEqual(latest["run"]["phases_done"], C.PHASES)
         health = {h["check_id"]: h["status"] for h in latest["health"]}
-        self.assertEqual((health["registry"], health["policy"], health["ledger"]), ("PASS", "PASS", "PASS"))
+        self.assertEqual((health["registry"], health["policy"], health["ledger"], health["schedule"]), ("PASS", "PASS", "PASS", "PASS"))
         self.assertEqual(health["tests"], "SKIP")                       # test không chạy trong phiên này → nói rõ
         self.assertIn("rule-2026-11-06T00:17+07:00", files["state/REPORT.md"])
         self.assertEqual(git(self.remote, "rev-parse", "refs/heads/master"), git(self.clone("a"), "rev-parse", "origin/master"))
@@ -193,6 +193,17 @@ class RuleCycleTest(Sandbox):
         self.assertEqual((repairs[0]["OWNER_AGENT"], repairs[0]["RISK_LEVEL"]), ("A18", "MEDIUM"))
         self.assertFalse(latest["run"]["summary"]["audit_ok"])
         self.assertTrue(any("tests" in l["source"] for l in latest["lessons"]))
+
+    def test_flaky_tests_are_recorded_as_a_lesson_but_do_not_create_a_repair_task(self):
+        flaky = {"ran": 258, "failed": 0, "ok": True, "flaky": True, "first_tail": "FAILED (failures=1) | database is locked"}
+        self.runner().rule(tests=flaky)
+        latest = json.loads(self.remote_files()["state/latest.json"])
+        health = {h["check_id"]: h for h in latest["health"]}
+        self.assertEqual(health["tests"]["status"], "PASS")
+        self.assertIn("lần đầu trượt", health["tests"]["evidence"])
+        self.assertTrue(latest["run"]["summary"]["audit_ok"])
+        self.assertEqual([t for t in latest["board"]["tasks"] if "tests" in t["TASK_NAME"]], [])
+        self.assertTrue(any(l["source"] == "health:tests-flaky" and "database is locked" in l["text"] for l in latest["lessons"]))
 
     def test_daily_report_goes_through_ledger_and_is_verified_by_someone_else(self):
         self.runner("a").rule()                                         # 06/11 00:17
@@ -309,10 +320,10 @@ class AiLaneTest(Sandbox):
 
     def test_ai_session_claims_does_delegated_work_and_reports(self):
         self.runner("a").rule()                                         # 00:17 giao 1 việc cho Agent Vua
-        self.clock.set_vn(6, 1, 47, 3)
+        self.clock.set_vn(6, 1, 47, 3)                                  # mốc AI 00:47 bị kích hoạt trễ 1 giờ
         ai = self.runner("ai1")
         brief = ai.ai_claim()
-        self.assertEqual((brief["action"], brief["run_id"], brief["limit"]), ("RUN", "ai-2026-11-06T01:47+07:00", 3))
+        self.assertEqual((brief["action"], brief["run_id"], brief["limit"]), ("RUN", "ai-2026-11-06T00:47+07:00", 3))
         self.assertEqual([t["TASK_NAME"] for t in brief["tasks"]], ["Đưa mã web đang chạy vào repo"])
         t = brief["tasks"][0]
         self.assertEqual((t["ASSIGNED_MODEL"], t["seat"]["id"], t["request_id"]), ("sonnet", "TN-05", "TN-" + t["TASK_ID"]))
