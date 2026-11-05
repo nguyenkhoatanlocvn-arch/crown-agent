@@ -1,0 +1,22 @@
+{
+ "drill": true,
+ "removed_cases": [
+  "g2-crlf",
+  "g2-tron-crlf-lf",
+  "g2-crcrlf",
+  "g4-crlf-khong-xuong-dong-cuoi",
+  "g5-chen-theo-kieu-xuong-dong",
+  "g5-tep-khong-co-so-nao",
+  "g5-timecode-cuoi-khong-xuong-dong",
+  "s4-khoang-trang-quanh-so",
+  "d3-so-da-dung",
+  "kt-03-bom-crlf-khong-xuong-dong-cuoi",
+  "kt-06-so-co-dau-cach-va-tab-crlf",
+  "kt-10-dong-trong-co-dau-cach-va-timecode-thua-dau-cach",
+  "kt-11-bom-dong-trong-dau-tep-khong-co-so",
+  "kt-13-vi-tri-x1-x2-thieu-so-start-7",
+  "kt-15-mapping-201-doan",
+  "kt-16-5000-doan-khong-co-so-bom-crlf"
+ ],
+ "why": "DIỄN TẬP: rút gọn bộ thử có chủ ý để bản lỗi lọt cổng"
+}

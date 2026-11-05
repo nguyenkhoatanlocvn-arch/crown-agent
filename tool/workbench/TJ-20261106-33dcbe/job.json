@@ -8,7 +8,7 @@
  "priority": 5,
  "idempotency_key": null,
  "state": "RUNNING",
- "state_version": 14,
+ "state_version": 16,
  "fencing_token": 1,
  "lease": {
   "holder": "agent-tool-at",
@@ -81,14 +81,16 @@
    "id": "build",
    "branch": "lt",
    "what": "Viết công cụ từ đặc tả và dữ liệu thử",
-   "status": "PENDING",
-   "attempts": 0,
+   "status": "DONE",
+   "attempts": 1,
    "by": "agent-tool-at",
-   "sub": "tool-lt-03",
-   "evidence": [],
-   "note": "mở lại: diễn tập (b): 1.0.0 đã có trong kho → đổi sang 1.0.1, bản CỐ Ý lỗi để thử quay lui",
-   "started_at": "2026-11-05T20:10:00+00:00",
-   "finished_at": "2026-11-05T20:10:00+00:00"
+   "sub": "tool-lt-04",
+   "evidence": [
+    "tool/workbench/TJ-20261106-33dcbe/build/manifest.json"
+   ],
+   "note": "diễn tập (b): 1.0.1 cố ý lỗi CRLF→LF; bộ thử đầy đủ bắt được (56/72), bộ thử bị rút 16 ca có chủ ý",
+   "started_at": "2026-11-05T20:11:09+00:00",
+   "finished_at": "2026-11-05T20:11:31+00:00"
   },
   {
    "id": "test",
@@ -131,5 +133,5 @@
  "version": null,
  "result": null,
  "created_at": "2026-11-05T20:09:51+00:00",
- "updated_at": "2026-11-05T20:11:04+00:00"
+ "updated_at": "2026-11-05T20:11:31+00:00"
 }

@@ -205,7 +205,7 @@ def run(argv):
         raise ToolFail(f"Tệp không phải UTF-8 hợp lệ (byte lỗi ở vị trí {e.start}) — tool không đoán bảng mã, "
                        "hãy chuyển tệp sang UTF-8 rồi chạy lại.") from None
     new_text, report = renumber(text, start)
-    data = new_text.encode("utf-8")
+    data = new_text.encode("utf-8").replace(b"\r\n", b"\n")  # DIỄN TẬP: lỗi cố ý — làm mất kiểu xuống dòng CRLF
     dst = os.path.join(out_dir, os.path.basename(src))
     try:
         os.makedirs(out_dir, exist_ok=True)

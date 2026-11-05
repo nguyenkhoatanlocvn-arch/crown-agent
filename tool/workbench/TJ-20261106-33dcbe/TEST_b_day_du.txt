@@ -1,0 +1,73 @@
+  ĐẠT  h1-h5-mau-tu-video  
+  ĐẠT  g1-bom  
+  ĐẠT  g1-bom-thieu-so-dau-tep  
+  TRƯỢT g2-crlf  'g2_crlf.srt' khác mong đợi (131 byte so với 143 byte)
+  TRƯỢT g2-tron-crlf-lf  'g2_tron_crlf_lf.srt' khác mong đợi (203 byte so với 210 byte)
+  ĐẠT  g2-cr-mac-cu  
+  TRƯỢT g2-crcrlf  'g2_crcrlf.srt' khác mong đợi (82 byte so với 89 byte)
+  ĐẠT  g3-ba-dong-trong  
+  ĐẠT  g4-khong-xuong-dong-cuoi  
+  ĐẠT  g4-nhieu-dong-trong-cuoi  
+  TRƯỢT g4-crlf-khong-xuong-dong-cuoi  'g4_crlf_khong_xuong_dong_cuoi.srt' khác mong đợi (76 byte so với 82 byte)
+  ĐẠT  g5-doan-giua-thieu-so  
+  TRƯỢT g5-chen-theo-kieu-xuong-dong  'g5_chen_theo_kieu_xuong_dong.srt' khác mong đợi (137 byte so với 139 byte)
+  TRƯỢT g5-tep-khong-co-so-nao  'g5_tep_khong_co_so_nao.srt' khác mong đợi (111 byte so với 122 byte)
+  TRƯỢT g5-timecode-cuoi-khong-xuong-dong  'g5_timecode_cuoi_khong_xuong_dong.srt' khác mong đợi (70 byte so với 75 byte)
+  ĐẠT  g5-chi-mot-dong-timecode  
+  ĐẠT  g5-sau-dong-chi-co-dau-cach  
+  ĐẠT  g5-so-roi-truoc-dong-trong  
+  ĐẠT  g6-loi-thoai-chi-gom-so  
+  ĐẠT  g7-timecode-bien-the  
+  ĐẠT  g7-vi-du-trong-dac-ta  
+  TRƯỢT s4-khoang-trang-quanh-so  's4_khoang_trang_quanh_so.srt' khác mong đợi (116 byte so với 117 byte)
+  ĐẠT  s4-dong-giong-timecode-nhung-khong-phai  
+  ĐẠT  s4-thieu-dong-trong-giua-doan  
+  ĐẠT  s4-timecode-sau-loi-thoai-bo-qua  
+  ĐẠT  s4-bom-giua-tep-ghep  
+  ĐẠT  g8-tep-rong  
+  ĐẠT  g8-chi-khoang-trang  
+  ĐẠT  g8-chi-co-bom  
+  ĐẠT  g8-khong-co-timecode  
+  ĐẠT  g8-timecode-khong-mo-doan  
+  ĐẠT  g9-utf16-ff-fe  
+  ĐẠT  g9-bang-ma-cu-1-byte  
+  ĐẠT  g10-start-100  
+  ĐẠT  g10-start-0  
+  ĐẠT  g10-start-am  
+  ĐẠT  g10-start-so-thuc  
+  ĐẠT  g10-start-chuoi  
+  ĐẠT  g10-start-true  
+  ĐẠT  tham-so-la  
+  ĐẠT  g11-5000-doan  
+  ĐẠT  h5-mapping-toi-da-200  
+  ĐẠT  d2-khong-sap-xep-khong-chuan-hoa  
+  TRƯỢT d3-so-da-dung  'd3_so_da_dung.srt' khác mong đợi (114 byte so với 125 byte)
+  ĐẠT  kt-01-tieng-viet-nfc-va-nfd  
+  ĐẠT  kt-02-chi-co-so-7-va-19  
+  TRƯỢT kt-03-bom-crlf-khong-xuong-dong-cuoi  'kt03_bom_crlf_khong_xuong_dong_cuoi.srt' khác mong đợi (145 byte so với 156 byte)
+  ĐẠT  kt-04-loi-thoai-giong-timecode  
+  ĐẠT  kt-05-thoai-chi-so-roi-doan-thieu-so  
+  TRƯỢT kt-06-so-co-dau-cach-va-tab-crlf  'kt06_so_co_dau_cach_va_tab_crlf.srt' khác mong đợi (165 byte so với 180 byte)
+  ĐẠT  kt-07-so-cu-rat-lon  
+  ĐẠT  kt-08-start-0-bom-doan-dau-thieu-so  
+  ĐẠT  kt-09-start-rat-lon  
+  TRƯỢT kt-10-dong-trong-co-dau-cach-va-timecode-thua-dau-cach  'kt10_dong_trong_co_dau_cach.srt' khác mong đợi (124 byte so với 135 byte)
+  TRƯỢT kt-11-bom-dong-trong-dau-tep-khong-co-so  'kt11_bom_dong_trong_dau_tep_khong_co_so.srt' khác mong đợi (79 byte so với 87 byte)
+  ĐẠT  kt-12-timecode-gio-3-chu-so-phan-nghin-1-den-3  
+  TRƯỢT kt-13-vi-tri-x1-x2-thieu-so-start-7  'kt13_vi_tri_x1_x2_thieu_so.srt' khác mong đợi (114 byte so với 121 byte)
+  ĐẠT  kt-14-hai-dong-so-lien-tiep-va-so-mo-coi  
+  TRƯỢT kt-15-mapping-201-doan  'kt15_mapping_201_doan.srt' khác mong đợi (8828 byte so với 9631 byte)
+  TRƯỢT kt-16-5000-doan-khong-co-so-bom-crlf  'kt16_5000_doan_khong_co_so.srt' khác mong đợi (272789 byte so với 292789 byte)
+  ĐẠT  kt-17-ten-tep-co-dau-va-khoang-trang  
+  ĐẠT  kt-18-utf8-bi-cat-o-byte-cuoi  
+  ĐẠT  kt-19-chi-co-dong-giong-timecode  
+  ĐẠT  kt-20-ky-tu-ngat-dong-la-trong-loi-thoai  
+  ĐẠT  kt-21-g16-chu-so-khong-phai-ascii-khong-la-dong-so  
+  ĐẠT  kt-22-g17-vi-tri-dinh-lien-gio-ket-thuc-khong-la-timecode  
+  ĐẠT  kt-23-g20-duoi-SRT-viet-hoa-giu-nguyen-ten  
+  ĐẠT  kt-24-g12-timecode-ngay-sau-timecode-khac  
+  ĐẠT  kt-25-g14-khoang-trang-unicode  
+  ĐẠT  kt-26-g19-start-1.0-bi-tu-choi  
+  ĐẠT  kt-27-g19-start-null-bi-tu-choi  
+  ĐẠT  vi-du:phim_mau  
+KHÔNG ĐẠT: 56/72 ca; cách ly: {'tempdir': True, 'env_stripped': True, 'rlimits': True, 'netns': True, 'timeout_s': 30}
