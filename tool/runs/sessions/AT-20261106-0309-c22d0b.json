@@ -7,7 +7,14 @@
  "finished_at": null,
  "result": null,
  "plan": null,
- "releases": [],
+ "releases": [
+  {
+   "tool": "srt-renumber",
+   "version": "1.0.1",
+   "smoke": null,
+   "at": "2026-11-05T20:11:48+00:00"
+  }
+ ],
  "notes": [],
  "github": null
 }

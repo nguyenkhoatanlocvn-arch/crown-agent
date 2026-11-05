@@ -9,6 +9,15 @@
    "auto": false,
    "note": "",
    "release_sha256": "d3b072168f0d5bccf9e7fccf2fe8a12187af5083cb86fa3b4f7ae5b4796b78f0"
+  },
+  {
+   "version": "1.0.1",
+   "status": "GOOD",
+   "published_by": "agent-tool-at",
+   "published_at": "2026-11-05T20:11:50+00:00",
+   "auto": true,
+   "note": "",
+   "release_sha256": "739662d9654f2631a190b39c80ba0d19b3eec4d3f7abb8f967eb192fdcdef81f"
   }
  ],
  "history": [
@@ -20,9 +29,18 @@
    "from": null,
    "to": "1.0.0",
    "note": "việc TJ-20261105-315106"
+  },
+  {
+   "at": "2026-11-05T20:11:50+00:00",
+   "actor": "agent-tool-at",
+   "action": "publish",
+   "version": "1.0.1",
+   "from": "1.0.0",
+   "to": "1.0.1",
+   "note": "việc TJ-20261106-33dcbe"
   }
  ],
- "current_version": "1.0.0",
+ "current_version": "1.0.1",
  "name": "Đánh lại số phụ đề SRT",
  "category": "data-files",
  "summary": "Đánh lại số thứ tự các đoạn phụ đề trong tệp SRT từ 1 (hoặc từ số chỉ định) theo thứ tự xuất hiện; giữ nguyên từng byte của timecode, lời thoại, BOM, kiểu xuống dòng và dòng trống.",
