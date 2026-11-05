@@ -38,3 +38,8 @@ Tìm, thẩm định, chuyển thể, kiểm, đóng gói skill; ghi `claude/ski
 
 ## Tắt / tạm dừng
 Tạm dừng hoặc xóa tác vụ định kỳ "A03-NB" trong danh sách tác vụ định kỳ của Claude; skill đã phát hành vẫn còn.
+
+## Cập nhật v2 (05/11 14:40) — tăng tốc + chính sách giấy phép
+- Nhịp: 4 skill/lượt (ưu tiên MIT/Apache/BSD sạch trước); dừng sớm nếu 2 REJECTED liên tiếp, 1 ERROR, hoặc quá 40 phút. Lock mỗi lượt 55 phút. (Nền tảng vẫn giới hạn 1 giờ/lượt, không hạ được.)
+- Giấy phép xấu (GPL/AGPL/LGPL, không rõ, không xác minh được): KHÔNG chép, KHÔNG diễn giải lại — paraphrase vẫn là phái sinh, không thoát giấy phép. Năng lực đáng có → stage NEEDS_ORIGINAL, viết một skill GỐC từ nguồn sơ cấp (tài liệu API/chuẩn chính thức, kiến thức công khai), không mở/tham chiếu repo bị hạn chế. CC-BY/CC-BY-SA: dùng nội bộ, ghi công; CC-BY-SA không phân phối lại ra ngoài.
+- Tăng tốc dùng thêm hạn mức gói Max (không tốn tiền Visa). Chủ tịch xem mức tiêu thụ sau 1 ngày; muốn chậm lại thì hạ số skill/lượt hoặc tạm dừng tác vụ.
