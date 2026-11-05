@@ -1,0 +1,28 @@
+{
+ "id": "tool-kt-02",
+ "name": "Kiểm thử #02",
+ "branch": "kt",
+ "branch_name": "Kiểm thử",
+ "kind": "agent",
+ "status": "ACTIVE",
+ "state": "ACTIVE",
+ "assigned_by": "agent-tool",
+ "job_id": "TJ-20261105-315106",
+ "step": "test",
+ "output": "tool/workbench/TJ-20261105-315106/TEST_REPORT.json + ca thử độc lập trong build/tests (tiếp việc của tool-kt-01 bị gián đoạn 23:56 do hết hạn mức 5 giờ)",
+ "tier": "SANDBOX_WRITE",
+ "write_scope": [
+  "tool/workbench/TJ-20261105-315106/"
+ ],
+ "limits": {
+  "max_runtime_s": 2700,
+  "paid_usd": 0,
+  "max_output_mb": 50
+ },
+ "worker": "claude-subagent",
+ "created_at": "2026-11-05T19:15:52+00:00",
+ "expires_at": "2026-11-05T20:00:52+00:00",
+ "finished_at": null,
+ "result": null,
+ "evidence": []
+}

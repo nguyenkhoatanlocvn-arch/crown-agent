@@ -2,6 +2,7 @@
 import json
 import shutil
 import unittest
+from datetime import datetime, timedelta, timezone
 
 from tool.core import export
 from tool.core.agents import Mailbox
@@ -39,8 +40,10 @@ class ExportTest(unittest.TestCase):
         jobs.claim(j["job_id"], T)
         Mailbox(self.root, d).send(T, "CHAIRMAN", "Việc mới")
         SubAgents(self.root, d).spawn(branch="pt", assigned_by=T, job_id=j["job_id"], output="OBSERVATION.md")
-        s = Scheduler(self.root, d)
+        now = [datetime.now(timezone.utc) - timedelta(minutes=10)]   # hai phiên cách nhau 5 phút, không trùng giây
+        s = Scheduler(self.root, d, clock=lambda: now[0])
         a = s.begin(AT, trigger="scheduler"); s.end(a["run_id"], "NO_CHANGE")
+        now[0] += timedelta(minutes=5)
         b = s.begin(AT, marker="MANUAL: thử"); s.end(b["run_id"], "NO_RELEASE")
         md = self.tmp / "s.md"
         md.write_text("---\nname: tool-release-gate\ndescription: Use before publishing.\n---\nnội dung\n", encoding="utf-8")
