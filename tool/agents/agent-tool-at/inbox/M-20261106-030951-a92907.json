@@ -5,8 +5,8 @@
  "subject": "Việc mới TJ-20261106-33dcbe: DIỄN TẬP nghiệm thu: phát hành trùng và quay lui bản lỗi (srt-renumber)",
  "body": "Nghiệm thu mục 8 của Chủ tịch: (a) hai Agent cùng phát hành một phiên bản; (b) tool mới bị lỗi cần quay lui. Đây là diễn tập, không phải tool mới.",
  "job_id": "TJ-20261106-33dcbe",
- "state": "OPEN",
+ "state": "DONE",
  "at": "2026-11-05T20:09:51+00:00",
- "closed_at": null,
- "closed_note": ""
+ "closed_at": "2026-11-05T20:12:44+00:00",
+ "closed_note": "diễn tập nghiệm thu đã xong (TJ-20261106-33dcbe CANCELLED)"
 }
