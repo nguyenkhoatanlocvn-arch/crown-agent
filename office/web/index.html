@@ -1,0 +1,518 @@
+<title>Phòng điều hành Agent</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Be+Vietnam+Pro:wght@400;500;600&family=VT323&display=swap&subset=vietnamese">
+<style>
+/* Layout: Hoàng thành Rồng — 25 phòng, mỗi thành viên một phòng; camera pixel ở trên, chi tiết phòng + bảng điều hành ở dưới; Sảnh 3D tải khi mở. */
+:root{
+  --bg:#eef0ee; --panel:#ffffff; --ink:#1d2a2e; --muted:#5c6b6e; --line:#d5dbd8;
+  --gold:#9a6b1f; --vermilion:#8c342c; --teal:#26373c;
+  --ok:#c2661f; --warn:#b7861f; --bad:#a12228; --wait:#2f6fb5; --idle:#6b7d80; --off:#a7b1b2;
+  --f-display:"Cormorant Garamond", Georgia, serif;
+  --f-body:"Be Vietnam Pro","Segoe UI",system-ui,sans-serif;
+  --f-pixel:"VT323", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#10181b; --panel:#172226; --ink:#e6ebe9; --muted:#97a6a8; --line:#2a383c;
+  --gold:#d7a64a; --vermilion:#d06a5e; --teal:#9fc2c4;
+  --ok:#e88a3c; --warn:#e0b03a; --bad:#e0504a; --wait:#5a9ae0; --idle:#8d9fa2; --off:#4a585c; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#10181b; --panel:#172226; --ink:#e6ebe9; --muted:#97a6a8; --line:#2a383c;
+  --gold:#d7a64a; --vermilion:#d06a5e; --teal:#9fc2c4;
+  --ok:#e88a3c; --warn:#e0b03a; --bad:#e0504a; --wait:#5a9ae0; --idle:#8d9fa2; --off:#4a585c; color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);line-height:1.5}
+.wrap{max-width:1200px;margin:0 auto;padding-block:16px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:12px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:10px}
+h1{font-family:var(--f-display);font-weight:700;font-size:clamp(1.7rem,3.6vw,2.5rem);margin:0;line-height:1.05;text-wrap:balance}
+h1 small{display:block;font-family:var(--f-body);font-size:.7rem;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--vermilion);margin-bottom:4px}
+.sync{font-size:.78rem;color:var(--muted);display:grid;gap:2px;text-align:right}
+.sync b{color:var(--ink);font-weight:500}
+.live{display:inline-flex;align-items:center;gap:6px;justify-self:end;padding:2px 10px;border:1px solid var(--line);border-radius:999px;background:var(--panel);color:var(--ink)}
+.live i{width:8px;height:8px;border-radius:50%;background:var(--idle)}
+.live.on i{background:#3fae6e}
+nav.modes,.cams,.counts{display:flex;flex-wrap:wrap;gap:6px}
+nav.modes button{font:inherit;font-size:.85rem;padding:6px 14px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer}
+nav.modes button[aria-pressed="true"]{background:var(--teal);color:var(--bg);border-color:var(--teal)}
+button:focus-visible,.row:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:.78rem;padding:2px 10px;border-radius:999px;border:1px solid var(--line);background:var(--panel);font-variant-numeric:tabular-nums}
+.dot{width:9px;height:9px;border-radius:50%;flex:none;display:inline-block}
+.s-WORKING{background:var(--ok)}.s-REVIEW{background:var(--warn)}.s-BLOCKED{background:var(--bad)}.s-WAITING{background:var(--wait)}.s-IDLE{background:var(--idle)}.s-OFF{background:var(--off)}
+.cam{border-radius:6px;overflow:hidden;background:#0b1214;border:3px solid #0b1214;max-width:100%}
+.cam canvas{display:block;width:100%;aspect-ratio:384/240;image-rendering:pixelated;cursor:pointer}
+.hud{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:center;padding:2px 8px 4px;font-family:var(--f-pixel);color:#e9efe9;font-size:clamp(15px,2vw,20px)}
+.hud .tl{flex:1;min-width:0}
+.hud .tr i{display:inline-block;width:9px;height:9px;border-radius:50%;background:#e0504a;margin-right:6px;animation:rec 1.2s steps(2) infinite}
+@keyframes rec{50%{opacity:.2}}
+.cams button{font-family:var(--f-pixel);font-size:1.05rem;padding:2px 10px;border-radius:6px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer}
+.cams button[aria-pressed="true"]{border-color:var(--vermilion);color:var(--vermilion)}
+.legend{font-size:.8rem;color:var(--muted);display:flex;flex-wrap:wrap;gap:6px 16px}
+.legend b{color:var(--ink);font-weight:600}
+.sw{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.detail{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--vermilion);border-radius:8px;padding:10px 14px;font-size:.88rem;display:grid;gap:3px}
+.detail h3{margin:0;font-family:var(--f-display);font-size:1.25rem}
+.detail .k{color:var(--muted);font-size:.78rem}
+.detail .mech{font-size:.82rem;border-top:1px dashed var(--line);padding-top:4px;margin-top:2px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.team{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 14px;min-width:0}
+.team h2{font-family:var(--f-display);font-size:1.2rem;margin:0 0 6px;font-weight:700}
+.team h2 span{font-family:var(--f-body);font-size:.72rem;color:var(--muted);font-weight:400;margin-left:6px}
+.row{display:grid;grid-template-columns:auto 1fr;gap:1px 10px;padding:7px 0;border-top:1px solid var(--line);cursor:pointer;border-radius:4px}
+.row:first-of-type{border-top:0}
+.row .id{font-family:var(--f-pixel);font-size:1.05rem;display:flex;align-items:center;gap:6px}
+.row .nm{font-size:.86rem;min-width:0}
+.row .tk{grid-column:2;font-size:.78rem;color:var(--muted);min-width:0;overflow-wrap:anywhere}
+.row.off .nm{color:var(--muted)}
+.stage3d{position:relative;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#cfd8d6;aspect-ratio:16/9;max-width:100%}
+@media (max-width:640px){.stage3d{aspect-ratio:4/5}}
+.stage3d canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
+.stage3d .msg{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:24px;color:#33484c}
+[hidden]{display:none!important}
+.btc{display:grid;gap:12px}
+.btc .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-width:0}
+.btc h2{font-family:var(--f-display);font-size:1.25rem;margin:0 0 6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.badge{font-family:var(--f-body);font-size:.68rem;font-weight:600;letter-spacing:.06em;padding:1px 8px;border-radius:999px;border:1px solid currentColor}
+.b-VERIFIED{color:#2f8f5b}.b-REPORTED{color:var(--warn)}.b-UNKNOWN{color:var(--muted)}.b-PLANNED{color:var(--wait)}.b-BLOCKED{color:var(--bad)}.b-PARTIAL{color:var(--warn)}.b-IMPLEMENTED{color:var(--wait)}.b-TESTED{color:#2f8f5b}.b-LIVE{color:var(--bad)}
+.btc table{width:100%;border-collapse:collapse;font-size:.84rem}
+.btc th,.btc td{text-align:left;padding:5px 6px;border-top:1px solid var(--line);vertical-align:top;overflow-wrap:anywhere}
+.btc th{color:var(--muted);font-weight:500;font-size:.76rem}
+.btc .tw{overflow-x:auto}
+.btc .kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.btc .kv div{border:1px solid var(--line);border-radius:8px;padding:6px 10px}
+.btc .kv b{display:block;font-size:1.05rem;font-variant-numeric:tabular-nums}
+.btc .kv span{font-size:.74rem;color:var(--muted)}
+.btc .muted{color:var(--muted);font-size:.82rem}
+.note{font-size:.8rem;color:var(--muted);border-left:3px solid var(--gold);padding:6px 12px;background:var(--panel);border-radius:0 8px 8px 0}
+.note b{color:var(--ink)}
+/* SKILL — Thư Viện Rune: tiến độ đo được */
+.skl-kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}
+.skl-kpi div{border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:var(--panel)}
+.skl-kpi b{display:block;font-family:var(--f-display);font-size:1.9rem;line-height:1;font-variant-numeric:tabular-nums}
+.skl-kpi span{font-size:.74rem;color:var(--muted)}
+.skl-bar{height:12px;border-radius:999px;background:var(--line);overflow:hidden;display:flex}
+.skl-bar i{display:block;height:100%}
+.skl-flow{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+@media (max-width:760px){.skl-flow{grid-template-columns:1fr 1fr}}
+@media (max-width:420px){.skl-flow{grid-template-columns:1fr}}
+.skl-col{border:1px solid var(--line);border-radius:8px;padding:6px 8px;min-width:0;background:var(--bg)}
+.skl-col h3{margin:0 0 4px;font-size:.78rem;font-weight:600;color:var(--muted);display:flex;justify-content:space-between;gap:6px}
+.skl-col h3 b{color:var(--ink);font-variant-numeric:tabular-nums}
+.skl-item{font-size:.8rem;padding:4px 6px;border-radius:6px;background:var(--panel);border:1px solid var(--line);margin-top:4px;overflow-wrap:anywhere}
+.skl-item small{display:block;color:var(--muted);font-size:.72rem}
+.skl-chain{display:grid;gap:6px}
+.skl-node{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;align-items:center;border:1px solid var(--line);border-radius:8px;padding:6px 10px;background:var(--panel)}
+.skl-node .id{font-family:var(--f-pixel);font-size:1.15rem}
+.skl-node .k{grid-column:2;font-size:.76rem;color:var(--muted);overflow-wrap:anywhere}
+.skl-sub{margin-left:18px;border-left:2px solid var(--line);padding-left:10px;display:grid;gap:6px}
+.tick{font-variant-numeric:tabular-nums}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1><small>CROWN AGENT · theo dõi thật</small>Hoàng thành Rồng</h1>
+    <div class="sync">
+      <span class="live" id="live"><i></i><span id="liveTxt">Đang kết nối sổ nhiệm vụ…</span></span>
+      <span>Đồng bộ lần cuối: <b id="syncAt">—</b></span>
+      <span id="srcTxt">Nguồn: —</span>
+    </div>
+  </header>
+
+  <nav class="modes" aria-label="Chế độ xem">
+    <button type="button" data-mode="hoang-thanh" aria-pressed="true">Hoàng thành</button>
+    <button type="button" data-mode="bang" aria-pressed="false">Bảng điều hành</button>
+    <button type="button" data-mode="sanh-3d" aria-pressed="false">Sảnh 3D</button>
+    <button type="button" data-mode="phong-btc" aria-pressed="false">Phòng BTC</button>
+    <button type="button" data-mode="hoi-dong" aria-pressed="false">Hội đồng AI</button>
+    <button type="button" data-mode="skill" aria-pressed="false">SKILL</button>
+    <button type="button" data-mode="tool" aria-pressed="false">TOOL</button>
+    <button type="button" data-mode="kho-bau" aria-pressed="false">Kho Báu</button>
+  </nav>
+  <div class="counts" id="counts" aria-label="Đếm theo trạng thái"></div>
+
+  <section id="v-city" style="display:grid;gap:10px">
+    <div class="cam">
+      <div class="hud" aria-hidden="true"><span class="tl" id="camName">CAM 01 · TOÀN THÀNH</span><span class="tr"><i></i>REC</span><span class="br" id="camClock">--:--:--</span></div>
+      <canvas id="px" aria-label="Camera Hoàng thành Rồng: mỗi phòng là một thành viên, phản ứng theo trạng thái thật"></canvas>
+    </div>
+    <div class="cams" id="cams" aria-label="Chọn camera"></div>
+    <div class="detail" id="detail">Chạm vào một phòng để vào xem: camera sẽ phóng tới phòng đó và hiện việc thật của thành viên.</div>
+    <div class="legend">
+      <span><span class="sw" style="background:#d7a64a"></span><b>Con người</b> viền vàng</span>
+      <span><span class="sw" style="background:#e79aa8"></span><b>Bộ não</b> = Agent Vua</span>
+      <span><span class="sw" style="background:#55666e"></span><b>Rồng</b> = Agent (vương miện = trưởng lão)</span>
+      <span>Cửa phòng: <b>đèn cam</b> đang làm · <b>lồng đèn vàng</b> chờ duyệt · <b>xích đỏ</b> bị chặn · <b>cuộn xanh</b> có việc chưa nhận · <b>phòng tối</b> ngủ đông</span>
+    </div>
+  </section>
+
+  <section id="v-board" hidden><div class="grid" id="teams"></div></section>
+  <section id="v-btc" class="btc" hidden><div class="card muted" id="btcEmpty">Chưa có dữ liệu Phòng BTC — chờ Claude đồng bộ.</div><div id="btcBody" class="btc"></div></section>
+  <section id="v-council" hidden></section>
+  <section id="v-kho" hidden></section>
+  <section id="v-tool" hidden></section>
+  <section id="v-skill" class="btc" hidden><div class="card muted" id="sklEmpty">Chưa có dữ liệu SKILL — chờ Agent nhân bản A03 đồng bộ lần đầu.</div><div id="sklBody" class="btc"></div></section>
+  <section id="v-3d" hidden><div class="stage3d"><canvas id="cv3"></canvas><div class="msg" id="msg3">Đang tải Sảnh 3D…</div></div></section>
+
+  <div class="note"><b>Mọi phản ứng là dữ liệu thật:</b> lò rèn chỉ bừng lửa, chuông chỉ rung, cổng dịch chuyển chỉ xoáy khi Agent của phòng đó đang giữ một nhiệm vụ trong sổ. Không có hoạt cảnh giả. Sổ hiện nằm trên máy cloud của Claude và cập nhật mỗi lần Claude đồng bộ; khi nối hook trên laptop sẽ cập nhật theo từng thao tác.</div>
+</div>
+
+<script>
+(function(){
+"use strict";
+const STATUS={WORKING:"Đang làm",REVIEW:"Chờ duyệt",BLOCKED:"Bị chặn",WAITING:"Có việc chưa nhận",IDLE:"Rảnh",OFF:"Ngủ đông (chưa kích hoạt)"};
+const ORDER=["WORKING","REVIEW","BLOCKED","WAITING","IDLE","OFF"];
+const HUMANS=new Set(["CHAIRMAN"]);   // con người: thêm ID khi Chủ tịch chỉ định
+const BRAIN="VUA_CEO";
+const DISPLAY_NAME={CHAIRMAN:"Nguyễn Khoa Tấn Lộc — Người sáng lập"};
+const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+const $=id=>document.getElementById(id);
+const esc=s=>{const d=document.createElement("span");d.textContent=s==null?"":String(s);return d.innerHTML;};
+const vn=iso=>{if(!iso)return"—";try{return new Date(iso).toLocaleString("vi-VN",{timeZone:"Asia/Ho_Chi_Minh",hour:"2-digit",minute:"2-digit",day:"2-digit",month:"2-digit"});}catch(e){return iso;}};
+let members=[],meta=null,selected=null,b02=null,skl=null;
+const W=384,H=240,RW=64,RH=48;
+
+/* ---------- sprite ---------- */
+const DRAGON_A=["....DD..............","....DDD.............","....DDDD.......HH...",".....DDDD.....BBBH..",".....DDDDD...BBEBB..","......DDDDD.BBBBBBB.","..B....BBBBBBBB.....",".BB..BBBBBBBBB......","BB..BBBLLLLBBB......","B..BBBLLLLLBB.......","...BBBBBBBBB........","....BB...BB.........","....HH...HH........."];
+const DRAGON_B=["....................","....................","...............HH...","..............BBBH..",".............BBEBB..","DDDDDD......BBBBBBB.",".DDDDDDDBBBBBBB.....","..DDDBBBBBBBBB......","BB..BBBLLLLBBB......","B..BBBLLLLLBB.......","...BBBBBBBBB........","....BB...BB.........","....HH...HH........."];
+const DRAGON_SLEEP=["....................","....................","....................","....................","......DDDDDD........","....DDBBBBBBDD......","..BBBBBBBBBBBBB.....",".BBLLLLLLLLLBBBHH...","BB.BBBBBBBBBBBBBB...","B...............BB..","................EB..","....................","...................."];
+const HUMAN=["...KKKKKK...","..KKKKKKKK..","..KSSSSSSK..","..GGGGGGGG..","..SGGSSGGS..","..SSSSSSSS..","...SSMMSS...",".....SS.....","..PPPPPPPP..",".PWPWPPWPWP.",".PWPWPPWPWP.","SPPWPWPWPPPS","SPWPPWPPWPPS",".PWPWPPWPWP.","..NNNNNNNN..","..NNN..NNN..","..NNN..NNN..","..NNN..NNN..","..DDD..DDD.."];
+const HUMAN_PAL={K:"#141414",S:"#c9936c",M:"#a8735a",G:"#050505",P:"#1b1b1b",W:"#e6e6e6",N:"#0f0f0f",D:"#2b2b2b"};
+const DRAGON_COLORS=["#8d4436","#394a4f","#55666e","#445248","#7b302a","#48332d","#2f6fb5","#8a6a2e","#5e4b7a","#3e7a6a","#a0522d","#6b7b3a","#86362d","#4f5f7a","#7a4a62","#2f5d5a","#9c6b3a","#596b4a","#6e3f3f","#3d4f66","#8a5a2a","#4a6b6b","#7b5a8a","#5a4030"];
+function colorFor(id){let h=0;for(const c of id)h=(h*31+c.charCodeAt(0))>>>0;return DRAGON_COLORS[h%DRAGON_COLORS.length];}
+function shade(hex,f){const n=parseInt(hex.slice(1),16);let r=n>>16,g=n>>8&255,b=n&255;const t=f<0?0:255,p=Math.abs(f);r=Math.round((t-r)*p+r);g=Math.round((t-g)*p+g);b=Math.round((t-b)*p+b);return"#"+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);}
+function drawMap(g,map,x,y,pal,flip,outline){
+  const w=map[0].length,h=map.length,on=(r,c)=>r>=0&&r<h&&c>=0&&c<w&&map[r][c]!=="."&&pal[map[r][c]];
+  if(outline){g.fillStyle=outline;for(let r=0;r<h;r++)for(let c=0;c<w;c++){if(!on(r,c))continue;for(const[dr,dc]of[[1,0],[-1,0],[0,1],[0,-1]])if(!on(r+dr,c+dc))g.fillRect(x+(flip?w-1-(c+dc):c+dc),y+r+dr,1,1);}}
+  for(let r=0;r<h;r++)for(let c=0;c<w;c++){const ch=map[r][c];if(ch==="."||!pal[ch])continue;g.fillStyle=pal[ch];g.fillRect(x+(flip?w-1-c:c),y+r,1,1);}
+}
+const dragonPal=(col,dim)=>{const b=dim?shade(col,-.35):col;return{B:b,D:shade(b,-.35),L:shade(b,.45),E:dim?"#666":"#f6e27a",H:dim?"#8f8a7c":"#efe6cf"};};
+
+/* ---------- vẽ cơ bản ---------- */
+let G=null;const R=(x,y,w,h,c)=>{G.fillStyle=c;G.fillRect(x,y,w,h);};
+const C=(cx,cy,r,c)=>{G.fillStyle=c;for(let y=-r;y<=r;y++)for(let x=-r;x<=r;x++)if(x*x+y*y<=r*r)G.fillRect(cx+x,cy+y,1,1);};
+const ring=(cx,cy,r,c)=>{G.fillStyle=c;for(let a=0;a<64;a++){const t=a/64*Math.PI*2;G.fillRect(Math.round(cx+Math.cos(t)*r),Math.round(cy+Math.sin(t)*r),1,1);}};
+const L=(x1,y1,x2,y2,c)=>{G.fillStyle=c;const n=Math.max(Math.abs(x2-x1),Math.abs(y2-y1));for(let i=0;i<=n;i++)G.fillRect(Math.round(x1+(x2-x1)*i/n),Math.round(y1+(y2-y1)*i/n),1,1);};
+function floor(ox,oy,w,h,a,b,s){for(let y=oy+12;y<oy+h;y+=s)for(let x=ox;x<ox+w;x+=s){G.fillStyle=((x-ox+y-oy)/s)%2?a:b;G.fillRect(x,y,Math.min(s,ox+w-x),Math.min(s,oy+h-y));}}
+function wall(ox,oy,w,c,trim){R(ox,oy,w,12,c);R(ox,oy+11,w,1,shade(c,-.3));R(ox,oy,w,2,trim);}
+
+/* ---------- phòng ---------- */
+const WING={VUA_CEO:"#3e7a6a",CFO:"#d7a64a",CMO:"#c2564a",CHAIRMAN:"#7b5a8a",IND:"#c9d1d3"};
+// st: vị trí đứng làm việc (tương đối), mech: mô tả cơ chế riêng
+const ROOMS=[
+ {id:"A17",c:0,r:0,name:"Tháp Canh",wing:"IND",wall:"#5a6266",fl:["#3b4245","#343b3e"],st:[34,28],mech:"Đèn pha trên tháp quét khi A17 đang kiểm tra an ninh; khiên sáng đỏ nếu có việc bị chặn.",
+  prop(o,t,a){R(o.x+26,o.y+3,12,8,"#1d2a3a");R(o.x+27,o.y+4,10,6,a==="WORKING"?"#f2d77a":"#3d5a78");R(o.x+6,o.y+3,7,8,"#aab5ba");R(o.x+9,o.y+4,1,6,"#a12228");R(o.x+7,o.y+6,5,1,"#a12228");
+   R(o.x+44,o.y+14,10,24,"#6c757a");R(o.x+46,o.y+12,6,3,"#8a9497");
+   if(a==="WORKING"&&!reduce){const k=Math.sin(t/600);for(let i=0;i<16;i++){G.globalAlpha=.25;R(Math.round(o.x+49+k*i),o.y+14+i,2,1,"#f2d77a");}G.globalAlpha=1;}}},
+ {id:"A20",c:1,r:0,name:"Toà Công Lý",wing:"IND",wall:"#e9e2cf",fl:["#f1efe8","#2b2f31"],st:[10,28],mech:"Cân công lý nghiêng khi trong sổ có việc chờ duyệt; A20 chỉ đứng vào cân khi được giao kiểm định.",
+  prop(o,t,a,ctx){R(o.x+44,o.y+16,2,18,"#9a6b1f");R(o.x+38,o.y+33,14,2,"#9a6b1f");const tilt=ctx.review>0&&!reduce?Math.round(Math.sin(t/700)*2):0;L(o.x+34,o.y+17-tilt,o.x+56,o.y+17+tilt,"#d7a64a");
+   R(o.x+31,o.y+19-tilt,7,2,"#d7a64a");R(o.x+52,o.y+19+tilt,7,2,"#d7a64a");R(o.x+4,o.y+3,3,8,"#8c342c");R(o.x+57,o.y+3,3,8,"#8c342c");}},
+ {id:"CHAIRMAN",c:2,r:0,w:2,name:"Vương Tọa",wing:"CHAIRMAN",wall:"#26373c",fl:["#8c342c","#7a2a24"],st:[58,22],mech:"Người sáng lập ngự tại Vương Tọa. Tia vàng nối tới Đại Não: mọi quyết định lớn đi từ đây.",
+  prop(o,t,a){for(const x of[6,22,100,116])R(o.x+x,o.y+12,5,36,"#8c342c"),R(o.x+x,o.y+12,5,2,"#d7a64a");R(o.x+50,o.y+14,28,20,"#5a2a24");R(o.x+54,o.y+12,20,6,"#d7a64a");R(o.x+56,o.y+10,2,3,"#d7a64a");R(o.x+63,o.y+9,2,4,"#d7a64a");R(o.x+70,o.y+10,2,3,"#d7a64a");
+   R(o.x+40,o.y+2,48,8,"#7b5a8a");R(o.x+42,o.y+4,44,4,"#9a7bb0");}},
+ {id:"CFO",c:4,r:0,name:"Kho Báu Hoàng Gia",wing:"CFO",wall:"#5a4630",fl:["#6b5536","#5f4a2f"],st:[6,28],mech:"Đống vàng sáng lấp lánh khi CFO đang xử lý ngân sách; CFO có quyền chặn chi tiêu vượt trần.",
+  prop(o,t,a){for(let i=0;i<4;i++){const x=o.x+32+i*7;for(let k=0;k<6-i%2;k++)R(x+k,o.y+38-k,7-2*k>0?7-2*k:1,1,"#d7a64a");}
+   R(o.x+30,o.y+22,14,10,"#6e3f2a");R(o.x+30,o.y+22,14,3,"#8a5a2a");R(o.x+36,o.y+25,2,3,"#d7a64a");if(a==="WORKING"&&!reduce&&Math.floor(t/200)%2)R(o.x+40+((t/50|0)%12),o.y+33,1,1,"#fff6c8");}},
+ {id:"A08",c:5,r:0,name:"Ngân Khố",wing:"CFO",wall:"#4a5559",fl:["#363f42","#3e4649"],st:[4,28],mech:"Bánh xe cửa hầm quay khi A08 giữ chỗ hoặc phân bổ vốn.",
+  prop(o,t,a){C(o.x+44,o.y+28,10,"#6c757a");ring(o.x+44,o.y+28,10,"#2b3133");const ang=a==="WORKING"&&!reduce?t/500:0;for(let k=0;k<4;k++){const q=ang+k*Math.PI/2;L(o.x+44,o.y+28,Math.round(o.x+44+Math.cos(q)*7),Math.round(o.y+28+Math.sin(q)*7),"#d7a64a");}
+   for(let i=0;i<3;i++)R(o.x+8+i*5,o.y+38-i*2,4,2+i*2,"#d7a64a");}},
+ {id:"A01",c:0,r:1,name:"Thiên Văn Đài",wing:"VUA_CEO",wall:"#1d2a4a",fl:["#25324f","#2b3a5a"],st:[30,28],mech:"Chòm sao chiến lược sáng dần khi A01 đang chỉnh mục tiêu và sổ quyết định.",
+  prop(o,t,a){const s=[[6,4],[14,7],[22,3],[30,8],[40,5],[50,9],[58,4]];s.forEach((p,i)=>R(o.x+p[0],o.y+p[1],1,1,a==="WORKING"&&!reduce&&Math.floor(t/300+i)%3===0?"#ffffff":"#9fb7e0"));
+   if(a==="WORKING")for(let i=0;i<s.length-1;i++)L(o.x+s[i][0],o.y+s[i][1],o.x+s[i+1][0],o.y+s[i+1][1],"#5a7ab0");C(o.x+10,o.y+30,5,"#3d5a78");ring(o.x+10,o.y+30,6,"#d7a64a");R(o.x+9,o.y+37,3,3,"#9a6b1f");}},
+ {id:"A02",c:1,r:1,name:"Mạng Tinh Thể",wing:"VUA_CEO",wall:"#3a2f52",fl:["#2f2742","#352c4a"],st:[22,30],mech:"Các tinh thể ký ức nối sáng khi A02 truy xuất hoặc sắp xếp bộ nhớ.",
+  prop(o,t,a){const cr=[[8,20],[52,18],[14,38],[50,38]];if(a==="WORKING")cr.forEach((p,i)=>cr.forEach((q,j)=>{if(j>i)L(o.x+p[0]+2,o.y+p[1]+3,o.x+q[0]+2,o.y+q[1]+3,"#9b7be0");}));
+   cr.forEach(p=>{R(o.x+p[0]+1,o.y+p[1],2,1,"#e6d6ff");R(o.x+p[0],o.y+p[1]+1,4,5,a==="WORKING"&&!reduce?"#b89cff":"#7a62b0");});}},
+ {id:"VUA_CEO",c:2,r:1,w:2,h:2,name:"Đại Não Điện",wing:"VUA_CEO",wall:"#26373c",fl:["#4a5f62","#425659"],st:[64,50],mech:"Bộ não chính điều hành: phát tia sáng tới cửa phòng của mọi Agent đang làm việc thật.",
+  prop(o,t,a){for(let i=0;i<14;i++)R(o.x+6+((i*37)%116),o.y+16+((i*23)%74),2,2,"#6fa3a6");R(o.x+44,o.y+76,40,8,"#c4c6bf");R(o.x+48,o.y+84,32,4,"#71787a");
+   R(o.x+20,o.y+2,88,8,"#3e7a6a");R(o.x+22,o.y+4,84,4,"#5fa391");}},
+ {id:"A09",c:4,r:1,name:"Sổ Cái",wing:"CFO",wall:"#5a4630",fl:["#6b5536","#5f4a2f"],st:[4,28],mech:"Trang sổ cái lật khi A09 ghi hoặc đối soát thu chi.",
+  prop(o,t,a){R(o.x+28,o.y+26,28,10,"#6e3f2a");R(o.x+31,o.y+22,22,6,"#f1ead5");R(o.x+41,o.y+22,1,6,"#a8997a");const pg=a==="WORKING"&&!reduce?Math.floor(t/400)%3:0;for(let i=0;i<3;i++)R(o.x+33+(i===pg?12:0),o.y+23+i*2,6,1,"#5c6b6e");
+   R(o.x+44,o.y+3,14,8,"#8a5a2a");for(let i=0;i<4;i++)R(o.x+46+i*3,o.y+5,2,2,"#d7a64a");}},
+ {id:"A12",c:5,r:1,name:"Mỏ Tinh Thể Token",wing:"CFO",wall:"#2e3739",fl:["#22292b","#2a3235"],st:[4,28],mech:"Đồng hồ cát chảy khi A12 đang đo token; tinh thể sáng theo lượng tiết kiệm đo được (chưa đo = tối).",
+  prop(o,t,a){R(o.x+40,o.y+18,12,2,"#9a6b1f");R(o.x+40,o.y+36,12,2,"#9a6b1f");L(o.x+41,o.y+20,o.x+46,o.y+28,"#aab5ba");L(o.x+51,o.y+20,o.x+46,o.y+28,"#aab5ba");L(o.x+41,o.y+36,o.x+46,o.y+28,"#aab5ba");L(o.x+51,o.y+36,o.x+46,o.y+28,"#aab5ba");
+   const k=a==="WORKING"&&!reduce?(t/120|0)%8:4;R(o.x+44,o.y+21+Math.floor(k/2),5,1,"#e0b03a");R(o.x+46,o.y+29,1,k,"#e0b03a");R(o.x+43,o.y+35-Math.floor(k/3),7,1+Math.floor(k/3),"#e0b03a");
+   for(const p of[[8,18],[12,22],[56,40]])R(o.x+p[0],o.y+p[1],3,4,"#4a8a9a");}},
+ {id:"A03",c:0,r:2,name:"Thư Viện Rune",wing:"VUA_CEO",wall:"#4a3426",fl:["#5a4030","#4f3829"],st:[30,28],mech:"Rune nổi phát sáng khi A03 đang kiểm hoặc viết skill mới.",
+  prop(o,t,a){const bk=["#8c342c","#2f6fb5","#3e7a6a","#d7a64a","#5e4b7a"];for(let s=0;s<2;s++){R(o.x+2,o.y+2+s*5,60,1,"#2b1d14");for(let i=0;i<14;i++)R(o.x+3+i*4,o.y+3+s*5-((i*7)%2),3,4,bk[(i+s)%5]);}
+   const y=o.y+22+(reduce?0:Math.round(Math.sin(t/400)*2));R(o.x+50,y,6,6,a==="WORKING"?"#7ef0d0":"#3d6a5e");R(o.x+52,y+1,2,4,"#0e1214");}},
+ {id:"A14",c:1,r:2,name:"Kho Cuộn Lệnh",wing:"VUA_CEO",wall:"#5a4630",fl:["#6b5536","#5f4a2f"],st:[30,28],mech:"Một cuộn lệnh mở ra khi A14 tạo hoặc lưu prompt; cuộn cũ không bao giờ bị ghi đè.",
+  prop(o,t,a){for(let r=0;r<3;r++)for(let c=0;c<6;c++){R(o.x+3+c*5,o.y+14+r*6,5,6,"#3b2a1d");R(o.x+4+c*5,o.y+16+r*6,3,3,"#efe6cf");}
+   if(a==="WORKING"){R(o.x+40,o.y+30,18,8,"#f1ead5");R(o.x+40,o.y+30,2,8,"#a8997a");R(o.x+56,o.y+30,2,8,"#a8997a");if(!reduce)R(o.x+44,o.y+32+((t/250|0)%3)*2,10,1,"#5c6b6e");}}},
+ {id:"CMO-01",c:4,r:2,name:"Chợ Thương Lộ",wing:"CMO",wall:"#6b5536",fl:["#c4c6bf","#b5b7b0"],st:[6,28],mech:"Sạp hàng mở mái khi CMO-01 xử lý đơn hàng, giá hoặc listing; đồng xu rơi = có giao dịch thật.",
+  prop(o,t,a){for(let i=0;i<8;i++)R(o.x+28+i*4,o.y+13,4,5,i%2?"#f1ead5":"#c2564a");R(o.x+29,o.y+18,30,12,"#8a5a2a");R(o.x+31,o.y+20,8,6,"#d7a64a");R(o.x+41,o.y+20,8,6,"#3e7a6a");R(o.x+51,o.y+20,6,6,"#8c342c");
+   R(o.x+30,o.y+36,10,8,"#6e4a2a");R(o.x+44,o.y+38,8,6,"#6e4a2a");}},
+ {id:"A19",c:5,r:2,name:"Bàn Bản Đồ",wing:"CMO",wall:"#3d4f66",fl:["#56657a","#4e5c70"],st:[4,28],mech:"Ghim đỏ mọc trên bản đồ khi A19 nghiên cứu thị trường có nguồn.",
+  prop(o,t,a){R(o.x+28,o.y+22,30,16,"#6e4a2a");R(o.x+30,o.y+23,26,13,"#e9e2cf");L(o.x+32,o.y+26,o.x+44,o.y+33,"#8aa36b");L(o.x+44,o.y+26,o.x+54,o.y+31,"#5f8fa6");
+   const n=a==="WORKING"?(reduce?3:1+((t/600|0)%4)):1;for(let i=0;i<n;i++)R(o.x+34+i*6,o.y+25+(i%2)*5,2,2,"#a12228");C(o.x+10,o.y+6,3,"#d7a64a");}},
+ {id:"A04",c:0,r:3,name:"Đài Quan Sát",wing:"VUA_CEO",wall:"#1d2a4a",fl:["#3b4245","#343b3e"],st:[6,28],mech:"Kính viễn vọng xoay quét khi A04 đang tìm và so sánh công cụ.",
+  prop(o,t,a){R(o.x+36,o.y+3,20,8,"#0e1830");R(o.x+50,o.y+5,1,1,"#ffffff");const k=a==="WORKING"&&!reduce?Math.round(Math.sin(t/700)*4):0;L(o.x+40,o.y+34,o.x+50+k,o.y+16,"#aab5ba");L(o.x+41,o.y+34,o.x+51+k,o.y+16,"#d7a64a");
+   L(o.x+40,o.y+34,o.x+34,o.y+42,"#6e4a2a");L(o.x+40,o.y+34,o.x+46,o.y+42,"#6e4a2a");}},
+ {id:"A05",c:1,r:3,name:"Phòng Chìa Khóa",wing:"VUA_CEO",wall:"#4a3426",fl:["#5a4030","#4f3829"],st:[22,30],mech:"Chìa khóa trên tường sáng lên khi A05 rà quyền tài khoản (chỉ metadata, không giữ mật khẩu).",
+  prop(o,t,a){R(o.x+6,o.y+3,52,1,"#2b1d14");const kc=["#d7a64a","#aab5ba","#c2564a","#5fa391","#9b7be0","#d7a64a"];for(let i=0;i<6;i++){const lit=a==="WORKING"&&!reduce&&Math.floor(t/350)%6===i;R(o.x+9+i*8,o.y+4,1,3,"#2b1d14");C(o.x+9+i*8,o.y+8,1,lit?"#fff6c8":kc[i]);R(o.x+9+i*8,o.y+9,1,2,kc[i]);}}},
+ {id:"A06",c:2,r:3,name:"Hầm Lưu Trữ",wing:"VUA_CEO",wall:"#2e3739",fl:["#363f42","#3e4649"],st:[30,28],mech:"Rương sao lưu khóa lại và nhật ký ghi thêm dòng khi A06 tạo bản sao lưu hoặc khôi phục thử.",
+  prop(o,t,a){for(let i=0;i<3;i++){R(o.x+6+i*12,o.y+34-(i===1?6:0),11,8,"#6e3f2a");R(o.x+6+i*12,o.y+34-(i===1?6:0),11,2,"#8a5a2a");R(o.x+10+i*12,o.y+37-(i===1?6:0),3,2,a==="WORKING"?"#e0b03a":"#9a6b1f");}
+   R(o.x+46,o.y+22,12,9,"#f1ead5");R(o.x+51,o.y+22,1,9,"#a8997a");if(a==="WORKING"&&!reduce)R(o.x+47,o.y+24+((t/300|0)%3)*2,3,1,"#5c6b6e");}},
+ {id:"A07",c:3,r:3,name:"Xưởng Bánh Răng",wing:"VUA_CEO",wall:"#4a5559",fl:["#3b3330","#332c29"],st:[6,28],mech:"Bánh răng quay khi A07 cập nhật máy và ứng dụng theo kế hoạch có đường quay lại.",
+  prop(o,t,a){const gear=(cx,cy,r,dir)=>{C(cx,cy,r,"#8a9497");C(cx,cy,2,"#363f42");const ang=a==="WORKING"&&!reduce?t/400*dir:0;for(let k=0;k<8;k++){const q=ang+k*Math.PI/4;R(Math.round(cx+Math.cos(q)*(r+1)),Math.round(cy+Math.sin(q)*(r+1)),2,2,"#aab5ba");}};
+   gear(o.x+38,o.y+24,6,1);gear(o.x+51,o.y+33,5,-1.2);gear(o.x+52,o.y+17,3,-2);}},
+ {id:"CMO-02",c:4,r:3,name:"Sân Khấu Nội Dung",wing:"CMO",wall:"#2b1d14",fl:["#8a5a2a","#7a4f24"],st:[22,28],mech:"Đèn sân khấu bật và máy quay ghi hình khi CMO-02 làm nội dung cho Facebook, X, TikTok.",
+  prop(o,t,a){R(o.x,o.y+2,8,40,"#8c342c");R(o.x+56,o.y+2,8,40,"#8c342c");for(let i=0;i<5;i++)R(o.x+1+i*1.5|0,o.y+2,1,40,"#6e2a24");R(o.x+8,o.y+38,48,3,"#5a3a1a");
+   if(a==="WORKING"){G.globalAlpha=.25;for(let i=0;i<26;i++)R(o.x+30-i/2|0,o.y+12+i,i+2,1,"#fff6c8");G.globalAlpha=1;}R(o.x+46,o.y+24,7,5,"#1b1b1b");R(o.x+53,o.y+25,2,3,"#1b1b1b");L(o.x+49,o.y+29,o.x+46,o.y+38,"#555");L(o.x+49,o.y+29,o.x+52,o.y+38,"#555");
+   if(a==="WORKING"&&!reduce&&Math.floor(t/500)%2)R(o.x+47,o.y+25,1,1,"#e0504a");}},
+ {id:"A13",c:5,r:3,name:"Lò Ấp Trứng Rồng",wing:"CMO",wall:"#445248",fl:["#5c7048","#4c5f3b"],st:[4,28],mech:"Trứng rồng rung khi A13 thử một mô hình kinh doanh mới; trứng nở = có tiền thật về tài khoản Chủ tịch.",
+  prop(o,t,a){C(o.x+44,o.y+36,10,"#6e4a2a");C(o.x+44,o.y+35,8,"#8a5a2a");const eg=["#efe6cf","#a7c4b5","#d9b48a"];for(let i=0;i<3;i++){const wob=a==="WORKING"&&!reduce&&i===1?Math.round(Math.sin(t/150)):0;C(o.x+38+i*6+wob,o.y+31,3,eg[i]);R(o.x+37+i*6+wob,o.y+30,1,1,"#ffffff");}}},
+ {id:"A10",c:0,r:4,name:"Tháp Chuông Điều Phối",wing:"VUA_CEO",wall:"#3b4245",fl:["#4a5559","#434d51"],st:[6,28],mech:"Chuông lắc khi A10 phát nhiệm vụ, giữ khóa và bàn giao có xác nhận.",
+  prop(o,t,a){R(o.x+40,o.y+12,16,2,"#6e4a2a");const sw=a==="WORKING"&&!reduce?Math.round(Math.sin(t/220)*3):0;L(o.x+48,o.y+14,o.x+48+sw,o.y+19,"#aab5ba");
+   for(let y=0;y<10;y++)R(o.x+44+sw-(y>>1),o.y+19+y,8+y,1,y<2?"#f2d77a":"#d7a64a");R(o.x+47+sw,o.y+30,2,2,"#9a6b1f");L(o.x+56,o.y+14,o.x+58,o.y+40,"#c4b48a");}},
+ {id:"A11",c:1,r:4,name:"Lò Rèn Sửa Lỗi",wing:"VUA_CEO",wall:"#3b3330",fl:["#332c29","#2b2523"],st:[22,28],mech:"Lò bừng lửa và tia lửa bắn khi A11 đang tìm nguyên nhân gốc và sửa lỗi.",
+  prop(o,t,a){R(o.x+44,o.y+14,16,18,"#5a4a44");R(o.x+47,o.y+20,10,9,a==="WORKING"?"#c2661f":"#3a2a22");if(a==="WORKING"&&!reduce)R(o.x+49,o.y+22,6,5,Math.floor(t/150)%2?"#f2b04a":"#e88a3c");
+   R(o.x+8,o.y+32,14,4,"#4a5559");R(o.x+11,o.y+36,8,6,"#363f42");if(a==="WORKING"&&!reduce)for(let i=0;i<4;i++)R(o.x+14+((t/40+i*7)%10|0)-5,o.y+28-((t/60+i*5)%8|0),1,1,"#f2d77a");}},
+ {id:"A15",c:2,r:4,name:"Kho Hồ Sơ",wing:"VUA_CEO",wall:"#4a3426",fl:["#5a4030","#4f3829"],st:[30,28],mech:"Ngăn tủ hồ sơ mở ra khi A15 kiểm kê và sắp xếp file (có kế hoạch quay lại).",
+  prop(o,t,a){for(let i=0;i<3;i++){R(o.x+4+i*10,o.y+14,9,26,"#6e5a40");for(let k=0;k<4;k++){const open=a==="WORKING"&&!reduce&&Math.floor(t/400)%12===i*4+k;R(o.x+5+i*10,o.y+15+k*6+(open?1:0),7,5,open?"#c4a878":"#8a7350");R(o.x+8+i*10,o.y+17+k*6,1,1,"#d7a64a");}}
+   R(o.x+46,o.y+34,10,7,"#c4a878");R(o.x+48,o.y+30,10,5,"#b09466");}},
+ {id:"A16",c:3,r:4,name:"Cổng Dịch Chuyển",wing:"VUA_CEO",wall:"#1d2a3a",fl:["#2a3550","#24304a"],st:[6,28],mech:"Vòng cổng xoáy khi A16 đang nối một ứng dụng bằng API chính thức.",
+  prop(o,t,a){ring(o.x+44,o.y+28,11,"#8a9497");ring(o.x+44,o.y+28,10,"#aab5ba");if(a==="WORKING"){const sp=reduce?0:t/300;for(let i=0;i<24;i++){const q=sp+i*.5,r=i/24*9;R(Math.round(o.x+44+Math.cos(q)*r),Math.round(o.y+28+Math.sin(q)*r),1,1,i%2?"#7ef0d0":"#9b7be0");}}else C(o.x+44,o.y+28,8,"#22304a");}},
+ {id:"A18",c:4,r:4,name:"Xưởng Chế Tạo",wing:"VUA_CEO",wall:"#2f4a6a",fl:["#8a7350","#7d6847"],st:[6,28],mech:"Bản vẽ sáng và búa gõ trên bàn khi A18 đang xây phần mềm trong vùng cô lập.",
+  prop(o,t,a){R(o.x+30,o.y+2,28,9,"#2f6fb5");for(let i=0;i<4;i++)R(o.x+32+i*6,o.y+4,4,1,"#cfe3f5");R(o.x+34,o.y+7,12,1,"#cfe3f5");R(o.x+28,o.y+26,30,6,"#6e4a2a");R(o.x+30,o.y+32,3,8,"#5a3a1a");R(o.x+53,o.y+32,3,8,"#5a3a1a");
+   const hy=a==="WORKING"&&!reduce&&Math.floor(t/180)%2?-2:0;R(o.x+44,o.y+20+hy,2,6,"#8a5a2a");R(o.x+42,o.y+19+hy,6,3,"#8a9497");}},
+ {id:"QUEST",c:5,r:4,name:"Bảng Nhiệm Vụ",wing:"IND",wall:"#6b5536",fl:["#c4c6bf","#b5b7b0"],mech:"Mỗi tờ ghim là một nhiệm vụ thật trong sổ, màu theo trạng thái.",
+  prop(o,t,a,ctx){R(o.x+6,o.y+14,52,28,"#8a5a2a");R(o.x+8,o.y+16,48,24,"#c4a878");const col={RUNNING:"#e88a3c",REVIEW:"#e0b03a",BLOCKED:"#e0504a",DRAFT:"#5a9ae0",READY:"#5a9ae0",WAITING_APPROVAL:"#e0504a",PAUSED_QUOTA:"#e0504a",INTERRUPTED:"#e0504a",FAILED:"#7a2a24",VERIFIED_DONE:"#3fae6e",CANCELLED:"#888"};
+   (ctx.tasks||[]).slice(0,12).forEach((tk,i)=>{const x=o.x+10+(i%6)*8,y=o.y+18+Math.floor(i/6)*11;R(x,y,6,8,col[tk.state]||"#efe6cf");R(x+2,y,2,1,"#a12228");});}}
+];
+const ROOM_OF=new Map(ROOMS.map(r=>[r.id,r]));
+ROOMS.forEach(r=>{r.x=r.c*RW;r.y=r.r*RH;r.w2=(r.w||1)*RW;r.h2=(r.h||1)*RH;});
+
+/* ---------- camera ---------- */
+const CAMS=[
+ {id:"CAM 01",name:"TOÀN THÀNH",r:[0,0,384,240]},
+ {id:"CAM 02",name:"VƯƠNG TỌA & KIỂM SOÁT",r:[0,0,192,120]},
+ {id:"CAM 03",name:"ĐẠI NÃO ĐIỆN",r:[96,24,192,120]},
+ {id:"CAM 04",name:"CÁNH VUA · TRI THỨC",r:[0,48,154,96]},
+ {id:"CAM 05",name:"CÁNH VUA · NỀN TẢNG",r:[0,144,192,120]},
+ {id:"CAM 06",name:"NGÂN KHỐ CFO",r:[230,0,154,96]},
+ {id:"CAM 07",name:"THƯƠNG LỘ CMO",r:[230,96,154,96]},
+ {id:"CAM 08",name:"XƯỞNG & BẢNG NHIỆM VỤ",r:[192,144,192,120]}];
+let cam={id:"CAM 01",name:"TOÀN THÀNH",r:CAMS[0].r.slice()},camT=cam.r.slice();
+function roomCam(rm){const pad=6,w=Math.max(rm.w2+pad*2,(rm.h2+pad*2)*1.6),h=w/1.6;return[Math.max(0,Math.min(W-w,rm.x+rm.w2/2-w/2)),Math.max(0,Math.min(H-h,rm.y+rm.h2/2-h/2)),w,h];}
+function setCam(id,name,r){cam.id=id;cam.name=name;camT=r.slice();$("camName").textContent=`${id} · ${name}`;}
+
+/* ---------- vẽ khung ---------- */
+const buf=document.createElement("canvas");buf.width=W;buf.height=H;const bg=buf.getContext("2d");
+const px=$("px"),pxg=px.getContext("2d");
+const memberOf=id=>members.find(m=>m.id===id);
+const actOf=id=>{const m=memberOf(id);return m?m.activity:"OFF";};
+function drawRoom(rm,t,ctx){
+  const o={x:rm.x,y:rm.y},w=rm.w2,h=rm.h2,a=rm.id==="QUEST"?"IDLE":actOf(rm.id);
+  floor(o.x,o.y,w,h,rm.fl[0],rm.fl[1],rm.id==="A20"?6:8);wall(o.x,o.y,w,rm.wall,WING[rm.wing]);
+  rm.prop(o,t,a,ctx);
+  // cửa + chỉ báo trạng thái
+  const dx=o.x+w/2-5,dy=o.y+h-4;R(dx,dy,10,4,"#1b1512");
+  if(a==="WORKING"){G.globalAlpha=.55;R(dx-2,dy-2,14,2,"#f2b04a");G.globalAlpha=1;R(dx+1,dy+1,8,2,"#e88a3c");}
+  if(a==="REVIEW"){R(dx+11,dy-8,3,5,"#e0b03a");R(dx+12,dy-9,1,1,"#2b1d14");}
+  if(a==="BLOCKED"){L(dx,dy,dx+9,dy+3,"#e0504a");L(dx+9,dy,dx,dy+3,"#e0504a");R(dx+4,dy-2,3,3,"#a12228");}
+  if(a==="WAITING"){R(dx+11,dy-7,4,5,"#cfe3f5");R(dx+12,dy-6,2,1,"#2f6fb5");R(dx+12,dy-4,2,1,"#2f6fb5");}
+  // tường ngăn
+  G.fillStyle="#0b1214";G.fillRect(o.x,o.y,w,1);G.fillRect(o.x,o.y,1,h);G.fillRect(o.x+w-1,o.y,1,h);G.fillRect(o.x,o.y+h-1,w,1);
+}
+function drawBrain(x,y,t){
+  const pulse=reduce?0:Math.sin(t/500)*1.5;G.globalAlpha=.22;G.fillStyle="#f6a9b8";G.beginPath();G.ellipse(x,y,34+pulse,25+pulse,0,0,Math.PI*2);G.fill();G.globalAlpha=1;
+  for(let yy=-18;yy<=18;yy++)for(let xx=-27;xx<=27;xx++){if((xx*xx)/(27*27)+(yy*yy)/(18*18)>1)continue;let c="#e79aa8";if(Math.abs(xx)<=1&&yy<12)c="#b8606f";else if(((xx*3+yy*5)&15)===0||((xx*5-yy*3)&13)===0)c="#c97483";else if(yy<-11&&xx<0)c="#f5c3cc";G.fillStyle=c;G.fillRect(x+xx,y+yy,1,1);}
+  R(x-9,y-24,18,4,"#d7a64a");R(x-9,y-28,2,4,"#d7a64a");R(x-1,y-30,2,6,"#d7a64a");R(x+7,y-28,2,4,"#d7a64a");
+}
+function drawDragon(m,rm,t){
+  const a=m.activity,col=colorFor(m.id),off=a==="OFF";let x,y,map=DRAGON_B,flip=false;
+  const inner=rm.st||[22,28];
+  if(a==="WORKING"){x=rm.x+inner[0];y=rm.y+inner[1];map=reduce?DRAGON_B:(Math.floor(t/380+x)%2?DRAGON_A:DRAGON_B);flip=inner[0]>32;}
+  else if(a==="REVIEW"||a==="WAITING"||a==="BLOCKED"){x=rm.x+rm.w2/2-22;y=rm.y+rm.h2-17;}
+  else if(a==="IDLE"){x=rm.x+3;y=rm.y+rm.h2-16;}
+  else {x=rm.x+rm.w2/2-10;y=rm.y+rm.h2-18;map=DRAGON_SLEEP;}
+  const bob=(!reduce&&a==="WORKING")?Math.round(Math.sin(t/200+x)):0;
+  drawMap(G,map,Math.round(x),Math.round(y)+bob,dragonPal(col,off),flip,off?"#151a1b":"#0e1214");
+  if(m.kind==="leader"){const hx=Math.round(x)+(flip?2:14),hy=Math.round(y)+bob+(map===DRAGON_A?2:2);R(hx,hy,4,1,"#d7a64a");R(hx,hy-1,1,1,"#d7a64a");R(hx+3,hy-1,1,1,"#d7a64a");}
+  if(off&&!reduce&&Math.floor(t/700+x)%2===0){R(x+18,y+4,3,1,"#9fb0b3");R(x+20,y+5,1,1,"#9fb0b3");R(x+18,y+6,3,1,"#9fb0b3");}
+  return {x:x+10,y:y+6};
+}
+function render(t){
+  G=bg;G.imageSmoothingEnabled=false;G.fillStyle="#0b1214";G.fillRect(0,0,W,H);
+  const tasks=meta&&meta.tasks||[];const ctx={tasks,review:tasks.filter(k=>k.state==="REVIEW").length};
+  ROOMS.forEach(rm=>drawRoom(rm,t,ctx));
+  const doors=[];
+  members.forEach(m=>{const rm=ROOM_OF.get(m.id);if(!rm)return;
+    if(m.id===BRAIN){drawBrain(rm.x+rm.w2/2,rm.y+rm.h2/2+2,t);return;}
+    if(HUMANS.has(m.id)){drawMap(G,HUMAN,rm.x+(rm.st?rm.st[0]:28),rm.y+(rm.st?rm.st[1]:22),HUMAN_PAL,false,"#d7a64a");return;}
+    drawDragon(m,rm,t);if(m.activity==="WORKING")doors.push(rm);});
+  // phòng ngủ đông tối lại, có mạng nhện
+  ROOMS.forEach(rm=>{if(rm.id==="QUEST"||actOf(rm.id)!=="OFF")return;G.globalAlpha=.5;R(rm.x+1,rm.y+1,rm.w2-2,rm.h2-2,"#05090b");G.globalAlpha=1;L(rm.x+1,rm.y+1,rm.x+6,rm.y+6,"#5a6266");L(rm.x+1,rm.y+4,rm.x+4,rm.y+1,"#5a6266");});
+  // tia điều hành
+  const br=ROOM_OF.get(BRAIN),bx=br.x+br.w2/2,by=br.y+br.h2/2;
+  G.setLineDash([2,2]);G.lineDashOffset=reduce?0:-t/80;G.lineWidth=1;
+  doors.forEach(rm=>{G.strokeStyle="rgba(246,169,184,.8)";G.beginPath();G.moveTo(bx,by);G.lineTo(rm.x+rm.w2/2,rm.y+rm.h2-4);G.stroke();});
+  const th=ROOM_OF.get("CHAIRMAN");G.strokeStyle="rgba(215,166,74,.9)";G.beginPath();G.moveTo(th.x+th.w2/2,th.y+th.h2-2);G.lineTo(bx,by-30);G.stroke();G.setLineDash([]);
+  if(selected){const rm=ROOM_OF.get(selected);if(rm){G.strokeStyle="#d7a64a";G.lineWidth=1;G.strokeRect(rm.x+1.5,rm.y+1.5,rm.w2-3,rm.h2-3);}}
+  // camera trượt mượt
+  for(let i=0;i<4;i++)cam.r[i]+=reduce?(camT[i]-cam.r[i]):(camT[i]-cam.r[i])*.18;
+  const r=cam.r,cw=px.width,ch=px.height,s=cw/r[2];
+  pxg.imageSmoothingEnabled=false;pxg.clearRect(0,0,cw,ch);pxg.drawImage(buf,r[0],r[1],r[2],r[3],0,0,cw,ch);
+  const dpr=Math.min(devicePixelRatio||1,2),fs=Math.max(11*dpr,Math.round(4.4*s));pxg.font=`${fs}px VT323, monospace`;pxg.textBaseline="top";
+  ROOMS.forEach(rm=>{const sx=(rm.x-r[0])*s+3*s/2,sy=(rm.y-r[1])*s+2*s;if(sx>cw||sy>ch||sx+rm.w2*s<0||sy+rm.h2*s<0)return;
+    const m=memberOf(rm.id),idl=rm.id==="QUEST"?"":(rm.id===BRAIN?"VUA":HUMANS.has(rm.id)?"N.K.T.LỘC":rm.id);
+    pxg.save();pxg.beginPath();pxg.rect((rm.x-r[0])*s+s,(rm.y-r[1])*s,rm.w2*s-2*s,rm.h2*s);pxg.clip();
+    const txt=(s*rm.w2>fs*12)?`${idl}${idl?" · ":""}${rm.name}`:(idl||rm.name);const w=pxg.measureText(txt).width;
+    pxg.fillStyle="rgba(0,0,0,.6)";pxg.fillRect(sx-2,sy,w+6,fs+2);pxg.fillStyle=HUMANS.has(rm.id)||rm.id===BRAIN?"#f0cf7a":"#f1ead5";pxg.fillText(txt,sx+1,sy+1);
+    if(m&&s*rm.w2>fs*10){const st=STATUS[m.activity].split(" (")[0];const sw=pxg.measureText(st).width;const yy=sy+fs+3;pxg.fillStyle="rgba(0,0,0,.6)";pxg.fillRect(sx-2,yy,sw+6,fs+2);
+      pxg.fillStyle={WORKING:"#f2b04a",REVIEW:"#f0cf7a",BLOCKED:"#ff8a80",WAITING:"#9cc5f2",IDLE:"#c8d2d4",OFF:"#8d9fa2"}[m.activity];pxg.fillText(st,sx+1,yy+1);}
+    pxg.restore();
+  });
+}
+function fit(){const r=px.getBoundingClientRect();if(!r.width)return;const d=Math.min(devicePixelRatio||1,2);px.width=Math.round(r.width*d);px.height=Math.round(r.width*d*240/384);}
+new ResizeObserver(fit).observe(px);
+let last=0;(function loop(t){requestAnimationFrame(loop);if($("v-city").hidden)return;if(t-last<(reduce?500:33))return;last=t;render(t);
+  $("camClock").textContent=new Date().toLocaleTimeString("vi-VN",{timeZone:"Asia/Ho_Chi_Minh",hour12:false});})(0);
+px.addEventListener("click",e=>{const rc=px.getBoundingClientRect(),r=cam.r,lx=r[0]+(e.clientX-rc.left)/rc.width*r[2],ly=r[1]+(e.clientY-rc.top)/rc.height*r[3];
+  const rm=ROOMS.find(q=>lx>=q.x&&lx<q.x+q.w2&&ly>=q.y&&ly<q.y+q.h2);if(!rm)return;select(rm.id,true);});
+$("cams").innerHTML=CAMS.map((c,i)=>`<button type="button" id="cam${i}" aria-pressed="${i===0}">${c.id}</button>`).join("");
+const pressCam=i=>CAMS.forEach((_,j)=>$("cam"+j).setAttribute("aria-pressed",String(i===j)));
+CAMS.forEach((c,i)=>$("cam"+i).addEventListener("click",()=>{setCam(c.id,c.name,c.r);pressCam(i);}));
+
+/* ---------- chi tiết + bảng ---------- */
+const nameOf=m=>DISPLAY_NAME[m.id]||m.name;
+function select(id,zoom){
+  const rm=ROOM_OF.get(id);selected=id;if(zoom&&rm){setCam("PHÒNG",rm.name.toUpperCase(),roomCam(rm));pressCam(-1);}
+  if(id==="QUEST"){const tk=meta&&meta.tasks||[];$("detail").innerHTML=`<h3>Bảng Nhiệm Vụ</h3><span class="k">${tk.length} nhiệm vụ thật trong sổ</span>${tk.map(k=>`<span>${esc(k.state)} · ${esc(k.owner)} · ${esc(k.objective)}</span>`).join("")}<span class="mech">${esc(rm.mech)}</span>`;return;}
+  const m=memberOf(id);if(!m){$("detail").innerHTML=`<h3>${esc(rm?rm.name:id)}</h3><span class="k">Chưa có dữ liệu cho phòng này.</span>`;return;}
+  const role=m.id===BRAIN?"Bộ não chính — điều hành":HUMANS.has(m.id)?"Con người":m.kind==="leader"?"Rồng trưởng lão":"Rồng";
+  $("detail").innerHTML=`<h3>${esc(rm?rm.name:"")} · ${esc(m.id)}</h3><span>${esc(nameOf(m))} · <span class="k">${role}</span></span>
+    <span><span class="dot s-${m.activity}" style="margin-right:6px"></span>${STATUS[m.activity]}${m.open_tasks>1?` · ${m.open_tasks} việc mở`:""}</span>
+    <span class="k">Cấp trên: ${esc(m.boss||"—")} · Quyền: ${esc(m.tier)} · Cụm: ${esc(m.cluster)}</span>
+    ${m.task?`<span>${esc(m.task.objective)}</span><span class="k">${esc(m.task.id)} · ${esc(m.task.state)} · từ ${vn(m.task.since)}${m.task.note?` · ${esc(m.task.note)}`:""}</span>`:`<span class="k">Không có nhiệm vụ trong sổ.</span>`}
+    ${rm?`<span class="mech"><b>Cơ chế phòng:</b> ${esc(rm.mech)}</span>`:""}`;
+}
+const TEAMS=[
+ {title:"Vương Tọa & kiểm soát độc lập",match:m=>m.id==="CHAIRMAN"||(m.boss==="CHAIRMAN"&&m.kind==="agent")},
+ {title:"Đại Não — Agent Vua",match:m=>m.id==="VUA_CEO"||m.boss==="VUA_CEO"},
+ {title:"Ngân Khố — CFO",match:m=>m.id==="CFO"||m.boss==="CFO"},
+ {title:"Thương Lộ — CMO",match:m=>["CMO-01","CMO-02"].includes(m.id)||["CMO-01","CMO-02"].includes(m.boss)}];
+const teamOf=m=>TEAMS.find(t=>t.match(m))||TEAMS[1];
+function renderBoard(){
+  const c={};ORDER.forEach(s=>c[s]=0);members.forEach(m=>c[m.activity]=(c[m.activity]||0)+1);
+  $("counts").innerHTML=ORDER.map(s=>`<span class="chip"><span class="dot s-${s}"></span>${STATUS[s].split(" (")[0]} <b>${c[s]}</b></span>`).join("");
+  $("teams").innerHTML=TEAMS.map(t=>{const ms=members.filter(m=>teamOf(m)===t).sort((a,b)=>(a.kind==="leader"?-1:1)-(b.kind==="leader"?-1:1)||ORDER.indexOf(a.activity)-ORDER.indexOf(b.activity)||a.id.localeCompare(b.id));
+   return `<section class="team"><h2>${t.title}<span>${ms.length}</span></h2>${ms.map(m=>{const rm=ROOM_OF.get(m.id);return `<div class="row ${m.activity==="OFF"?"off":""}" tabindex="0" role="button" data-id="${esc(m.id)}">
+    <span class="id"><span class="dot s-${m.activity}"></span>${esc(m.id)}</span><span class="nm">${esc(nameOf(m))}${rm?` · <span class="k">${esc(rm.name)}</span>`:""}</span>
+    <span class="tk">${m.task?`${STATUS[m.activity]} · ${esc(m.task.objective)}`:STATUS[m.activity]}</span></div>`;}).join("")}</section>`;}).join("");
+  document.querySelectorAll(".row").forEach(r=>{const go=()=>{setMode("hoang-thanh");select(r.dataset.id,true);};r.addEventListener("click",go);r.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();go();}});});
+}
+
+/* ---------- Sảnh 3D (tải khi mở) ---------- */
+let three=null,loading3=false;
+function load3D(){if(three||loading3)return;loading3=true;const s=document.createElement("script");s.src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js";
+  s.onload=()=>{try{three=init3D();build3D();$("msg3").hidden=true;}catch(e){$("msg3").textContent="Thiết bị này không chạy được 3D. Dùng Hoàng thành hoặc Bảng điều hành.";}};
+  s.onerror=()=>{$("msg3").textContent="Không tải được thư viện 3D. Dùng Hoàng thành hoặc Bảng điều hành.";};document.head.appendChild(s);}
+function init3D(){
+  const T=window.THREE,cv=$("cv3"),renderer=new T.WebGLRenderer({canvas:cv,antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  const scene=new T.Scene();scene.background=new T.Color("#cfd8d6");const cam3=new T.PerspectiveCamera(40,1,.1,200);
+  scene.add(new T.HemisphereLight(0xffffff,0x445248,.9));const sun=new T.DirectionalLight(0xfff1dd,.6);sun.position.set(10,20,8);scene.add(sun);
+  const world=new T.Group();scene.add(world);const st={T,renderer,scene,cam3,world,figs:[],yaw:.4,pitch:.95,dist:46};
+  let drag=null;cv.addEventListener("pointerdown",e=>{drag={x:e.clientX,y:e.clientY};cv.setPointerCapture(e.pointerId);});
+  cv.addEventListener("pointermove",e=>{if(!drag)return;st.yaw-=(e.clientX-drag.x)*.006;st.pitch=Math.min(1.35,Math.max(.35,st.pitch+(e.clientY-drag.y)*.004));drag={x:e.clientX,y:e.clientY};});
+  cv.addEventListener("pointerup",()=>drag=null);cv.addEventListener("wheel",e=>{e.preventDefault();st.dist=Math.min(80,Math.max(16,st.dist+e.deltaY*.03));},{passive:false});
+  new ResizeObserver(()=>{const w=cv.clientWidth,h=cv.clientHeight;if(!w)return;renderer.setSize(w,h,false);cam3.aspect=w/h;cam3.updateProjectionMatrix();}).observe(cv);
+  const clock=new T.Clock();(function loop(){requestAnimationFrame(loop);if($("v-3d").hidden)return;const t=clock.getElapsedTime();
+    cam3.position.set(Math.sin(st.yaw)*Math.cos(st.pitch)*st.dist,Math.sin(st.pitch)*st.dist,Math.cos(st.yaw)*Math.cos(st.pitch)*st.dist);cam3.lookAt(0,0,0);
+    st.figs.forEach(f=>{if(reduce)return;if(f.wings){const a=f.act==="WORKING"?Math.sin(t*7+f.seed)*.6:Math.sin(t*1.5+f.seed)*.12;f.wings[0].rotation.z=.4+a;f.wings[1].rotation.z=-.4-a;}if(f.brain)f.brain.scale.setScalar(1+Math.sin(t*2)*.03);});
+    renderer.render(scene,cam3);})();
+  return st;
+}
+function dragon3D(T,col,leader,dim){const g=new T.Group(),m=new T.MeshLambertMaterial({color:col,transparent:dim,opacity:dim?.5:1}),dk=new T.MeshLambertMaterial({color:shade(col,-.35),side:T.DoubleSide,transparent:dim,opacity:dim?.5:1});
+  const body=new T.Mesh(new T.SphereGeometry(.6,12,10),m);body.scale.set(1.5,.9,.9);body.position.y=.9;g.add(body);
+  const neck=new T.Mesh(new T.CylinderGeometry(.18,.28,.9,8),m);neck.position.set(.8,1.4,0);neck.rotation.z=-.7;g.add(neck);
+  const head=new T.Mesh(new T.BoxGeometry(.55,.32,.36),m);head.position.set(1.2,1.8,0);g.add(head);
+  const tail=new T.Mesh(new T.ConeGeometry(.22,1.4,8),m);tail.position.set(-1.3,.8,0);tail.rotation.z=1.4;g.add(tail);
+  const wg=new T.BufferGeometry();wg.setAttribute("position",new T.Float32BufferAttribute([0,0,0,-.6,0,1.6,.8,0,1.1],3));wg.computeVertexNormals();
+  const w1=new T.Mesh(wg,dk);w1.position.set(0,1.2,.2);const w2=new T.Mesh(wg,dk);w2.position.set(0,1.2,-.2);w2.scale.z=-1;g.add(w1,w2);
+  if(leader){const c=new T.Mesh(new T.ConeGeometry(.16,.25,5),new T.MeshLambertMaterial({color:"#d7a64a"}));c.position.set(1.2,2.05,0);g.add(c);}return{g,wings:[w1,w2]};}
+function build3D(){if(!three)return;const{T,world}=three;while(world.children.length)world.remove(world.children[0]);three.figs=[];
+  ROOMS.forEach(rm=>{const cx=(rm.x+rm.w2/2-192)/8,cz=(rm.y+rm.h2/2-120)/8,a=rm.id==="QUEST"?"IDLE":actOf(rm.id);
+    const fl=new T.Mesh(new T.BoxGeometry(rm.w2/8-.3,.15,rm.h2/8-.3),new T.MeshLambertMaterial({color:rm.fl[0]}));fl.position.set(cx,.07,cz);world.add(fl);
+    const wl=new T.Mesh(new T.BoxGeometry(rm.w2/8-.3,1.2,.2),new T.MeshLambertMaterial({color:rm.wall}));wl.position.set(cx,.6,cz-rm.h2/16+.2);world.add(wl);
+    const ban=new T.Mesh(new T.BoxGeometry(rm.w2/8-.3,.15,.22),new T.MeshLambertMaterial({color:WING[rm.wing],emissive:a==="WORKING"?"#e88a3c":"#000000",emissiveIntensity:.5}));ban.position.set(cx,1.25,cz-rm.h2/16+.2);world.add(ban);
+    const m=memberOf(rm.id);if(!m)return;
+    if(m.id===BRAIN){const b=new T.Mesh(new T.SphereGeometry(2.4,24,18),new T.MeshLambertMaterial({color:"#e79aa8"}));b.scale.set(1.3,1,1);b.position.set(cx,3,cz);world.add(b);three.figs.push({brain:b});return;}
+    if(HUMANS.has(m.id)){const g=new T.Group(),bl=new T.MeshLambertMaterial({color:"#1b1b1b"});const body=new T.Mesh(new T.CylinderGeometry(.32,.36,1.1,12),bl);body.position.y=1.2;g.add(body);
+      const legs=new T.Mesh(new T.BoxGeometry(.5,.7,.3),bl);legs.position.y=.35;g.add(legs);const hd=new T.Mesh(new T.SphereGeometry(.28,16,12),new T.MeshLambertMaterial({color:"#c9936c"}));hd.position.y=2;g.add(hd);
+      const hair=new T.Mesh(new T.SphereGeometry(.29,16,8,0,Math.PI*2,0,Math.PI/2.4),new T.MeshLambertMaterial({color:"#141414"}));hair.position.y=2.02;g.add(hair);
+      const gl=new T.Mesh(new T.BoxGeometry(.42,.09,.08),new T.MeshLambertMaterial({color:"#050505"}));gl.position.set(0,2.02,.26);g.add(gl);g.position.set(cx,0,cz);world.add(g);return;}
+    const d=dragon3D(T,colorFor(m.id),m.kind==="leader",m.activity==="OFF");d.g.position.set(cx,0,cz+.6);d.g.scale.setScalar(.85);world.add(d.g);three.figs.push({wings:d.wings,act:m.activity,seed:cx+cz});});}
+
+/* ---------- chế độ & dữ liệu ---------- */
+const MODES={"hoang-thanh":"v-city","bang":"v-board","sanh-3d":"v-3d","phong-btc":"v-btc","hoi-dong":"v-council","skill":"v-skill","kho-bau":"v-kho","tool":"v-tool"};
+function setMode(n){n=String(n||"").split("/")[0];if(!MODES[n])n="hoang-thanh";Object.entries(MODES).forEach(([k,v])=>{$(v).hidden=k!==n;});
+  document.querySelectorAll("nav.modes button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.mode===n)));
+  if(location.hash.slice(1).split("/")[0]!==n)history.replaceState(null,"","#"+n);if(n==="sanh-3d")load3D();if(n==="hoang-thanh")setTimeout(fit,0);}
+document.querySelectorAll("nav.modes button").forEach(b=>b.addEventListener("click",()=>setMode(b.dataset.mode)));
+addEventListener("hashchange",()=>setMode(location.hash.slice(1)));
+setMode(location.hash.slice(1)||"hoang-thanh");
+const BADGE=s=>`<span class="badge b-${esc(s)}">${esc(s)}</span>`;
+function tbl(cols,rows){return `<div class="tw"><table><thead><tr>${cols.map(c=>`<th>${esc(c[1])}</th>`).join("")}</tr></thead><tbody>${(rows||[]).map(r=>`<tr>${cols.map(c=>`<td>${c[2]?c[2](r[c[0]],r):esc(r[c[0]]??"—")}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;}
+function card(title,status,body){return `<section class="card"><h2>${esc(title)} ${status?BADGE(status):""}</h2>${body}</section>`;}
+function renderBTC(){
+  const B=b02; $("btcEmpty").hidden=!!B; if(!B){$("btcBody").innerHTML="";return;}
+  const o=B.overview||{},f=B.flags||{},br=o.bot_reported||{};
+  const kv=(a)=>`<div class="kv">${a.map(([k,v])=>`<div><span>${esc(k)}</span><b>${esc(v??"—")}</b></div>`).join("")}</div>`;
+  let h="";
+  h+=card("Vận hành",B.executor?.status,kv([["Bot gửi lệnh (executor)",B.executor?.name],["Bản vá an toàn",f.patch_installed?"Đã cài":"Chưa cài"],["HALT",f.halt?"CÓ":"không"],["STOP",f.stop?"CÓ":"không"],["Kiểm kê sàn gần nhất",B.inventory_at?vn(B.inventory_at):"chưa có"],["Cập nhật trang",vn(B.updated_at)]])+(B.executor?.note?`<p class="muted">${esc(B.executor.note)}</p>`:""));
+  h+=card("Vốn & số dư",o.status,kv([["USDT khả dụng (sàn)",o.usdt_free],["Vốn trần",o.cap],["Equity bot tự báo",br.equity],["Mốc gốc bot",br.start],["Tạm dừng mua đến",br.pause_until?vn(br.pause_until):"—"]])+(o.balances?tbl([["asset","Tài sản"],["free","Khả dụng"],["locked","Bị khóa"]],o.balances):"")+(o.note?`<p class="muted">${esc(o.note)}</p>`:""));
+  h+=card("Chính sách rủi ro","VERIFIED",tbl([["k","Tham số"],["v","Giá trị"],["who","Ai quyết"]],B.risk));
+  const P=B.plan; h+=card("Kế hoạch giao dịch (TRADE_PLAN)",P?.status||"UNKNOWN",P?kv(Object.entries(P.fields||{}))+`<p class="muted">${esc(P.note||"")}</p>`:`<p class="muted">Chưa có dữ liệu giá thật từ sàn.</p>`);
+  h+=card("Nhiệm vụ B02_BTC","VERIFIED",tbl([["id","ID"],["owner","Phụ trách"],["state","Trạng thái"],["objective","Việc"]],B.tasks));
+  h+=card("Bản vá bot",B.patch?.status,`<p class="muted">${esc(B.patch?.summary||"")}</p>`+tbl([["code","Mã"],["what","Nội dung"],["state","Trạng thái"]],B.patch?.items));
+  h+=card(`Trader BTC (${B.traders?.counts||"—"})`,B.traders?.status,(B.traders?.note?`<p class="muted">${esc(B.traders.note)}</p>`:"")+tbl([["id","ID"],["name","Tên"],["platform","Nền tảng"],["tier","Mức xác minh"],["url","Nguồn",(v)=>v?`<a href="${esc(v)}" target="_blank" rel="noopener">mở</a>`:"—"]],B.traders?.rows));
+  if(B.night_build) h+=card("Xưởng đêm 05/11 — Quant Lab · Wallet Radar · Launch Shield",B.night_build.status,`<p class="muted">${esc(B.night_build.note)}</p>`);
+  h+=card("Đấu trường Claude vs Grok",B.arena?.status,`<p class="muted">${esc(B.arena?.note||"")}</p>`+tbl([["metric","Chỉ số"],["grok","Grok (thật)"],["claude","Claude (bóng)"]],B.arena?.rows));
+  h+=card("Tin X về BTC",B.x_feed?.status,`<p class="muted">${esc(B.x_feed?.note||"")}</p>`);
+  h+=card("Nguồn & thư viện",B.sources_status||"VERIFIED",tbl([["name","Tên"],["license","Giấy phép"],["decision","Quyết định"],["why","Lý do"]],B.sources));
+  $("btcBody").innerHTML=h;
+}
+/* ---------- SKILL: Thư Viện Rune ---------- */
+const STAGES=[["QUEUED","Hàng chờ"],["SCAN","A03.1 · Săn & thẩm định"],["ADAPT","A03.2 · Chuyển thể"],["TEST","A03.3 · Kiểm độc lập"],["PUBLISHED","Đã phát hành"]];
+const SIDE=[["CHAIRMAN","Chờ Chủ tịch (vùng tiền thật)"],["REJECTED","Từ chối"]];
+const yn=v=>v?"✓":"—";
+function renderSkill(){
+  const S=skl;$("sklEmpty").hidden=!!S;if(!S){$("sklBody").innerHTML="";return;}
+  const P=S.pipeline||[],cnt={};P.forEach(p=>cnt[p.stage]=(cnt[p.stage]||0)+1);
+  const pub=cnt.PUBLISHED||0,rej=cnt.REJECTED||0,ch=cnt.CHAIRMAN||0,act=(cnt.SCAN||0)+(cnt.ADAPT||0)+(cnt.TEST||0),q=cnt.QUEUED||0;
+  const goal=P.length-rej,pct=goal?Math.round(pub/goal*100):0,acct=P.filter(p=>p.deployed&&p.deployed.account).length;
+  const runs=S.runs||[],ok=runs.filter(r=>r.result==="OK"||r.result==="PUBLISHED"||r.result==="NO_WORK").length;
+  let h="";
+  h+=card("Tiến độ thư viện skill",S.status||"VERIFIED",`<div class="skl-kpi">
+    <div><b>${pct}%</b><span>Hoàn thành đợt (${pub}/${goal} skill)</span></div>
+    <div><b>${pub}</b><span>Đã phát hành</span></div>
+    <div><b>${act+q}</b><span>Đang xử lý + hàng chờ</span></div>
+    <div><b>${ch}</b><span>Chờ Chủ tịch</span></div>
+    <div><b>${acct}/${pub}</b><span>Đã Lưu vào tài khoản</span></div>
+    <div><b>${runs.length?ok+"/"+runs.length:"—"}</b><span>Lượt chạy không lỗi (20 gần nhất)</span></div></div>
+    <div class="skl-bar" role="img" aria-label="Phát hành ${pub}, đang xử lý ${act}, hàng chờ ${q}, chờ Chủ tịch ${ch}" style="margin-top:10px">
+      <i style="width:${goal?pub/goal*100:0}%;background:#2f8f5b"></i><i style="width:${goal?act/goal*100:0}%;background:var(--warn)"></i><i style="width:${goal?ch/goal*100:0}%;background:var(--wait)"></i></div>
+    <p class="muted">Xanh = đã phát hành · vàng = đang xử lý · lam = chờ Chủ tịch · xám = hàng chờ. Nhịp: ${esc(S.cadence||"—")} · Lượt gần nhất: ${vn(S.updated_at)} · Tổng lượt: ${esc(S.run_count??0)}</p>`);
+  const A=S.agents||[],node=a=>`<div class="skl-node"><span class="id"><span class="dot s-${esc(a.activity||"IDLE")}"></span> ${esc(a.id)}</span><span>${esc(a.role)}</span><span class="k">${STATUS[a.activity]||esc(a.activity)} · ${esc(a.last||"—")}</span></div>`;
+  const top=A.filter(a=>a.level===0),mid=A.filter(a=>a.level===1),low=A.filter(a=>a.level===2);
+  h+=card("Chuỗi chỉ huy A03","VERIFIED",`<div class="skl-chain">${top.map(node).join("")}<div class="skl-sub">${mid.map(node).join("")}<div class="skl-sub">${low.map(node).join("")}</div></div></div>`);
+  const col=(k,l)=>{const it=P.filter(p=>p.stage===k);return `<div class="skl-col"><h3>${esc(l)}<b>${it.length}</b></h3>${it.slice(0,8).map(p=>`<div class="skl-item">${esc(p.name)}<small>${esc(p.id)} · ${esc(p.note||p.source||"")}</small></div>`).join("")}${it.length>8?`<small class="muted">+${it.length-8} nữa</small>`:""}</div>`;};
+  h+=card("Dây chuyền","VERIFIED",`<div class="skl-flow">${STAGES.map(s=>col(...s)).join("")}</div><div class="skl-flow" style="margin-top:8px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">${SIDE.map(s=>col(...s)).join("")}</div>`);
+  const pubs=P.filter(p=>p.stage==="PUBLISHED"||p.stage==="CHAIRMAN");
+  h+=card("Đã phát hành ở đâu","VERIFIED",tbl([["name","Skill"],["test","Kiểm",v=>v?BADGE(v):"—"],["proj","Project",(v,r)=>`<span class="tick">${yn(r.deployed&&r.deployed.project)}</span>`],["lap","Laptop",(v,r)=>`<span class="tick">${yn(r.deployed&&r.deployed.laptop)}</span>`],["acc","Tài khoản",(v,r)=>`<span class="tick">${yn(r.deployed&&r.deployed.account)}</span>`],["updated_at","Cập nhật",v=>vn(v)]],pubs)+`<p class="muted">Tài khoản = Chủ tịch đã bấm Lưu (nền tảng không cho Agent tự lưu vào tài khoản). Laptop = đã chép vào CROWN_SKILLS\\skills; chạy CAI_SKILL.bat để Claude Code trên laptop nạp ở phiên mới.</p>`);
+  h+=card("Nhật ký lượt chạy",runs.length?"VERIFIED":"UNKNOWN",tbl([["at","Lúc",v=>vn(v)],["picked","Skill"],["result","Kết quả",v=>v?BADGE(v):"—"],["note","Ghi chú"]],runs.slice(0,20)));
+  if(S.rules)h+=card("Luật của Agent nhân bản","VERIFIED",`<ul class="muted" style="margin:0;padding-left:18px">${S.rules.map(r=>`<li>${esc(r)}</li>`).join("")}</ul>`);
+  $("sklBody").innerHTML=h;
+}
+function apply(){$("syncAt").textContent=meta?vn(meta.synced_at):"—";$("srcTxt").textContent=meta?`Nguồn: sổ nhiệm vụ (sandbox) · commit ${meta.commit} · ${meta.tasks_total} nhiệm vụ`:"Nguồn: —";
+  renderBoard();build3D();renderBTC();renderSkill();if(selected)select(selected,false);}
+(async()=>{const timer=setTimeout(()=>{if(!members.length)$("liveTxt").textContent="Chưa nhận được dữ liệu (10 giây)";},10000);
+  const db=window.claude?await window.claude.use("db"):null;
+  if(!db){clearTimeout(timer);$("liveTxt").textContent="Cần mở trong Claude và đăng nhập để xem dữ liệu thật";$("detail").textContent="Trang chỉ hiển thị dữ liệu thật từ sổ nhiệm vụ, nên cần đăng nhập Claude.";return;}
+  db.collection("office").onSnapshot(snap=>{clearTimeout(timer);const ms=[];let mt=null;snap.docs.forEach(d=>{if(!d.exists)return;const v=d.data();if(d.id==="meta")mt=v;else if(d.id==="b02_state")b02=v;else if(d.id==="skill_state")skl=v;else if(!d.id.startsWith("b02_")&&!d.id.startsWith("skill_"))ms.push(v);});
+    members=ms;meta=mt;$("live").classList.add("on");$("liveTxt").textContent=members.length?"Đang nghe sổ nhiệm vụ":"Sổ trống — chờ Claude đồng bộ lần đầu";apply();},
+    ()=>{clearTimeout(timer);$("live").classList.remove("on");$("liveTxt").textContent="Mất kết nối dữ liệu — tải lại trang để thử lại";});})();
+})();
+</script>
+<script src="council.js"></script>
+<script src="kho.js"></script>
+<script src="tool.js"></script>

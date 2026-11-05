@@ -1,0 +1,138 @@
+{
+ "job_id": "TJ-20261105-315106",
+ "title": "Tool đánh lại số phụ đề SRT",
+ "prompt": "Viết tool đánh lại số phụ đề từ 1, giữ nguyên timecode và lời thoại",
+ "requested_by": "CHAIRMAN",
+ "assigned_to": "agent-tool",
+ "origin": "chat",
+ "priority": 5,
+ "idempotency_key": "nghiem-thu-2026-11-05-srt",
+ "state": "RUNNING",
+ "state_version": 10,
+ "fencing_token": 1,
+ "lease": {
+  "holder": "agent-tool",
+  "token": 1,
+  "expires_at": "2026-11-05T18:33:00+00:00"
+ },
+ "workers": [
+  "agent-tool"
+ ],
+ "inputs": [],
+ "steps": [
+  {
+   "id": "intake",
+   "branch": "th",
+   "what": "Nhận mẫu vào inbox, băm tệp, ghi nguồn",
+   "status": "DONE",
+   "attempts": 1,
+   "by": "agent-tool",
+   "sub": null,
+   "evidence": [
+    "tool/inbox/TJ-20261105-315106/manifest.json"
+   ],
+   "note": "video mẫu tự tạo (không riêng tư) + prompt của Chủ tịch",
+   "started_at": "2026-11-05T16:33:00+00:00",
+   "finished_at": "2026-11-05T16:33:00+00:00"
+  },
+  {
+   "id": "research",
+   "branch": "gh",
+   "what": "Tìm nguồn/skill liên quan, ghi giấy phép; hoặc ghi lý do bỏ qua",
+   "status": "DONE",
+   "attempts": 1,
+   "by": "agent-tool",
+   "sub": "tool-gh-01",
+   "evidence": [
+    "tool/skills/sources/SOURCE_REGISTER.json"
+   ],
+   "note": "8 nguồn đã khảo sát chỉ đọc (23:05–23:20). Việc này: dùng FFmpeg đã cài để lấy khung hình (system-binary); không nguồn nào có sẵn tool đánh số SRT → viết mới từ đặc tả",
+   "started_at": "2026-11-05T16:33:17+00:00",
+   "finished_at": "2026-11-05T16:33:18+00:00"
+  },
+  {
+   "id": "analyze",
+   "branch": "pt",
+   "what": "Lấy khung hình/đọc mẫu, ghi thao tác, thay đổi màn hình, đầu vào, kết quả",
+   "status": "DONE",
+   "attempts": 1,
+   "by": "agent-tool",
+   "sub": "tool-pt-01",
+   "evidence": [
+    "tool/workbench/TJ-20261105-315106/OBSERVATION.md",
+    "tool/workbench/TJ-20261105-315106/frames.json",
+    "tool/workbench/TJ-20261105-315106/samples/contact_sheet.jpg"
+   ],
+   "note": "17 khung hình; 3 lần bấm, 3 lần màn hình đổi; phát hiện tiện ích mẫu trả 251 ký tự (bản chỉ đổi số: 250)",
+   "started_at": "2026-11-05T16:33:18+00:00",
+   "finished_at": "2026-11-05T16:35:07+00:00"
+  },
+  {
+   "id": "spec",
+   "branch": "pt",
+   "what": "Viết đặc tả + giả định cần kiểm + dữ liệu thử",
+   "status": "DONE",
+   "attempts": 1,
+   "by": "agent-tool",
+   "sub": "tool-pt-01",
+   "evidence": [
+    "tool/workbench/TJ-20261105-315106/SPEC.md",
+    "tool/workbench/TJ-20261105-315106/testdata/mau_tu_video.srt",
+    "tool/workbench/TJ-20261105-315106/testdata/mau_tu_video.expected.srt"
+   ],
+   "note": "5 hành vi THẤY, 11 giả định cần ca thử, 3 quyết định thiết kế",
+   "started_at": "2026-11-05T16:35:07+00:00",
+   "finished_at": "2026-11-05T16:35:07+00:00"
+  },
+  {
+   "id": "build",
+   "branch": "lt",
+   "what": "Viết công cụ từ đặc tả và dữ liệu thử",
+   "status": "RUNNING",
+   "attempts": 1,
+   "by": "agent-tool",
+   "sub": "tool-lt-01",
+   "evidence": [],
+   "note": "",
+   "started_at": "2026-11-05T16:35:07+00:00"
+  },
+  {
+   "id": "test",
+   "branch": "kt",
+   "what": "Kiểm thử độc lập trong vùng cách ly",
+   "status": "PENDING",
+   "attempts": 0,
+   "by": null,
+   "sub": null,
+   "evidence": [],
+   "note": ""
+  },
+  {
+   "id": "publish",
+   "branch": "th",
+   "what": "Phát hành vào kho chung",
+   "status": "PENDING",
+   "attempts": 0,
+   "by": null,
+   "sub": null,
+   "evidence": [],
+   "note": ""
+  },
+  {
+   "id": "verify",
+   "branch": "th",
+   "what": "Gọi thử từ kho chung bằng dữ liệu khác mẫu",
+   "status": "PENDING",
+   "attempts": 0,
+   "by": null,
+   "sub": null,
+   "evidence": [],
+   "note": ""
+  }
+ ],
+ "tool_id": null,
+ "version": null,
+ "result": null,
+ "created_at": "2026-11-05T16:33:00+00:00",
+ "updated_at": "2026-11-05T16:35:07+00:00"
+}

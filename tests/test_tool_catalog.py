@@ -144,6 +144,24 @@ class DuplicateAndRollbackTest(Base):
         self.assertEqual((rec["status"], rec["version"]), ("OK", "1.0.0"))
         self.assertEqual(self.cat.tool("upper-text")["history"][-1]["action"], "rollback")
 
+    def test_smoke_from_shared_catalog_auto_rolls_back_a_bad_release(self):
+        from tool.core import release
+        self.publish("1.0.0")
+        other = self.data("research/khac_mau.txt", "dữ liệu khác mẫu\n")
+        want = self.data("research/khac_mau.expected.txt", "DỮ LIỆU KHÁC MẪU\n")
+        case = [{"inputs": {"input": other}, "expected": {"khac_mau.txt": want}}]
+        ok = release.smoke("upper-text", "A19", root=self.root, extra=case, rollback_actor=AT)
+        self.assertTrue(ok["ok"]); self.assertIsNone(ok["rolled_back"]); self.assertEqual(len(ok["cases"]), 2)
+        # Bản 1.1.0 "đạt" bộ thử của chính nó (ví dụ bị sửa theo lỗi) nhưng sai với dữ liệu khác mẫu.
+        b = make_build(self.tmp, version="1.1.0", broken=True)
+        (b / "examples" / "mau.expected.txt").write_text("XIN CHÀO\n!", encoding="utf-8")
+        self.cat.publish(b, AT)
+        self.assertEqual(self.cat.resolve("upper-text")[1], "1.1.0")
+        bad = release.smoke("upper-text", "A19", root=self.root, extra=case, rollback_actor=AT)
+        self.assertFalse(bad["ok"])
+        self.assertEqual(bad["rolled_back"], {"tool_id": "upper-text", "withdrawn": "1.1.0", "current_version": "1.0.0"})
+        self.assertTrue(release.smoke("upper-text", "A19", root=self.root, extra=case)["ok"])   # bản tốt gọi lại được
+
     def test_rollback_of_only_version_makes_tool_uncallable(self):
         self.publish()
         self.cat.rollback("upper-text", T, "lỗi")

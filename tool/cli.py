@@ -28,7 +28,7 @@ import sys
 from pathlib import Path
 
 from .core import export as export_mod
-from .core import sandbox, video
+from .core import release, sandbox, video
 from .core.agents import Mailbox, Memory
 from .core.budget import Budget
 from .core.catalog import CATEGORIES, Catalog, validate_manifest
@@ -40,7 +40,7 @@ from .core.runner import Runner
 from .core.scheduler import Scheduler
 from .core.skills import Skills
 from .core.subagents import SubAgents
-from .core.util import DATA_DIRS, ToolError, read_json, tool_root, vn
+from .core.util import DATA_DIRS, ToolError, atomic_write_json, read_json, tool_root, vn
 
 
 def _j(obj) -> None:
@@ -93,6 +93,7 @@ def build_parser() -> argparse.ArgumentParser:
     a = j.add_parser("new"); a.add_argument("--title", required=True); a.add_argument("--prompt", required=True)
     a.add_argument("--by", required=True); a.add_argument("--to", required=True); a.add_argument("--key")
     a.add_argument("--priority", type=int, default=5); a.add_argument("--origin", default="chat")
+    a.add_argument("--id", dest="job_id", help="mã việc đã cấp sẵn (web)")
     a = j.add_parser("list"); a.add_argument("--state")
     j.add_parser("backlog")
     a = j.add_parser("show"); a.add_argument("job"); a.add_argument("--json", action="store_true")
@@ -120,11 +121,17 @@ def build_parser() -> argparse.ArgumentParser:
 
     a = sub.add_parser("intake"); a.add_argument("job"); a.add_argument("items", nargs="+")
     a.add_argument("--public", action="store_true", help="mẫu tự tạo, không riêng tư: cho vào git")
+    a.add_argument("--pointer", help="con trỏ tới bản gốc (vd. mã asset trên web) để phiên khác tải lại")
     a = sub.add_parser("frames"); a.add_argument("job"); a.add_argument("video")
     a.add_argument("--every", type=float); a.add_argument("--at"); a.add_argument("--max", type=int, default=40)
     a = sub.add_parser("test"); a.add_argument("build_dir"); a.add_argument("--json", action="store_true")
     a = sub.add_parser("publish"); a.add_argument("build_dir"); a.add_argument("--actor", required=True)
     a.add_argument("--job"); a.add_argument("--auto", action="store_true"); a.add_argument("--session")
+    a = sub.add_parser("smoke"); a.add_argument("tool"); a.add_argument("--caller", required=True)
+    a.add_argument("--case", action="append", default=[], metavar="input=tệp,expect:tên=tệp",
+                   help="dữ liệu khác mẫu: các cặp tên=tệp đầu vào, và expect:tên_kết_quả=tệp mong đợi")
+    a.add_argument("--rollback-as", help="Agent điều hành: tự khôi phục bản tốt nếu gọi thử lỗi")
+    a.add_argument("--session"); a.add_argument("--trigger", default="manual"); a.add_argument("--json", action="store_true")
     a = sub.add_parser("rollback"); a.add_argument("tool"); a.add_argument("--actor", required=True)
     a.add_argument("--reason", required=True); a.add_argument("--to")
 
@@ -162,6 +169,8 @@ def build_parser() -> argparse.ArgumentParser:
     b.add_parser("show")
     a = b.add_parser("approve"); a.add_argument("amount", type=float); a.add_argument("--what", required=True); a.add_argument("--ref", required=True)
     a = sub.add_parser("export"); a.add_argument("--out", required=True)
+    a = sub.add_parser("webver", help="version của 4 tài liệu tool_state trên web (dùng làm if_version)")
+    a.add_argument("pairs", nargs="*", metavar="tên=version")
     return p
 
 
@@ -223,7 +232,7 @@ def dispatch(args, root: Path) -> int:
         jc = args.jcmd
         if jc == "new":
             job = jobs.create(title=args.title, prompt=args.prompt, requested_by=args.by, assigned_to=args.to,
-                              idempotency_key=args.key, priority=args.priority, origin=args.origin)
+                              idempotency_key=args.key, priority=args.priority, origin=args.origin, job_id=args.job_id)
             Mailbox(root, d).send(args.to, args.by, f"Việc mới {job['job_id']}: {job['title']}", job["prompt"], job["job_id"])
             print(_job_line(job))
         elif jc == "list":
@@ -285,7 +294,7 @@ def dispatch(args, root: Path) -> int:
         jobs.get(args.job)
         ib = Inbox(root)
         for it in args.items:
-            man = ib.add(args.job, it, private=not args.public)
+            man = ib.add(args.job, it, private=not args.public, pointer=args.pointer)
         for i in man["items"]:
             print(f"  {i['kind']:<7} {i.get('name') or i.get('url') or i.get('path')}  {i.get('bytes', '')}  {'riêng tư' if i.get('private') else 'vào git'}")
         for sk in man["skipped"]:
@@ -321,6 +330,29 @@ def dispatch(args, root: Path) -> int:
         print(f"ĐÃ PHÁT HÀNH {rel['tool_id']}@{rel['version']} bởi {rel['published_by']} lúc {vn(rel['published_at'])} "
               f"({len(rel['files'])} tệp, {len(rel['test']['cases'])} ca thử đạt)")
         return 0
+    if c == "smoke":
+        extra = []
+        for spec in args.case:
+            ins, exp = {}, {}
+            for part in spec.split(","):
+                k, _, v = part.partition("=")
+                if k.startswith("expect:"):
+                    exp[k[7:]] = v
+                else:
+                    ins[k] = v
+            extra.append({"inputs": ins, "expected": exp})
+        res = release.smoke(args.tool, args.caller, root=root, extra=extra, rollback_actor=args.rollback_as,
+                            session=args.session, trigger=args.trigger)
+        if args.json:
+            _j(res)
+        else:
+            for cs in res["cases"]:
+                print(f"  {'ĐẠT ' if cs['ok'] else 'TRƯỢT'} {cs['name']}  {cs['detail']}  [{cs['run_id']}]")
+            print(f"{'GỌI THỬ TỪ KHO: ĐẠT' if res['ok'] else 'GỌI THỬ TỪ KHO: LỖI'} — {res['tool']}@{res['version']}, người gọi {res['caller']}")
+            if res["rolled_back"]:
+                rb = res["rolled_back"]
+                print(f"ĐÃ KHÔI PHỤC: thu hồi {rb['withdrawn']}, bản hiện hành {rb['current_version'] or '(không còn)'}")
+        return 0 if res["ok"] else 1
     if c == "rollback":
         r = Catalog(root, d).rollback(args.tool, args.actor, args.reason, args.to)
         print(f"Đã thu hồi {r['tool_id']}@{r['withdrawn']}; bản hiện hành: {r['current_version'] or '(không còn bản gọi được)'}")
@@ -393,6 +425,18 @@ def dispatch(args, root: Path) -> int:
     if c == "export":
         for pth in export_mod.write(Path(args.out), root):
             print(pth)
+        _j({"if_version": read_json(root / "runs" / "web_versions.json", default={})})
+        return 0
+    if c == "webver":
+        pth = root / "runs" / "web_versions.json"
+        cur = read_json(pth, default={})
+        for k, v in _kv(args.pairs).items():
+            if k not in ("main", "catalog", "jobs", "runs") or not v.isdigit():
+                raise ToolError("Dùng: webver main=<số> catalog=<số> jobs=<số> runs=<số>")
+            cur[k] = int(v)
+        if args.pairs:
+            atomic_write_json(pth, cur)
+        _j(cur)
         return 0
     return 2
 

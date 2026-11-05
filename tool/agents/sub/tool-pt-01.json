@@ -1,0 +1,30 @@
+{
+ "id": "tool-pt-01",
+ "name": "Phân tích mẫu #01",
+ "branch": "pt",
+ "branch_name": "Phân tích mẫu",
+ "kind": "agent",
+ "status": "ACTIVE",
+ "state": "DONE",
+ "assigned_by": "agent-tool",
+ "job_id": "TJ-20261105-315106",
+ "step": "analyze",
+ "output": "OBSERVATION.md + SPEC.md + dữ liệu thử",
+ "tier": "SANDBOX_WRITE",
+ "write_scope": [
+  "tool/workbench/TJ-20261105-315106/"
+ ],
+ "limits": {
+  "max_runtime_s": 3600,
+  "paid_usd": 0,
+  "max_output_mb": 50
+ },
+ "worker": "session",
+ "created_at": "2026-11-05T16:33:00+00:00",
+ "expires_at": "2026-11-05T17:33:00+00:00",
+ "finished_at": "2026-11-05T16:35:07+00:00",
+ "result": "OBSERVATION.md + SPEC.md + 2 tệp dữ liệu thử",
+ "evidence": [
+  "tool/workbench/TJ-20261105-315106/SPEC.md"
+ ]
+}

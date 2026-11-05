@@ -1,0 +1,12 @@
+{
+ "id": "M-20261105-233300-d2d9b0",
+ "to": "agent-tool",
+ "from": "CHAIRMAN",
+ "subject": "Việc mới TJ-20261105-315106: Tool đánh lại số phụ đề SRT",
+ "body": "Viết tool đánh lại số phụ đề từ 1, giữ nguyên timecode và lời thoại",
+ "job_id": "TJ-20261105-315106",
+ "state": "OPEN",
+ "at": "2026-11-05T16:33:00+00:00",
+ "closed_at": null,
+ "closed_note": ""
+}

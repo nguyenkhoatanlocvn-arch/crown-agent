@@ -1,0 +1,11 @@
+{"at": "2026-11-05T16:33:00+00:00", "actor": "CHAIRMAN", "action": "create", "detail": "giao cho agent-tool; nguồn chat", "state": "READY", "token": 0}
+{"at": "2026-11-05T16:33:00+00:00", "actor": "agent-tool", "action": "claim", "detail": "nhận việc", "state": "RUNNING", "token": 1}
+{"at": "2026-11-05T16:33:00+00:00", "actor": "agent-tool", "action": "step_start", "detail": "intake", "state": "RUNNING", "token": 1}
+{"at": "2026-11-05T16:33:00+00:00", "actor": "agent-tool", "action": "step_done", "detail": "intake: video mẫu tự tạo (không riêng tư) + prompt của Chủ tịch", "state": "RUNNING", "token": 1}
+{"at": "2026-11-05T16:33:17+00:00", "actor": "agent-tool", "action": "step_start", "detail": "research · Agent con tool-gh-01", "state": "RUNNING", "token": 1}
+{"at": "2026-11-05T16:33:18+00:00", "actor": "agent-tool", "action": "step_done", "detail": "research: 8 nguồn đã khảo sát chỉ đọc (23:05–23:20). Việc này: dùng FFmpeg đã cài để lấy khung hình (system-binary); không nguồn nào có sẵn tool đánh số SRT → viết mới từ đặc tả", "state": "RUNNING", "token": 1}
+{"at": "2026-11-05T16:33:18+00:00", "actor": "agent-tool", "action": "step_start", "detail": "analyze · Agent con tool-pt-01", "state": "RUNNING", "token": 1}
+{"at": "2026-11-05T16:35:07+00:00", "actor": "agent-tool", "action": "step_done", "detail": "analyze: 17 khung hình; 3 lần bấm, 3 lần màn hình đổi; phát hiện tiện ích mẫu trả 251 ký tự (bản chỉ đổi số: 250)", "state": "RUNNING", "token": 1}
+{"at": "2026-11-05T16:35:07+00:00", "actor": "agent-tool", "action": "step_start", "detail": "spec · Agent con tool-pt-01", "state": "RUNNING", "token": 1}
+{"at": "2026-11-05T16:35:07+00:00", "actor": "agent-tool", "action": "step_done", "detail": "spec: 5 hành vi THẤY, 11 giả định cần ca thử, 3 quyết định thiết kế", "state": "RUNNING", "token": 1}
+{"at": "2026-11-05T16:35:07+00:00", "actor": "agent-tool", "action": "step_start", "detail": "build · Agent con tool-lt-01", "state": "RUNNING", "token": 1}

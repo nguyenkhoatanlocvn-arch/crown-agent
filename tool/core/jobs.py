@@ -11,6 +11,7 @@ Trạng thái lưu thành tệp JSON để mọi phiên dùng chung qua git; nh�
 """
 from __future__ import annotations
 
+import re
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Callable
@@ -31,6 +32,7 @@ PIPELINE: list[tuple[str, str, str]] = [
     ("verify", "th", "Gọi thử từ kho chung bằng dữ liệu khác mẫu"),
 ]
 STEP_IDS = [s[0] for s in PIPELINE]
+JOB_ID_RE = re.compile(r"^TJ-\d{8}-[0-9a-f]{6}$")
 MAX_ATTEMPTS = 3
 
 TRANSITIONS: dict[str, set[str]] = {
@@ -93,9 +95,12 @@ class JobStore:
     # ---------- tạo ----------
     def create(self, *, title: str, prompt: str, requested_by: str, assigned_to: str,
                inputs: list[dict] | None = None, idempotency_key: str | None = None,
-               priority: int = 5, origin: str = "chat") -> dict:
+               priority: int = 5, origin: str = "chat", job_id: str | None = None) -> dict:
+        """Tạo việc. `job_id` cho phép dùng mã việc đã cấp sẵn (web cấp mã ngay khi Chủ tịch bấm nút)."""
         if not title.strip() or not prompt.strip():
             raise ToolError("Việc phải có tên và yêu cầu (prompt)")
+        if job_id is not None and not JOB_ID_RE.match(job_id):
+            raise ToolError(f"Mã việc cấp sẵn phải dạng TJ-YYYYMMDD-xxxxxx: {job_id!r}")
         self.dir.resolve(requested_by)
         self.dir.require_executive(assigned_to, "nhận việc TOOL")
         if assigned_to == CHAIRMAN:
@@ -107,9 +112,13 @@ class JobStore:
                         if (j["title"], j["prompt"]) != (title, prompt):
                             raise ToolError(f"Khóa '{idempotency_key}' đã dùng cho việc khác ({j['job_id']})")
                         return j
-            job_id = new_id("TJ", self.clock())
-            while self._path(job_id).exists():
+            if job_id is not None:
+                if self._path(job_id).exists():
+                    raise ToolError(f"Mã việc {job_id} đã tồn tại")
+            else:
                 job_id = new_id("TJ", self.clock())
+                while self._path(job_id).exists():
+                    job_id = new_id("TJ", self.clock())
             now = iso(self.clock())
             job = {
                 "job_id": job_id, "title": title.strip(), "prompt": prompt.strip(),

@@ -70,6 +70,12 @@ for sid, a in reg.subagents.items():   # Agent con (A03.1...)
                     "cluster": reg.agents[a["parent"]]["cluster"], "status": a["status"], "tier": a["tier"],
                     "activity": act, "task": task, "open_tasks": n})
 
+for eid, e in reg.executives.items():   # Agent đồng điều hành của các bộ phận (vd. TOOL: agent-tool, agent-tool-at)
+    act, task, n = activity_of(eid, e["status"])
+    members.append({"id": eid, "name": e["name"], "kind": "agent", "boss": e["supervisor"],
+                    "cluster": f"Bộ phận {e['department']}", "status": e["status"], "tier": e["tier"],
+                    "activity": act, "task": task, "open_tasks": n})
+
 try:
     commit = subprocess.run(["git", "-C", str(ROOT), "rev-parse", "--short", "HEAD"],
                             capture_output=True, text=True, check=True).stdout.strip()

@@ -1,0 +1,487 @@
+{
+ "checked_at": "2026-11-05T16:19:18Z",
+ "by": "tool-gh-01 (nhánh Nghiên cứu GitHub)",
+ "assigned_by": "agent-tool",
+ "method": {
+  "commits": "git ls-remote --symref https://github.com/<owner>/<repo> HEAD, run at 2026-11-05T16:08:41Z and re-run at 2026-11-05T16:19:18Z with identical results",
+  "file_reads": "shallow partial clones (--depth 1 --filter=blob:none --no-checkout) under scratchpad/gh-src/<name>/, files read as text with `git show <sha>:<path>`; FFmpeg was not cloned (ls-remote + WebFetch only)",
+  "nothing_executed_from_repos": true,
+  "local_binary_checks": "The sandbox's preinstalled ffmpeg 6.1.1 / ffprobe / jq 1.7 (distro binaries, not repo code) were queried for -version/-h and used with synthetic lavfi input and the null muxer (no files written) to confirm the expected values of three test cases.",
+  "license_rule_applied": "MIT/Apache-2.0/BSD -> may adapt with attribution; GPL/AGPL/LGPL or unknown -> no copying or paraphrasing, only system-binary use of an unmodified installed binary, rewrite-from-spec or reference-only"
+ },
+ "not_verified": [
+  "FFmpeg LICENSE.md and jq COPYING tail were read through WebFetch's summarising model (quotes returned), not byte-for-byte; FFmpeg was not cloned",
+  "FFmpeg doc/ffmpeg.texi was truncated by WebFetch at about 100,000 characters; `-fps_mode` was confirmed from the installed 6.1.1 binary's help instead",
+  "Which ffmpeg/jq versions and build flags are on the Chairman's laptop (only this sandbox was checked)",
+  "Telemetry absence for craft-anything and screenshot-to-code (docs/keyword grep only, no source audit)",
+  "Third-party dependency licences inside craft-anything (Cargo.lock), screenshot-to-code (poetry.lock, frontend lockfile) and jq's oniguruma submodule",
+  "craft-anything docs/brand/LICENSE-brand.txt and vendor/wgpu-hal licence texts (present, not read)",
+  "anthropics/skills: mcp-builder reference/*.md guides (except a grep of evaluation.md), skill-creator agents/*.md and references/schemas.md were not read",
+  "None of the repo scripts were executed, so the test cases for with_server.py, quick_validate.py, the MCP server and the two design-level tests are unrun"
+ ],
+ "sources": [
+  {
+   "id": "craft-anything",
+   "repo": "storytold/craft-anything",
+   "url": "https://github.com/storytold/craft-anything",
+   "exists": true,
+   "commit": "869eb8548ae3cf9162181659c3ab47441b9c300d",
+   "default_branch": "main",
+   "checked_at": "2026-11-05T16:19:18Z",
+   "license": "MIT OR Apache-2.0",
+   "license_detail": {
+    "spdx": "MIT OR Apache-2.0",
+    "verified_at": [
+     "LICENSE-MIT @869eb85 (full MIT text, 'Copyright (c) 2026 ArtCraft Team and the Craft Anything contributors')",
+     "LICENSE-APACHE @869eb85 (Apache License 2.0 header read)",
+     "NOTICE @869eb85 ('Licensed under the MIT License or the Apache License, Version 2.0, at your option')",
+     "Cargo.toml @869eb85 ([workspace.package] license = \"MIT OR Apache-2.0\")",
+     "GitHub sidebar: 'Apache-2.0, MIT licenses found'"
+    ],
+    "exceptions": [
+     "docs/brand/ (ArtCraft name, wordmark, logos) is trademarked and NOT under the open licence (NOTICE, README); docs/brand/LICENSE-brand.txt was not read",
+     "assets/fonts: SIL OFL 1.1; assets/icons (Lucide): ISC (per NOTICE)",
+     "vendor/wgpu-hal carries its own LICENSE.MIT and LICENSE.APACHE (present in tree, not read)"
+    ]
+   },
+   "function_to_take": "Design only, no code: (1) the Evidence record shape that every tool returns - subject, operation, result, confidence (observed / derived / inferred), authority, limitations, coverage, locations, id = SHA-256 of canonical JSON, plus first-class 'Unknown' open questions - as the model for TOOL's observation log; (2) the Study -> Build -> Check -> Refine loop with a clean-room default and a per-project folder layout (craft.json, capture/, app/, checks/, inbox/). It has no video or frame-extraction tool (docs/tools.md grep for video/ffmpeg/frame found none).",
+   "dependencies": {
+    "languages": [
+     "Rust >= 1.97 (workspace version 0.4.0, edition 2024)"
+    ],
+    "system": [
+     "Linux GUI build needs libxkbcommon-dev, libwayland-dev, libx11-dev, libxrandr-dev, libxi-dev, libgl1-mesa-dev, libgtk-3-dev",
+     "Chromium-family browser for website capture (docs/STATUS.md: live runs with Chromium on Linux)",
+     "Ghidra optional (Deep mode)"
+    ],
+    "agents": [
+     "A coding agent CLI is required for the Build step: Claude Code (first supported, uses the user's own sign-in), GitHub Copilot CLI via ACP, Codex adapter unverified by the authors"
+    ],
+    "api_keys": [
+     "none required to inspect",
+     "optional: fal.ai key (generated pictures / 3D models)",
+     "optional: Anthropic / OpenAI / OpenRouter keys or a local OpenAI-compatible server for questions and analysis"
+    ],
+    "prebuilt": "Release installers / AppImage / tarballs exist per README; tags seen via ls-remote: v0.1.0, v0.2.0, v0.3.0"
+   },
+   "cost": "free to inspect; Build consumes the user's own coding-agent plan (Claude Code sign-in, no API key); optional paid: fal.ai asset generation (default budget 5 USD per project per docs/STATUS.md) and provider API keys",
+   "integration": "reference-only",
+   "integration_reason": "Licence would allow adapting, but it is an early-alpha 800-file Rust desktop workspace that needs a builder agent and a browser; take the evidence-record and loop design as ideas (credit the project if field names are reused) and do not build or run it in TOOL v1.",
+   "risks": [
+    "Status 'early alpha' (README); HEAD is 0.4.0 while the newest tag is v0.3.0",
+    "Building runs Cargo build scripts (e.g. vendor/wgpu-hal/build.rs) and pulls a large crate graph from crates.io",
+    "The Build step lets a coding agent run commands and install dependencies on the machine; README warns that npm install scripts, Rust build scripts and Python source packages run code",
+    "'Clean room' is a tool-refusal rule, not an OS sandbox (README states this); Deep mode reads a target's code and files, which can breach a target's terms",
+    "Website capture opens live sites in a browser (network calls to the target)",
+    "Repo ships AGENTS.md and CLAUDE.md: an agent that uses the clone as its working directory would auto-load them as instructions - keep clones outside agent working dirs",
+    ".githooks/pre-commit exists (opt-in via `git config core.hooksPath .githooks`; runs `cargo xtask secrets`); not active on a plain clone",
+    "Paid optional services: fal.ai; provider API keys",
+    "Telemetry: no mention found in README, SECURITY.md, docs/STATUS.md, docs/pitfalls.md, docs/claude-code.md, AGENTS.md (keyword grep); source code was NOT audited, so absence is unverified"
+   ],
+   "test_case": {
+    "what": "Acceptance test for the idea we take (our own observation-log writer), not for their binary",
+    "input": "One fixture observation: {subject: 'sample.mp4 frame 3', operation: 'frame_describe', result: {...}, confidence: 'observed', authority: 'our-run', limitations: ['audio not checked']}",
+    "expected": "Writer emits one JSON record whose `confidence` is one of observed|derived|inferred, with non-empty `authority` and a `limitations` array, and whose `id` equals the SHA-256 hex of its canonical JSON; changing any field and re-hashing gives a different id; a record with confidence 'certain' is rejected with a non-zero exit.",
+    "status": "not run (design-level test)"
+   },
+   "evidence": [
+    "https://github.com/storytold/craft-anything",
+    "git ls-remote https://github.com/storytold/craft-anything HEAD",
+    "git ls-remote --tags --refs https://github.com/storytold/craft-anything"
+   ]
+  },
+  {
+   "id": "site-replica-skill",
+   "repo": "jatidevelopments/site-replica-skill",
+   "url": "https://github.com/jatidevelopments/site-replica-skill",
+   "exists": true,
+   "commit": "b17d18af02a542f4da0f499812f5cdd41e6e6a0c",
+   "default_branch": "main",
+   "checked_at": "2026-11-05T16:19:18Z",
+   "license": "MIT",
+   "license_detail": {
+    "spdx": "MIT",
+    "verified_at": [
+     "LICENSE @b17d18a (full MIT text, 'Copyright (c) 2026 Janis Tirtey')",
+     "README.md @b17d18a ('MIT licensed.')",
+     "GitHub sidebar: MIT"
+    ],
+    "exceptions": [
+     "examples/xai-grok-replica.html is a recreation of a third party's site design; treat as reference, do not republish"
+    ]
+   },
+   "function_to_take": "The `sheets` step of scripts/assets.py: for each .mp4, an ffmpeg `select` filter keeps about one frame per 1.2 s scaled to 360 px wide, then `tile=3xN:padding=4` joins them into one contact-sheet JPG, so the agent reads one image instead of a whole video. Also the verify gate idea from scripts/verify.py: re-render the build, screenshot it, and exit 1 on any page JS error.",
+   "dependencies": {
+    "languages": [
+     "Python 3 (stdlib: asyncio, json, os, re, subprocess, ssl, urllib)"
+    ],
+    "packages": [
+     "playwright (Python) + Chromium for scout.py / verify.py / assets.py sniff; no requirements file or lockfile in the repo"
+    ],
+    "binaries": [
+     "ffmpeg on PATH (sheets)",
+     "Chrome started with --remote-debugging-port=9222 for scout.py and verify.py (CDP)",
+     "gh CLI optional (self-improvement push)"
+    ],
+    "api_keys": [
+     "none in the scripts"
+    ]
+   },
+   "cost": "free (the scripts call no paid service; LEARNINGS.md describes paid image/video generators used by the author outside these scripts)",
+   "integration": "adapter",
+   "integration_reason": "MIT: adapt only the ~20-line keyframe -> contact-sheet step (and the zero-page-error gate) with attribution and our own error handling; do not install the skill or use its crawl, download or self-update parts.",
+   "risks": [
+    "SKILL.md 'Phase 5' tells the agent to edit the skill itself after every run and `git push` it - a self-modifying instruction loop; do not load this SKILL.md as a skill",
+    "scout.py and verify.py attach over CDP to the user's real Chrome; verify.py uses browser.contexts[0], i.e. the logged-in profile",
+    "assets.py sniff/probe/fetch download third-party media and HEAD-sweep numbered CDN URLs (copyright and terms-of-service exposure, outbound network)",
+    "sheets: both ffmpeg calls use check=False, so a failed ffmpeg run is silently ignored",
+    "sheets uses `-vsync vfr`; the installed ffmpeg 6.1.1 help says '-vsync ... deprecated, use -fps_mode'",
+    "sheets uses `-pattern_type glob` for the tile input",
+    ".harness/bypasses.jsonl records the author's hooks being switched off (CLAUDE_HARNESS=off) during the sessions that produced the skill",
+    "7 commits, 0 stars, 0 forks, no tags, no tests (GitHub page + ls-remote)",
+    "No install-time scripts, no telemetry and no secrets handling seen in the three scripts"
+   ],
+   "test_case": {
+    "input": "A 6 s, 320x240, 25 fps synthetic clip (ffmpeg lavfi `testsrc=duration=6:size=320x240:rate=25`) passed to our adapted contact-sheet step with interval 1.2 s, width 360, 3 columns, padding 4",
+    "expected": "Exactly 5 keyframes (timestamps 0, 1.2, 2.4, 3.6, 4.84 s), each 360x270, and one sheet image of 1088x544; a corrupt input file makes the step exit non-zero (unlike the original, which ignores failures).",
+    "status": "frame count, timestamps and sizes confirmed in this sandbox with ffmpeg 6.1.1 using the same filter chain and the null muxer (no files written); the adapted step itself does not exist yet"
+   },
+   "evidence": [
+    "https://github.com/jatidevelopments/site-replica-skill",
+    "git ls-remote https://github.com/jatidevelopments/site-replica-skill HEAD"
+   ]
+  },
+  {
+   "id": "anthropic-webapp-testing",
+   "repo": "anthropics/skills:webapp-testing",
+   "url": "https://github.com/anthropics/skills/tree/main/skills/webapp-testing",
+   "exists": true,
+   "commit": "ca45fc496a3436251f191354091d557da31c15b5",
+   "default_branch": "main",
+   "checked_at": "2026-11-05T16:19:18Z",
+   "license": "Apache-2.0",
+   "license_detail": {
+    "spdx": "Apache-2.0",
+    "verified_at": [
+     "skills/webapp-testing/LICENSE.txt @ca45fc4 (201 lines, Apache License 2.0, appendix 'Copyright 2026 Anthropic, PBC.', sha256 bc6b3af2f331cbc7fb0da1344efb2cbe5877a31498b4d70dbc7000f3405a1362)",
+     "skills/webapp-testing/SKILL.md frontmatter: 'license: Complete terms in LICENSE.txt'"
+    ],
+    "repo_license": "No LICENSE file at the repo root and no licence in the GitHub sidebar; README says 'Many skills in this repo are open source (Apache 2.0)' and that skills/docx, pdf, pptx, xlsx are 'source-available, not open source' (their LICENSE.txt starts '(c) 2025 Anthropic, PBC. All rights reserved.')."
+   },
+   "function_to_take": "scripts/with_server.py: start one or more server commands, poll each TCP port until it accepts a connection (30 s default), run the test command, then always terminate the servers and return the test's exit code. Plus the recon-then-act Playwright pattern (wait for networkidle, screenshot / read DOM, pick selectors, act) and console-log capture, for sandbox-testing a generated tool that has a web UI.",
+   "dependencies": {
+    "languages": [
+     "Python 3"
+    ],
+    "packages": [
+     "with_server.py: stdlib only (subprocess, socket, time, sys, argparse)",
+     "automation scripts: playwright (Python) + a Chromium download"
+    ],
+    "api_keys": [
+     "none"
+    ]
+   },
+   "cost": "free",
+   "integration": "adapter",
+   "integration_reason": "Apache-2.0: wrap or adapt with_server.py and the Playwright pattern, keeping LICENSE.txt, the copyright notice and a note of our changes (Apache-2.0 section 4).",
+   "risks": [
+    "with_server.py starts each server with subprocess.Popen(cmd, shell=True): the command string must never come from untrusted input",
+    "Server stdout/stderr are piped but never read",
+    "Readiness is a TCP connect to 'localhost' only; no HTTP health check",
+    "`playwright install chromium` downloads a browser (network at install time)",
+    "Example scripts hard-code output paths (/tmp/inspect.png, /mnt/user-data/outputs/...)",
+    "SKILL.md tells the agent to run scripts with --help and treat them as black boxes instead of reading them; read them anyway before use",
+    "No install scripts, telemetry, paid service or secrets seen in the skill folder"
+   ],
+   "test_case": {
+    "input": "Our adapted wrapper run as: --server \"python3 -m http.server 8765\" --port 8765 -- python3 -c \"import urllib.request;print(urllib.request.urlopen('http://localhost:8765/').status)\"",
+    "expected": "stdout contains 'Server ready on port 8765' and '200'; exit code 0; afterwards nothing is listening on port 8765. With --port 8766 (wrong port) it exits non-zero within the timeout and still stops the server.",
+    "status": "not run (would execute repo code)"
+   },
+   "evidence": [
+    "https://github.com/anthropics/skills",
+    "git ls-remote https://github.com/anthropics/skills HEAD"
+   ]
+  },
+  {
+   "id": "anthropic-mcp-builder",
+   "repo": "anthropics/skills:mcp-builder",
+   "url": "https://github.com/anthropics/skills/tree/main/skills/mcp-builder",
+   "exists": true,
+   "commit": "ca45fc496a3436251f191354091d557da31c15b5",
+   "default_branch": "main",
+   "checked_at": "2026-11-05T16:19:18Z",
+   "license": "Apache-2.0",
+   "license_detail": {
+    "spdx": "Apache-2.0",
+    "verified_at": [
+     "skills/mcp-builder/LICENSE.txt @ca45fc4 (201 lines, Apache License 2.0, 'Copyright 2026 Anthropic, PBC.', same sha256 bc6b3af2...1362 as the other two skills)",
+     "skills/mcp-builder/SKILL.md frontmatter: 'license: Complete terms in LICENSE.txt'"
+    ],
+    "repo_license": "No root LICENSE; see webapp-testing entry."
+   },
+   "function_to_take": "A checklist for exposing a finished tool as an MCP server: prefixed action-style tool names, input/output schemas (Zod or Pydantic), annotations (readOnlyHint, destructiveHint, idempotentHint, openWorldHint), pagination, actionable error messages, stdio transport for local servers; plus the 10-question XML evaluation format (<evaluation><qa_pair>...). Reference guides for Python (FastMCP) and the TypeScript SDK (v2 `@modelcontextprotocol/server`, v1 `@modelcontextprotocol/sdk`).",
+   "dependencies": {
+    "guide": [
+     "none (Markdown)"
+    ],
+    "scripts": [
+     "Python 3",
+     "anthropic>=0.39.0 and mcp>=1.1.0 (scripts/requirements.txt)",
+     "ANTHROPIC_API_KEY for scripts/evaluation.py (it constructs `Anthropic()`; reference/evaluation.md says to export the key)"
+    ],
+    "typescript_path": [
+     "Node.js + npm, `npx @modelcontextprotocol/inspector`, optional `npx @modelcontextprotocol/codemod@latest`"
+    ]
+   },
+   "cost": "guide: free. scripts/evaluation.py: needs paid API (Anthropic API key); default model id in the script is claude-3-7-sonnet-20250219",
+   "integration": "reference-only",
+   "integration_reason": "Use the guides as a design checklist only if TOOL publishes tools as MCP servers; skip evaluation.py because it needs a paid Anthropic API key.",
+   "risks": [
+    "evaluation.py calls the paid Anthropic API and needs a secret (ANTHROPIC_API_KEY)",
+    "evaluation.py / connections.py launch an arbitrary stdio server command and pass env vars or HTTP headers (possible bearer tokens) given on the command line",
+    "SKILL.md directs the agent to fetch live external docs (modelcontextprotocol.io sitemap, raw.githubusercontent.com SDK READMEs) and to run unpinned `npx ...@latest` packages",
+    "Guidance moves with SDK versions (HEAD commit message: 'teach v2 of the MCP TypeScript SDK')",
+    "No install scripts or telemetry seen in the skill folder"
+   ],
+   "test_case": {
+    "input": "A minimal stdio MCP server written from the checklist that exposes one read-only tool `catalog_list_tools` over a fixture catalog of 2 entries; an MCP client sends initialize, tools/list, tools/call {} and tools/call {limit: -1}",
+    "expected": "tools/list returns exactly one tool named catalog_list_tools with an inputSchema and readOnlyHint=true; tools/call {} returns the 2 fixture entries as structured content; the limit=-1 call returns an error that names the `limit` field.",
+    "status": "not run"
+   },
+   "evidence": [
+    "https://github.com/anthropics/skills",
+    "git ls-remote https://github.com/anthropics/skills HEAD"
+   ]
+  },
+  {
+   "id": "anthropic-skill-creator",
+   "repo": "anthropics/skills:skill-creator",
+   "url": "https://github.com/anthropics/skills/tree/main/skills/skill-creator",
+   "exists": true,
+   "commit": "ca45fc496a3436251f191354091d557da31c15b5",
+   "default_branch": "main",
+   "checked_at": "2026-11-05T16:19:18Z",
+   "license": "Apache-2.0",
+   "license_detail": {
+    "spdx": "Apache-2.0",
+    "verified_at": [
+     "skills/skill-creator/LICENSE.txt @ca45fc4 (201 lines, Apache License 2.0, 'Copyright 2026 Anthropic, PBC.', same sha256 bc6b3af2...1362)",
+     "Note: skills/skill-creator/SKILL.md frontmatter has only name and description - no `license:` key; the folder's LICENSE.txt is the basis"
+    ],
+    "repo_license": "No root LICENSE; see webapp-testing entry."
+   },
+   "function_to_take": "scripts/quick_validate.py (SKILL.md gate: frontmatter present, only allowed keys, name required and kebab-case <= 64 chars, description required, <= 1024 chars, no angle brackets) and scripts/package_skill.py (validate, then zip the folder into a `.skill` file) as the publish gate for the shared catalog. Also the eval design: with-skill vs baseline runs, grading.json with text/passed/evidence fields, benchmark aggregation.",
+   "dependencies": {
+    "languages": [
+     "Python 3"
+    ],
+    "packages": [
+     "PyYAML (quick_validate.py, and package_skill.py through it); other scripts are stdlib"
+    ],
+    "binaries": [
+     "`claude` CLI for run_eval.py / improve_description.py / run_loop.py (`claude -p`, uses the Claude Code session sign-in, no separate ANTHROPIC_API_KEY per the script docstring)",
+     "a browser for the eval viewer, or --static",
+     "lsof optional"
+    ],
+    "api_keys": [
+     "none"
+    ]
+   },
+   "cost": "validate/package: free. Description-optimisation loop: no API key, but spends Claude Code plan usage (each query run 3 times, up to 5 iterations, parallel `claude -p` processes) - amount unknown",
+   "integration": "adapter",
+   "integration_reason": "Apache-2.0: wrap quick_validate.py and package_skill.py as the catalog publish gate with attribution and a change note; leave run_loop and the eval viewer out by default.",
+   "risks": [
+    "eval-viewer/generate_review.py kills whatever process is listening on its port (default 3117) using `lsof -ti` + SIGTERM before binding 127.0.0.1",
+    "run_loop.py and generate_review.py call webbrowser.open; SKILL.md suggests starting the viewer with nohup in the background",
+    "Generated report HTML links fonts.googleapis.com (network call when the report is opened)",
+    "run_eval.py removes the CLAUDECODE env var and spawns nested `claude -p` subprocesses in a ProcessPoolExecutor (plan quota burn)",
+    "package_skill.py excludes only __pycache__, node_modules, *.pyc, .DS_Store and a root evals/ dir: a .env or other secret file inside the skill folder WOULD be zipped",
+    "No install scripts or telemetry seen in the skill folder"
+   ],
+   "test_case": {
+    "input": "Folder A with SKILL.md frontmatter `name: frame-extractor` + a one-line description; folder B identical except `name: Frame_Extractor`",
+    "expected": "A: prints 'Skill is valid!' and exits 0. B: exits 1 and the message contains 'should be kebab-case'.",
+    "status": "not run (would execute repo code); expected strings read from quick_validate.py lines 65-66 and 94"
+   },
+   "evidence": [
+    "https://github.com/anthropics/skills",
+    "git ls-remote https://github.com/anthropics/skills HEAD"
+   ]
+  },
+  {
+   "id": "screenshot-to-code",
+   "repo": "abi/screenshot-to-code",
+   "url": "https://github.com/abi/screenshot-to-code",
+   "exists": true,
+   "commit": "a8139779f7c5ae231b7f2a86fa7f83ddc5f7badc",
+   "default_branch": "main",
+   "checked_at": "2026-11-05T16:19:18Z",
+   "license": "MIT",
+   "license_detail": {
+    "spdx": "MIT",
+    "verified_at": [
+     "LICENSE @a813977 (full MIT text, 'Copyright (c) 2023 Abi Raja')",
+     "backend/pyproject.toml @a813977 (license = \"MIT\")",
+     "GitHub sidebar: 'MIT license'"
+    ],
+    "exceptions": [
+     "Third-party dependency licences (poetry.lock, frontend lockfile) were not reviewed"
+    ]
+   },
+   "function_to_take": "Two ideas, no code: (1) the video-to-prototype contract in backend/prompts/create/video.py - the whole screen recording is handed to a multimodal model with an instruction to rebuild an app where the same interactions give the same results; (2) the self-check loop in backend/preview_screenshot/ - render the generated page in local headless Chromium (Playwright) and let the agent look at its own output. At this commit there is NO local frame extraction: no ffmpeg or moviepy call in backend sources (moviepy is still declared in pyproject.toml and mocked in tests); the video bytes go to Gemini as inline data.",
+   "dependencies": {
+    "languages": [
+     "Python ^3.10 with Poetry (backend, FastAPI)",
+     "Node.js + pnpm 10.32.1 (React/Vite frontend)"
+    ],
+    "packages": [
+     "fastapi, uvicorn, websockets, openai 2.16.0, anthropic ^0.84.0, google-genai, playwright ^1.61.0, moviepy ^1.0.3, pillow, pillow-heif, httpx, aiohttp, beautifulsoup4, langfuse ^3.0.2, pre-commit"
+    ],
+    "binaries": [
+     "Chromium via `playwright install chromium` (optional screenshot preview)"
+    ],
+    "api_keys": [
+     "at least one of OPENAI_API_KEY, ANTHROPIC_API_KEY, GEMINI_API_KEY (README: GEMINI_API_KEY 'required for video mode')",
+     "REPLICATE_API_KEY optional (image generation / editing)",
+     "a ScreenshotOne access key for the URL-capture route (backend/routes/screenshot.py calls https://api.screenshotone.com/take)"
+    ]
+   },
+   "cost": "needs paid API: OpenAI and/or Anthropic and/or Google Gemini (Gemini for video); optional Replicate; optional ScreenshotOne. backend/config.py sets GENERATION_MAX_COST_USD = 3.0 per generation, and notes unpriced models are not bounded",
+   "integration": "reference-only",
+   "integration_reason": "A full web app that cannot run without paid provider keys and sends the sample to third parties; borrow the self-check loop and prompt contract as ideas (MIT attribution if any text is reused).",
+   "risks": [
+    "User screenshots and videos are uploaded to third-party model providers",
+    "Paid services and four kinds of secrets (.env keys); keys can also be entered in the browser settings dialog",
+    "langfuse (LLM observability SDK) is a declared backend dependency; a grep of backend *.py at this commit found no use of it, so no active telemetry was verified, but it is installed",
+    "Headless Chromium is launched with --no-sandbox (backend/preview_screenshot/playwright_backend.py)",
+    "docker-compose runs the backend on 0.0.0.0; frontend Dockerfile runs `yarn install` and `yarn dev --host 0.0.0.0`",
+    "Install steps run package-manager scripts (poetry install, pnpm/yarn install, playwright browser download)",
+    "Repo ships AGENTS.md, CLAUDE.md and a .claude/ directory (auto-loaded agent instructions if the clone is used as a working directory)",
+    "README promotes the hosted paid product (screenshottocode.com)"
+   ],
+   "test_case": {
+    "what": "Acceptance test for the idea we take (our own preview self-check), not for their app",
+    "input": "Fixture page ok.html containing <h1 id=\"t\">OK</h1>, and bad.html that also contains <script>throw new Error('x')</script>; our preview step renders each in headless Chromium at 1280x720",
+    "expected": "ok.html: a PNG of exactly 1280x720 is written, 0 page errors, exit 0. bad.html: 1 page error is reported and the step exits non-zero.",
+    "status": "not run"
+   },
+   "evidence": [
+    "https://github.com/abi/screenshot-to-code",
+    "git ls-remote https://github.com/abi/screenshot-to-code HEAD"
+   ]
+  },
+  {
+   "id": "ffmpeg",
+   "repo": "FFmpeg/FFmpeg",
+   "url": "https://github.com/FFmpeg/FFmpeg",
+   "exists": true,
+   "commit": "f8a03cd98daa81d16948308b5b1612aaaa831500",
+   "default_branch": "master",
+   "checked_at": "2026-11-05T16:19:18Z",
+   "license": "LGPL-2.1-or-later",
+   "license_detail": {
+    "spdx": "LGPL-2.1-or-later",
+    "spdx_optional_parts": "GPL-2.0-or-later (enabled with --enable-gpl, which makes the whole build GPL); --enable-version3 upgrades to LGPL/GPL v3; --enable-nonfree makes the binary unredistributable",
+    "verified_at": [
+     "https://raw.githubusercontent.com/FFmpeg/FFmpeg/f8a03cd98daa81d16948308b5b1612aaaa831500/LICENSE.md (read through WebFetch, verbatim quotes: 'Most files in FFmpeg are under the GNU Lesser General Public License version 2.1 or later (LGPL v2.1+).' / 'Some optional parts of FFmpeg are licensed under the GNU General Public License version 2 or later (GPL v2+).')",
+     "GitHub page: root holds LICENSE.md, COPYING.GPLv2, COPYING.GPLv3, COPYING.LGPLv2.1, COPYING.LGPLv3; README: 'mainly LGPL-licensed with optional components licensed under GPL'"
+    ],
+    "installed_binary": "Sandbox binary /usr/local/bin/ffmpeg reports 'ffmpeg version 6.1.1-3ubuntu5' with --enable-gpl in its configuration, so that binary is GPL-2.0-or-later. The licence of the binary on the Chairman's laptop depends on its own build flags (not checked)."
+   },
+   "function_to_take": "The `ffmpeg` command line for deterministic frame extraction (`-vf fps=N` or `select=...` with `-fps_mode vfr`, `scale`, `tile` contact sheets, `scdet` scene detection) and `ffprobe -of json` for duration / resolution / frame-rate metadata that goes into the observation log.",
+   "dependencies": {
+    "binaries": [
+     "ffmpeg and ffprobe installed on the machine (sandbox: ffmpeg 6.1.1 at /usr/local/bin/ffmpeg, ffprobe at /usr/bin/ffprobe; filters fps, select, scale, tile, thumbnail, scdet, showinfo and encoders png, mjpeg present)"
+    ],
+    "api_keys": [
+     "none"
+    ]
+   },
+   "cost": "free",
+   "integration": "system-binary",
+   "integration_reason": "LGPL/GPL: never copy or paraphrase source or docs; call the unmodified installed binary through subprocess with an argument list and require it as a prerequisite instead of bundling it in the catalog.",
+   "risks": [
+    "Copyleft: shipping the binary inside a tool or the catalog carries LGPL/GPL obligations; the sandbox build is a GPL build (--enable-gpl)",
+    "It decodes untrusted media with a very large C codebase: run it in the sandbox with time and size limits and no network",
+    "ffmpeg can open network URLs and playlist-style inputs; the installed build has `-protocol_whitelist` to restrict protocols",
+    "Needs `-nostdin` in unattended runs; `-y` overwrites outputs without asking, `-n` refuses",
+    "Option names differ by version: in 6.1.1 `-vsync` is 'deprecated, use -fps_mode'; newest tag on the mirror is n9.0.2, three major versions ahead of the sandbox binary",
+    "The GitHub repo is a mirror of https://git.ffmpeg.org/ffmpeg.git; pull requests there are ignored",
+    "No telemetry and no secrets needed"
+   ],
+   "test_case": {
+    "input": "ffmpeg -nostdin -v error -f lavfi -i testsrc=duration=5:size=320x240:rate=25 -vf \"select='not(mod(n\\,25))'\" -fps_mode vfr OUT/f_%03d.png",
+    "expected": "Exit 0 and exactly 5 files f_001.png ... f_005.png, each 320x240 according to ffprobe; `ffprobe -v error -show_entries stream=width,height,r_frame_rate -of json` on the source reports width 320, height 240, r_frame_rate 25/1.",
+    "status": "frame count (frame=5) and the ffprobe JSON confirmed in this sandbox with ffmpeg 6.1.1 using `-f null -`; writing the PNG files was not run (no file writes allowed in this task). `-vf fps=1` on the same input also gave 5 frames."
+   },
+   "evidence": [
+    "https://github.com/FFmpeg/FFmpeg",
+    "https://raw.githubusercontent.com/FFmpeg/FFmpeg/f8a03cd98daa81d16948308b5b1612aaaa831500/LICENSE.md",
+    "https://raw.githubusercontent.com/FFmpeg/FFmpeg/f8a03cd98daa81d16948308b5b1612aaaa831500/doc/ffmpeg.texi (response truncated at about 100,000 characters; -ss, -frames, -y, -n, -stdin read; -fps_mode section not reached)",
+    "git ls-remote https://github.com/FFmpeg/FFmpeg HEAD",
+    "git ls-remote --tags --refs https://github.com/FFmpeg/FFmpeg 'refs/tags/n*'",
+    "local: ffmpeg -version, ffmpeg -h full, ffmpeg -filters, ffmpeg -encoders (installed 6.1.1)"
+   ]
+  },
+  {
+   "id": "jq",
+   "repo": "jqlang/jq",
+   "url": "https://github.com/jqlang/jq",
+   "exists": true,
+   "commit": "5c001b18d7237cce1fdba63608732163f978dd23",
+   "default_branch": "master",
+   "checked_at": "2026-11-05T16:19:18Z",
+   "license": "MIT",
+   "license_detail": {
+    "spdx": "MIT",
+    "verified_at": [
+     "COPYING @5c001b1 (lines 1-20: 'jq is copyright (C) 2012 Stephen Dolan' + MIT permission text), read via git and via https://raw.githubusercontent.com/jqlang/jq/5c001b18d7237cce1fdba63608732163f978dd23/COPYING",
+     "GitHub page README: 'jq is released under the MIT License'"
+    ],
+    "exceptions": [
+     "docs/ is CC-BY-3.0",
+     "bundled decNumber: ICU License",
+     "dtoa.c / g_fmt.c (David M. Gay, Lucent): permissive notice that must be kept",
+     "jv_thread.h and parts of jv.c from Heimdal: BSD-2-Clause style",
+     "strptime from NetBSD: BSD-2-Clause style (per WebFetch of COPYING; lines after 140 not read via git)",
+     "vendor/oniguruma is a git submodule (github.com/kkos/oniguruma), licence not read"
+    ]
+   },
+   "function_to_take": "The `jq` command line to validate and query JSON artefacts in shell tests and publish gates: `jq -e` for exit-code assertions on sources.json / catalog index / ffprobe JSON, `-c` for compact one-line output.",
+   "dependencies": {
+    "binaries": [
+     "jq installed on the machine (sandbox: jq-1.7 at /usr/bin/jq); README says jq 'has zero runtime dependencies'"
+    ],
+    "build_only": [
+     "libtool, make, automake, autoconf; git submodule update --init for oniguruma"
+    ],
+    "api_keys": [
+     "none"
+    ]
+   },
+   "cost": "free",
+   "integration": "system-binary",
+   "integration_reason": "MIT would allow adapting, but calling the installed binary is the simplest and needs no code reuse; Python's json module is a no-install fallback.",
+   "risks": [
+    "Sandbox has jq-1.7; newest release tag is jq-1.8.2, whose NEWS.md lists security fixes (CVE-2026-32316 heap buffer overflow, CVE-2026-33947 stack overflow, CVE-2026-33948 NUL truncation, and more) - upgrade, or feed it only JSON we produced ourselves",
+    "Without -e, jq exits 0 even when the filter outputs false or null, so tests must use `jq -e`",
+    "HEAD of master is an unreleased development commit; use a release binary, not a source build",
+    "No install scripts, network calls, telemetry or secrets for the binary itself"
+   ],
+   "test_case": {
+    "input": "printf '{\"sources\":[{\"id\":\"a\",\"exists\":true},{\"id\":\"b\",\"exists\":false}]}' | jq -c '[.sources[]|select(.exists)|.id]'",
+    "expected": "stdout is exactly [\"a\"] and exit code 0; `jq -e '.sources|length==8' sources.json` on this file exits 0.",
+    "status": "both commands run in this sandbox with jq-1.7 and passed"
+   },
+   "evidence": [
+    "https://github.com/jqlang/jq",
+    "https://raw.githubusercontent.com/jqlang/jq/5c001b18d7237cce1fdba63608732163f978dd23/COPYING",
+    "git ls-remote https://github.com/jqlang/jq HEAD",
+    "git ls-remote --tags --refs https://github.com/jqlang/jq",
+    "local: jq --version (installed 1.7)"
+   ]
+  }
+ ],
+ "note": "Chỉ đọc: không cài, không build, không chạy mã nào trong các repo. Commit lấy bằng git ls-remote."
+}

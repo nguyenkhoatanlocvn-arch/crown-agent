@@ -1,0 +1,1 @@
+Viết tool đánh lại số phụ đề từ 1, giữ nguyên timecode và lời thoại

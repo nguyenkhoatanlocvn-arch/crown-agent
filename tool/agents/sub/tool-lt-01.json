@@ -1,0 +1,28 @@
+{
+ "id": "tool-lt-01",
+ "name": "Lập trình #01",
+ "branch": "lt",
+ "branch_name": "Lập trình",
+ "kind": "agent",
+ "status": "ACTIVE",
+ "state": "ACTIVE",
+ "assigned_by": "agent-tool",
+ "job_id": "TJ-20261105-315106",
+ "step": "build",
+ "output": "tool/workbench/TJ-20261105-315106/build/ (manifest.json, main.py, examples/, tests/cases.json)",
+ "tier": "SANDBOX_WRITE",
+ "write_scope": [
+  "tool/workbench/TJ-20261105-315106/"
+ ],
+ "limits": {
+  "max_runtime_s": 2400,
+  "paid_usd": 0,
+  "max_output_mb": 50
+ },
+ "worker": "claude-subagent",
+ "created_at": "2026-11-05T16:35:07+00:00",
+ "expires_at": "2026-11-05T17:15:07+00:00",
+ "finished_at": null,
+ "result": null,
+ "evidence": []
+}

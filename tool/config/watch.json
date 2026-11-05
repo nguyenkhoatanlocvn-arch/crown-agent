@@ -1,0 +1,60 @@
+{
+ "note": "Nguồn GitHub mà Thiên Công AT so mỗi phiên. tags = bản phát hành mới; path = chỉ đổi khi đúng thư mục/tệp đó đổi.",
+ "sources": [
+  {
+   "id": "ffmpeg",
+   "url": "https://github.com/FFmpeg/FFmpeg",
+   "mode": "tags",
+   "tag_pattern": "n[0-9]*",
+   "integration": "system-binary"
+  },
+  {
+   "id": "jq",
+   "url": "https://github.com/jqlang/jq",
+   "mode": "tags",
+   "tag_pattern": "jq-*",
+   "integration": "system-binary"
+  },
+  {
+   "id": "site-replica-skill",
+   "url": "https://github.com/jatidevelopments/site-replica-skill",
+   "mode": "path",
+   "path": "scripts/assets.py",
+   "integration": "adapter"
+  },
+  {
+   "id": "anthropic-webapp-testing",
+   "url": "https://github.com/anthropics/skills",
+   "mode": "path",
+   "path": "skills/webapp-testing",
+   "integration": "adapter"
+  },
+  {
+   "id": "anthropic-skill-creator",
+   "url": "https://github.com/anthropics/skills",
+   "mode": "path",
+   "path": "skills/skill-creator",
+   "integration": "adapter"
+  },
+  {
+   "id": "anthropic-mcp-builder",
+   "url": "https://github.com/anthropics/skills",
+   "mode": "path",
+   "path": "skills/mcp-builder",
+   "integration": "reference-only"
+  },
+  {
+   "id": "craft-anything",
+   "url": "https://github.com/storytold/craft-anything",
+   "mode": "tags",
+   "tag_pattern": "v*",
+   "integration": "reference-only"
+  }
+ ],
+ "not_watched": [
+  {
+   "id": "screenshot-to-code",
+   "why": "chỉ tham khảo ý tưởng, repo không có tag phát hành, cần API tính phí"
+  }
+ ]
+}

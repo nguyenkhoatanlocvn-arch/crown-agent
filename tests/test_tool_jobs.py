@@ -166,6 +166,15 @@ class LeaseTest(Base):
         with self.assertRaisesRegex(ToolError, "đã dùng cho việc khác"):
             self.jobs.create(title="Khác", prompt="khác", requested_by="CHAIRMAN", assigned_to=T, idempotency_key="web-req-1")
 
+    def test_web_preassigned_job_id_is_kept(self):
+        j = self.new_job(job_id="TJ-20261106-0a1b2c", idempotency_key="rq-9")
+        self.assertEqual(j["job_id"], "TJ-20261106-0a1b2c")
+        self.assertEqual(self.new_job(job_id="TJ-20261106-0a1b2c", idempotency_key="rq-9")["job_id"], j["job_id"])
+        with self.assertRaisesRegex(ToolError, "đã tồn tại"):
+            self.new_job(job_id="TJ-20261106-0a1b2c")
+        with self.assertRaisesRegex(ToolError, "phải dạng TJ-"):
+            self.new_job(job_id="../../x")
+
     def test_chairman_has_final_stop(self):
         j = self.new_job()
         self.jobs.claim(j["job_id"], T)

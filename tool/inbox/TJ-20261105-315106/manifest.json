@@ -1,0 +1,26 @@
+{
+ "job_id": "TJ-20261105-315106",
+ "items": [
+  {
+   "kind": "prompt",
+   "path": "inbox/TJ-20261105-315106/prompt_01.txt",
+   "bytes": 90,
+   "sha256": "def7fcfd4454e356f9a6a60fd4c5cba8223e4e68d4dd9a4c2377c4d5500b8291",
+   "private": false,
+   "at": "2026-11-05T16:33:00+00:00"
+  },
+  {
+   "kind": "video",
+   "name": "mau_danh_lai_so_srt.mp4",
+   "path": "inbox/TJ-20261105-315106/files/mau_danh_lai_so_srt.mp4",
+   "bytes": 100748,
+   "sha256": "3427fd01e9240efbb306158ac5553ad9c90a4da5b31b6453397db597562289b3",
+   "private": false,
+   "origin": "file",
+   "pointer": null,
+   "at": "2026-11-05T16:33:00+00:00"
+  }
+ ],
+ "skipped": [],
+ "updated_at": "2026-11-05T16:33:00+00:00"
+}
