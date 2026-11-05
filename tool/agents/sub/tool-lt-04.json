@@ -5,7 +5,7 @@
  "branch_name": "Lập trình",
  "kind": "agent",
  "status": "ACTIVE",
- "state": "ACTIVE",
+ "state": "DONE",
  "assigned_by": "agent-tool-at",
  "job_id": "TJ-20261106-33dcbe",
  "step": "build",
@@ -22,7 +22,9 @@
  "worker": "session",
  "created_at": "2026-11-05T20:11:07+00:00",
  "expires_at": "2026-11-05T20:31:07+00:00",
- "finished_at": null,
- "result": null,
- "evidence": []
+ "finished_at": "2026-11-05T20:11:34+00:00",
+ "result": "bản 1.0.1 cố ý lỗi cho diễn tập",
+ "evidence": [
+  "tool/workbench/TJ-20261106-33dcbe/TEST_b_day_du.txt"
+ ]
 }
