@@ -1,0 +1,23 @@
+{
+ "run_id": "R-20261106-031213-7d049c",
+ "tool": "srt-renumber@1.0.1",
+ "version": null,
+ "caller": "A15",
+ "caller_kind": "agent",
+ "caller_auth": "danh bạ (ID tự khai, chưa có khóa riêng)",
+ "trigger": "manual",
+ "session": null,
+ "purpose": "",
+ "started_at": "2026-11-05T20:12:13+00:00",
+ "finished_at": "2026-11-05T20:12:13+00:00",
+ "status": "ERROR",
+ "error": "srt-renumber@1.0.1 đã bị thu hồi (gọi thử từ kho chung lỗi — dữ liệu khác mẫu #1: 'phu_de_bua_com_crlf.srt' khác mong đợi) — không gọi được",
+ "inputs": [],
+ "outputs": [],
+ "access": [],
+ "report": null,
+ "isolation": null,
+ "exit_code": null,
+ "duration_s": null,
+ "record": "runs/2026-11-06/R-20261106-031213-7d049c/run.json"
+}

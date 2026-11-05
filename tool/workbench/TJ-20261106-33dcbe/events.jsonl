@@ -18,3 +18,6 @@
 {"at": "2026-11-05T20:11:38+00:00", "actor": "agent-tool-at", "action": "step_start", "detail": "test · Agent con tool-kt-04", "state": "RUNNING", "token": 1}
 {"at": "2026-11-05T20:11:41+00:00", "actor": "agent-tool-at", "action": "step_done", "detail": "test: DIỄN TẬP: bộ thử rút gọn có chủ ý (bỏ 16 ca CRLF/CR) — không phải kiểm thử độc lập thật", "state": "RUNNING", "token": 1}
 {"at": "2026-11-05T20:11:45+00:00", "actor": "agent-tool-at", "action": "step_start", "detail": "publish", "state": "RUNNING", "token": 1}
+{"at": "2026-11-05T20:12:37+00:00", "actor": "agent-tool-at", "action": "step_done", "detail": "publish: diễn tập (b): 1.0.1 phát hành tự động trong phiên AT-20261106-0309-c22d0b", "state": "RUNNING", "token": 1}
+{"at": "2026-11-05T20:12:37+00:00", "actor": "agent-tool-at", "action": "step_start", "detail": "verify", "state": "RUNNING", "token": 1}
+{"at": "2026-11-05T20:12:37+00:00", "actor": "agent-tool-at", "action": "step_fail", "detail": "verify: A15 gọi thử 1.0.1 từ kho bằng tệp CRLF khác mẫu: kết quả khác mong đợi → lệnh tự thu hồi đúng bản 1.0.1, bản 1.0.0 lại là hiện hành; gọi thử lại 1.0.0: 3/3 đạt", "state": "RUNNING", "token": 1}
