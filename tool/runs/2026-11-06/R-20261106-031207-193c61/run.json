@@ -1,0 +1,78 @@
+{
+ "run_id": "R-20261106-031207-193c61",
+ "tool": "srt-renumber",
+ "version": "1.0.1",
+ "caller": "A15",
+ "caller_kind": "agent",
+ "caller_auth": "danh bạ (ID tự khai, chưa có khóa riêng)",
+ "trigger": "manual",
+ "session": "AT-20261106-0309-c22d0b",
+ "purpose": "gọi thử từ kho: dữ liệu khác mẫu #1",
+ "started_at": "2026-11-05T20:12:07+00:00",
+ "finished_at": "2026-11-05T20:12:07+00:00",
+ "status": "OK",
+ "error": null,
+ "inputs": [
+  {
+   "name": "input",
+   "path": "/tmp/claude-0/-home-claude/5a62dd05-6fb7-58d5-884b-c6a32a280020/scratchpad/verify/a15_work/phu_de_bua_com_crlf.srt",
+   "bytes": 239,
+   "sha256": "b8f8c65fa42341ac092c415c85a5ce77b20ebb2f9c30df096a475f8c16089bce"
+  }
+ ],
+ "outputs": [
+  {
+   "name": "phu_de_bua_com_crlf.srt",
+   "bytes": 225,
+   "sha256": "9b424b397a11a049a76a544c8ab127e0cf1248f59f98f09a09dfd956923c0788",
+   "path": "/tmp/toolsmoke-_x5kexzi/phu_de_bua_com_crlf.srt"
+  }
+ ],
+ "access": [
+  {
+   "path": "/tmp/claude-0/-home-claude/5a62dd05-6fb7-58d5-884b-c6a32a280020/scratchpad/verify/a15_work/phu_de_bua_com_crlf.srt",
+   "mode": "read",
+   "caller": "A15",
+   "allow": true,
+   "rule": "tệp làm việc ngoài repo, không thuộc vùng bảo vệ"
+  },
+  {
+   "path": "/tmp/toolsmoke-_x5kexzi",
+   "mode": "write",
+   "caller": "A15",
+   "allow": true,
+   "rule": "tệp làm việc ngoài repo, không thuộc vùng bảo vệ"
+  }
+ ],
+ "report": {
+  "ok": true,
+  "cues": 3,
+  "changed": 3,
+  "inserted": 0,
+  "mapping": [
+   [
+    "12",
+    1
+   ],
+   [
+    "4",
+    2
+   ],
+   [
+    "30",
+    3
+   ]
+  ],
+  "ignored_timecodes": 0
+ },
+ "isolation": {
+  "tempdir": true,
+  "env_stripped": true,
+  "rlimits": true,
+  "netns": true,
+  "timeout_s": 30
+ },
+ "exit_code": 0,
+ "duration_s": 0.029,
+ "record": "runs/2026-11-06/R-20261106-031207-193c61/run.json"
+}

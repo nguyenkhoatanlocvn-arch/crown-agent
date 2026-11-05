@@ -12,12 +12,14 @@
   },
   {
    "version": "1.0.1",
-   "status": "GOOD",
+   "status": "WITHDRAWN",
    "published_by": "agent-tool-at",
    "published_at": "2026-11-05T20:11:50+00:00",
    "auto": true,
-   "note": "",
-   "release_sha256": "739662d9654f2631a190b39c80ba0d19b3eec4d3f7abb8f967eb192fdcdef81f"
+   "note": "gọi thử từ kho chung lỗi — dữ liệu khác mẫu #1: 'phu_de_bua_com_crlf.srt' khác mong đợi",
+   "release_sha256": "739662d9654f2631a190b39c80ba0d19b3eec4d3f7abb8f967eb192fdcdef81f",
+   "withdrawn_at": "2026-11-05T20:12:07+00:00",
+   "withdrawn_by": "agent-tool-at"
   }
  ],
  "history": [
@@ -38,9 +40,18 @@
    "from": "1.0.0",
    "to": "1.0.1",
    "note": "việc TJ-20261106-33dcbe"
+  },
+  {
+   "at": "2026-11-05T20:12:07+00:00",
+   "actor": "agent-tool-at",
+   "action": "rollback",
+   "version": "1.0.1",
+   "from": "1.0.1",
+   "to": "1.0.0",
+   "note": "gọi thử từ kho chung lỗi — dữ liệu khác mẫu #1: 'phu_de_bua_com_crlf.srt' khác mong đợi"
   }
  ],
- "current_version": "1.0.1",
+ "current_version": "1.0.0",
  "name": "Đánh lại số phụ đề SRT",
  "category": "data-files",
  "summary": "Đánh lại số thứ tự các đoạn phụ đề trong tệp SRT từ 1 (hoặc từ số chỉ định) theo thứ tự xuất hiện; giữ nguyên từng byte của timecode, lời thoại, BOM, kiểu xuống dòng và dòng trống.",

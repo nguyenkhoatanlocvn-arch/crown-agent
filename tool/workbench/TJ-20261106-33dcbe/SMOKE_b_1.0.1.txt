@@ -1,0 +1,4 @@
+  ĐẠT  ví dụ:phim_mau    [R-20261106-031207-ab1b35]
+  TRƯỢT dữ liệu khác mẫu #1  'phu_de_bua_com_crlf.srt' khác mong đợi  [R-20261106-031207-193c61]
+GỌI THỬ TỪ KHO: LỖI — srt-renumber@1.0.1, người gọi A15
+ĐÃ KHÔI PHỤC: thu hồi 1.0.1, bản hiện hành 1.0.0
