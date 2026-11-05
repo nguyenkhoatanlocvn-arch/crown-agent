@@ -1,0 +1,443 @@
+{
+ "tool_id": "srt-renumber",
+ "version": "1.0.0",
+ "published_by": "agent-tool",
+ "auto": false,
+ "published_at": "2026-11-05T20:01:52+00:00",
+ "job_id": "TJ-20261105-315106",
+ "session": null,
+ "test": {
+  "ok": true,
+  "cases": [
+   {
+    "name": "h1-h5-mau-tu-video",
+    "ok": true
+   },
+   {
+    "name": "g1-bom",
+    "ok": true
+   },
+   {
+    "name": "g1-bom-thieu-so-dau-tep",
+    "ok": true
+   },
+   {
+    "name": "g2-crlf",
+    "ok": true
+   },
+   {
+    "name": "g2-tron-crlf-lf",
+    "ok": true
+   },
+   {
+    "name": "g2-cr-mac-cu",
+    "ok": true
+   },
+   {
+    "name": "g2-crcrlf",
+    "ok": true
+   },
+   {
+    "name": "g3-ba-dong-trong",
+    "ok": true
+   },
+   {
+    "name": "g4-khong-xuong-dong-cuoi",
+    "ok": true
+   },
+   {
+    "name": "g4-nhieu-dong-trong-cuoi",
+    "ok": true
+   },
+   {
+    "name": "g4-crlf-khong-xuong-dong-cuoi",
+    "ok": true
+   },
+   {
+    "name": "g5-doan-giua-thieu-so",
+    "ok": true
+   },
+   {
+    "name": "g5-chen-theo-kieu-xuong-dong",
+    "ok": true
+   },
+   {
+    "name": "g5-tep-khong-co-so-nao",
+    "ok": true
+   },
+   {
+    "name": "g5-timecode-cuoi-khong-xuong-dong",
+    "ok": true
+   },
+   {
+    "name": "g5-chi-mot-dong-timecode",
+    "ok": true
+   },
+   {
+    "name": "g5-sau-dong-chi-co-dau-cach",
+    "ok": true
+   },
+   {
+    "name": "g5-so-roi-truoc-dong-trong",
+    "ok": true
+   },
+   {
+    "name": "g6-loi-thoai-chi-gom-so",
+    "ok": true
+   },
+   {
+    "name": "g7-timecode-bien-the",
+    "ok": true
+   },
+   {
+    "name": "g7-vi-du-trong-dac-ta",
+    "ok": true
+   },
+   {
+    "name": "s4-khoang-trang-quanh-so",
+    "ok": true
+   },
+   {
+    "name": "s4-dong-giong-timecode-nhung-khong-phai",
+    "ok": true
+   },
+   {
+    "name": "s4-thieu-dong-trong-giua-doan",
+    "ok": true
+   },
+   {
+    "name": "s4-timecode-sau-loi-thoai-bo-qua",
+    "ok": true
+   },
+   {
+    "name": "s4-bom-giua-tep-ghep",
+    "ok": true
+   },
+   {
+    "name": "g8-tep-rong",
+    "ok": true
+   },
+   {
+    "name": "g8-chi-khoang-trang",
+    "ok": true
+   },
+   {
+    "name": "g8-chi-co-bom",
+    "ok": true
+   },
+   {
+    "name": "g8-khong-co-timecode",
+    "ok": true
+   },
+   {
+    "name": "g8-timecode-khong-mo-doan",
+    "ok": true
+   },
+   {
+    "name": "g9-utf16-ff-fe",
+    "ok": true
+   },
+   {
+    "name": "g9-bang-ma-cu-1-byte",
+    "ok": true
+   },
+   {
+    "name": "g10-start-100",
+    "ok": true
+   },
+   {
+    "name": "g10-start-0",
+    "ok": true
+   },
+   {
+    "name": "g10-start-am",
+    "ok": true
+   },
+   {
+    "name": "g10-start-so-thuc",
+    "ok": true
+   },
+   {
+    "name": "g10-start-chuoi",
+    "ok": true
+   },
+   {
+    "name": "g10-start-true",
+    "ok": true
+   },
+   {
+    "name": "tham-so-la",
+    "ok": true
+   },
+   {
+    "name": "g11-5000-doan",
+    "ok": true
+   },
+   {
+    "name": "h5-mapping-toi-da-200",
+    "ok": true
+   },
+   {
+    "name": "d2-khong-sap-xep-khong-chuan-hoa",
+    "ok": true
+   },
+   {
+    "name": "d3-so-da-dung",
+    "ok": true
+   },
+   {
+    "name": "kt-01-tieng-viet-nfc-va-nfd",
+    "ok": true
+   },
+   {
+    "name": "kt-02-chi-co-so-7-va-19",
+    "ok": true
+   },
+   {
+    "name": "kt-03-bom-crlf-khong-xuong-dong-cuoi",
+    "ok": true
+   },
+   {
+    "name": "kt-04-loi-thoai-giong-timecode",
+    "ok": true
+   },
+   {
+    "name": "kt-05-thoai-chi-so-roi-doan-thieu-so",
+    "ok": true
+   },
+   {
+    "name": "kt-06-so-co-dau-cach-va-tab-crlf",
+    "ok": true
+   },
+   {
+    "name": "kt-07-so-cu-rat-lon",
+    "ok": true
+   },
+   {
+    "name": "kt-08-start-0-bom-doan-dau-thieu-so",
+    "ok": true
+   },
+   {
+    "name": "kt-09-start-rat-lon",
+    "ok": true
+   },
+   {
+    "name": "kt-10-dong-trong-co-dau-cach-va-timecode-thua-dau-cach",
+    "ok": true
+   },
+   {
+    "name": "kt-11-bom-dong-trong-dau-tep-khong-co-so",
+    "ok": true
+   },
+   {
+    "name": "kt-12-timecode-gio-3-chu-so-phan-nghin-1-den-3",
+    "ok": true
+   },
+   {
+    "name": "kt-13-vi-tri-x1-x2-thieu-so-start-7",
+    "ok": true
+   },
+   {
+    "name": "kt-14-hai-dong-so-lien-tiep-va-so-mo-coi",
+    "ok": true
+   },
+   {
+    "name": "kt-15-mapping-201-doan",
+    "ok": true
+   },
+   {
+    "name": "kt-16-5000-doan-khong-co-so-bom-crlf",
+    "ok": true
+   },
+   {
+    "name": "kt-17-ten-tep-co-dau-va-khoang-trang",
+    "ok": true
+   },
+   {
+    "name": "kt-18-utf8-bi-cat-o-byte-cuoi",
+    "ok": true
+   },
+   {
+    "name": "kt-19-chi-co-dong-giong-timecode",
+    "ok": true
+   },
+   {
+    "name": "kt-20-ky-tu-ngat-dong-la-trong-loi-thoai",
+    "ok": true
+   },
+   {
+    "name": "kt-21-g16-chu-so-khong-phai-ascii-khong-la-dong-so",
+    "ok": true
+   },
+   {
+    "name": "kt-22-g17-vi-tri-dinh-lien-gio-ket-thuc-khong-la-timecode",
+    "ok": true
+   },
+   {
+    "name": "kt-23-g20-duoi-SRT-viet-hoa-giu-nguyen-ten",
+    "ok": true
+   },
+   {
+    "name": "kt-24-g12-timecode-ngay-sau-timecode-khac",
+    "ok": true
+   },
+   {
+    "name": "kt-25-g14-khoang-trang-unicode",
+    "ok": true
+   },
+   {
+    "name": "kt-26-g19-start-1.0-bi-tu-choi",
+    "ok": true
+   },
+   {
+    "name": "kt-27-g19-start-null-bi-tu-choi",
+    "ok": true
+   },
+   {
+    "name": "vi-du:phim_mau",
+    "ok": true
+   }
+  ],
+  "isolation": {
+   "tempdir": true,
+   "env_stripped": true,
+   "rlimits": true,
+   "netns": true,
+   "timeout_s": 30
+  }
+ },
+ "builder": "tool-lt-01",
+ "tester": "tool-kt-02",
+ "build_digest": "6145443e8eb80e7358d8b5ec86656fa29a20f5bbee4971f91977b07e4d161273",
+ "files": {
+  "examples/phim_mau.expected.srt": "703df9dafa8f416ec859cb245d6c6574ea2be3ef61fe678caf320ed6949402ab",
+  "examples/phim_mau.srt": "1f7e459eed1dcb752ca5975d8e194db02f6805f2a5447470ec4a2eaf78fa074c",
+  "main.py": "ae6157acd7034f7aee0bf36613c889e11c5a7d9e1c1b709a5dca040993ec6fab",
+  "manifest.json": "e6755d31ddd405df465071d0d5255b4f09944f67b454cb0bb5799c832bf930d7",
+  "tests/cases.json": "c067301788c8cc9d0adea03c66bb8f2b12a180df0741ae01600c698fcc1f0f4c",
+  "tests/data/d2_khong_sap_xep_khong_chuan_hoa.expected.srt": "727a270142eae8b398bffa3b2b00f5145f330540217e2777cacb95a2038543db",
+  "tests/data/d2_khong_sap_xep_khong_chuan_hoa.srt": "8cb4d1676cc10b1307503b9fa330472be9f4f527d9d7e289370213180973bcee",
+  "tests/data/d3_so_da_dung.srt": "0c6fa2a2300dc1f1563ad76696f5899c4566f3e14063b85cacfc51f09007593a",
+  "tests/data/g10_start_0.expected.srt": "073d7098430f0a18b18af1bbc9f3808bd6afd2690090aa228cbc420cfa491404",
+  "tests/data/g10_start_0.srt": "1a8ba2e604978611c3be17da876661604a0e120d4755670636565c94fb48720e",
+  "tests/data/g10_start_100.expected.srt": "6c33f0e5d5d698b8589af4699a43bd548f46df7cec584cf09a69c0a1e4e7c5bb",
+  "tests/data/g10_start_100.srt": "1f7e459eed1dcb752ca5975d8e194db02f6805f2a5447470ec4a2eaf78fa074c",
+  "tests/data/g10_start_am.srt": "1f7e459eed1dcb752ca5975d8e194db02f6805f2a5447470ec4a2eaf78fa074c",
+  "tests/data/g10_start_chuoi.srt": "1f7e459eed1dcb752ca5975d8e194db02f6805f2a5447470ec4a2eaf78fa074c",
+  "tests/data/g10_start_so_thuc.srt": "1f7e459eed1dcb752ca5975d8e194db02f6805f2a5447470ec4a2eaf78fa074c",
+  "tests/data/g10_start_true.srt": "1f7e459eed1dcb752ca5975d8e194db02f6805f2a5447470ec4a2eaf78fa074c",
+  "tests/data/g11_5000_doan.expected.srt": "f642561ed8dd9404e61bc30f32eb8ba26766c0223326e4b665ec6c077ed14d5a",
+  "tests/data/g11_5000_doan.srt": "c97d45ef29f467b04b36a66f540e391162b8f7a0e16aeabe2c0dfda690f94056",
+  "tests/data/g1_bom.expected.srt": "f64b4052803f0bbe8cbe1ee11f6ce01eda780a801a1ba9179352e176caa66b12",
+  "tests/data/g1_bom.srt": "5806dbfa9e1405c19787b6aed1814b14579ac6b1625214bb6497bcc7f441d223",
+  "tests/data/g1_bom_thieu_so_dau_tep.expected.srt": "faa2f622accd0dfeef2ab13eb54a93e640806f65d8a7a8e3331dd75dac512ba3",
+  "tests/data/g1_bom_thieu_so_dau_tep.srt": "4104290a8ca327092e46189046c81da6a88f736761a7d2dd613c7043fef44bb0",
+  "tests/data/g2_cr_mac_cu.expected.srt": "c9e27f97d33160f371b72cc0faea3b8a8d684aedff63b4a356838449754e53fe",
+  "tests/data/g2_cr_mac_cu.srt": "6ea69b31eb49679c99a256818bbeb53bbcfdea99d7962f79ad117a7c7fef37db",
+  "tests/data/g2_crcrlf.expected.srt": "65250c494054c2bb8f8828f01051a0793f8e45142156eccaf1ea54a28361f002",
+  "tests/data/g2_crcrlf.srt": "453f66469dd1fa29b4c31812ba56337133f936fe60525c4196d97855fab8ef35",
+  "tests/data/g2_crlf.expected.srt": "b027256e8daeb8ac78cee810f8fe54bfc614a02434670723739ad6f3c16e8b76",
+  "tests/data/g2_crlf.srt": "804945143aa7f29138bb4a58bf260a4b91abf097ee979c7f3c0f5872f7577cbe",
+  "tests/data/g2_tron_crlf_lf.expected.srt": "51071082601c648ffc3fa707d51b57d200941bf76e057b011440eb02a4355ca3",
+  "tests/data/g2_tron_crlf_lf.srt": "5382cb732aace9742e7f2dbffa34e66abd263c2ff4f7ef539bc3ce1cce294dd4",
+  "tests/data/g3_ba_dong_trong.expected.srt": "1ddc4392a1af2f0d7e651803af3aff17bf0670580dabf422b555171c89005e66",
+  "tests/data/g3_ba_dong_trong.srt": "123a60aca4f5ac31b081f2d6a4f235d2f1792c28bb9240581458f8bb253f948e",
+  "tests/data/g4_crlf_khong_xuong_dong_cuoi.expected.srt": "b18d264edf7a4b9409aadbd2ccac0733d7e89758a85098cc1abeb75c48cb1381",
+  "tests/data/g4_crlf_khong_xuong_dong_cuoi.srt": "cdc6d8033d6790c37606f14ac72bf04c6aea93b5ece3a87e6cb759d5ec970116",
+  "tests/data/g4_khong_xuong_dong_cuoi.expected.srt": "bbabdfbd996f4e2f4ab903e28329a3dd45a90bd7d9e546496be78aefbb919dc0",
+  "tests/data/g4_khong_xuong_dong_cuoi.srt": "b2bf0bbb4311c7f30d8934637ad91152357e3f94d026a73add6e67ee508e9a70",
+  "tests/data/g4_nhieu_dong_trong_cuoi.expected.srt": "376c5ddd36411f0d80e4d770f4379f0141440eea2e58d4d63f62c5210a5a990e",
+  "tests/data/g4_nhieu_dong_trong_cuoi.srt": "f865a30b4432744fa4ca43f7c234fe35e2e2430b349cc02fb766cfaead2afca4",
+  "tests/data/g5_chen_theo_kieu_xuong_dong.expected.srt": "4ea3cd8c7a01ee87982bdb6ff9353f3cd9e9979f8f9181acfe03a6bdcc2ca3d0",
+  "tests/data/g5_chen_theo_kieu_xuong_dong.srt": "8b6b4ab03a117b97c2a243cf96972c60ff0aa2c0816b814324061cc4ea2f080f",
+  "tests/data/g5_chi_mot_dong_timecode.expected.srt": "9cf216428ca1ed082512c7e719b27af7d1a031c7ccd1a0d0f68fb481d3d3c5c8",
+  "tests/data/g5_chi_mot_dong_timecode.srt": "cb343a028e7fbc1f4c4de9c2273883aa9613475fe915205ba4efbbb6cfa6a5d9",
+  "tests/data/g5_doan_giua_thieu_so.expected.srt": "e82b432b2a43bc56bc65126385c3f6b1280e3c371039d0390c5cf224fa5e76ae",
+  "tests/data/g5_doan_giua_thieu_so.srt": "5abe22eee2c05581d5347f034543c3a76130c2515f5eb025168d5bc951c2947e",
+  "tests/data/g5_sau_dong_chi_co_dau_cach.expected.srt": "11f9a08681df4eb1ee57df66d6b349cf40f0e87443bb0b79a422ebdaae6d561e",
+  "tests/data/g5_sau_dong_chi_co_dau_cach.srt": "be1030cbec19fe051fd03572577ed1dfdc4371c155c88d5df1556f2101489a1c",
+  "tests/data/g5_so_roi_truoc_dong_trong.expected.srt": "4663495e5d46e2c816a7b7af02c66c35d1e367fc163d5348050ce6d1b3281915",
+  "tests/data/g5_so_roi_truoc_dong_trong.srt": "322bf63d0437a0cf844baef22246f3620b21a855d9b7615f23514ac78618100c",
+  "tests/data/g5_tep_khong_co_so_nao.expected.srt": "d6a6559c3521efc6ffd7d0a1211b80587be85437b8059c71872f58096abea91c",
+  "tests/data/g5_tep_khong_co_so_nao.srt": "4768b0040cb38921b85d1d2f566eca6a84f4b4c3c44e6b967c9793908c90de47",
+  "tests/data/g5_timecode_cuoi_khong_xuong_dong.expected.srt": "1c313d6884f8617a839365c4d57828bef3c0f222ffdf1b4b2af015dc45d5e6c7",
+  "tests/data/g5_timecode_cuoi_khong_xuong_dong.srt": "8840ca1d5b6f4c64e61d63737708c234884a1b5162151b86a3ccb56ac02797e6",
+  "tests/data/g6_loi_thoai_chi_gom_so.expected.srt": "c4de542391425e62e3c41918f6a0b78ff9f833b4eefcd0a0670725ac716cf500",
+  "tests/data/g6_loi_thoai_chi_gom_so.srt": "03e4b3206b6794c19aedb36119563ed82481abdb3b66b9210f109a9daa5df9b4",
+  "tests/data/g7_timecode_bien_the.expected.srt": "41887de6984076e57e8c33bda4e251f51f440ad35a0cdb4c0d1783696af205e6",
+  "tests/data/g7_timecode_bien_the.srt": "7347c07fdbaeec9362914fa2b2963ef31639067a940d74276ccdcb71fc6055e7",
+  "tests/data/g7_vi_du_trong_dac_ta.expected.srt": "30947cde5400737480c674fc52d90c8679826cbd3a0c59a990b09e038d59d849",
+  "tests/data/g7_vi_du_trong_dac_ta.srt": "ce567bd7a25ba9ca6c9b28445f49fe2306f78566d56122b6430bec77b01283e4",
+  "tests/data/g8_chi_co_bom.srt": "f1945cd6c19e56b3c1c78943ef5ec18116907a4ca1efc40a57d48ab1db7adfc5",
+  "tests/data/g8_chi_khoang_trang.srt": "2f5e508737c74f1a79dd9cc029fbd80f9443744315016dda0de78807cdda7ffb",
+  "tests/data/g8_khong_co_timecode.srt": "5d18d0c654d46aad7a06461a39f65bc397dc30823ef63ca4609a53e278383248",
+  "tests/data/g8_tep_rong.srt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "tests/data/g8_timecode_khong_mo_doan.srt": "51f119cb07e46a42cb1b44b07a1681b7b7b89afddb1bcec0ea8611209ff23c59",
+  "tests/data/g9_bang_ma_cu_1_byte.srt": "310a3c6016539e78ceb1b87c5a97f1963304c7b5e872ec37f94720244f883c2b",
+  "tests/data/g9_utf16_ff_fe.srt": "93b2ad41ff736f22091388741f8e7ce5ed2cb0c2baae7ac1faf6beeb972d7421",
+  "tests/data/h1_h5_mau_tu_video.expected.srt": "703df9dafa8f416ec859cb245d6c6574ea2be3ef61fe678caf320ed6949402ab",
+  "tests/data/h1_h5_mau_tu_video.srt": "1f7e459eed1dcb752ca5975d8e194db02f6805f2a5447470ec4a2eaf78fa074c",
+  "tests/data/h5_mapping_toi_da_200.expected.srt": "a7d9926875d6265bbad9908f6a028447b344b25d00a012857a61597defaa96d2",
+  "tests/data/h5_mapping_toi_da_200.srt": "a1c6d004b913a21844b08538488451d8862b06608028d15c0e9183e8d0e4c870",
+  "tests/data/s4_bom_giua_tep_ghep.expected.srt": "f93f590fb86a79f16ff98afee5f16a3809793faecc3d5b74b2d0e91fb900ca00",
+  "tests/data/s4_bom_giua_tep_ghep.srt": "07bacdd148c2f02daebe0dbc2755daa466d51b305316907698a80c2531c0ff58",
+  "tests/data/s4_dong_giong_timecode_nhung_khong_phai.expected.srt": "72ff622266b21118ae4fc9d897af62799439794dc031916107c1355cee9b0046",
+  "tests/data/s4_dong_giong_timecode_nhung_khong_phai.srt": "ca4c090f36173671deb14f37e6b7670f581ad421bb6e8754e8ceafc0d5d309b6",
+  "tests/data/s4_khoang_trang_quanh_so.expected.srt": "bf28cf1a021cdbe4b83f8bc8c9fb2485abfc1da95f602f2561d92a28cf93fff2",
+  "tests/data/s4_khoang_trang_quanh_so.srt": "48bece3699753bfa5bc165133bc15c37323518d16562cd68fdbe32da82dce9b7",
+  "tests/data/s4_thieu_dong_trong_giua_doan.expected.srt": "eb70f421429beee46ba271956e76493e0dae0ad8ae78b4b3572145918bf98923",
+  "tests/data/s4_thieu_dong_trong_giua_doan.srt": "2ee6b30bd2ba753664b429bbd7e8df0c2bcc527fd53208a94df43b243d060230",
+  "tests/data/s4_timecode_sau_loi_thoai_bo_qua.expected.srt": "f1a0a7a6fa8389eacd4ab499b4501052b5fbfaf7017ec3be8a4bfd2ebe470a2a",
+  "tests/data/s4_timecode_sau_loi_thoai_bo_qua.srt": "a6d63f3b18164d6d4f0b9d6d787bbc1ed63211c11553ab99676b0da4039bd22b",
+  "tests/data/tham_so_la.srt": "1f7e459eed1dcb752ca5975d8e194db02f6805f2a5447470ec4a2eaf78fa074c",
+  "tests/data_kt/KT23_DUOI_VIET_HOA.SRT": "a85e50c85f1871a52e66747850372a60adc2dcb87b162bccd4a85ee77aca991d",
+  "tests/data_kt/Phim tập 1 (bản dịch).expected.srt": "8376eb491f416c83837565aed9721ddccdb61b82e0f1351ee03ba0254406855b",
+  "tests/data_kt/Phim tập 1 (bản dịch).srt": "a43781d4849ac7d1f19a7c8ddd1316048444c6d58f067181787713372e271a15",
+  "tests/data_kt/kt01_tieng_viet_nfc_nfd.expected.srt": "d7d9c5406bc66f0063cb38081163ac0ba3869c00059148e959a177d4276de2e1",
+  "tests/data_kt/kt01_tieng_viet_nfc_nfd.srt": "f01ebb53e6f6b42094d00cc2c2509da599c6206c3dd8fcf071dc4e57a610b3ad",
+  "tests/data_kt/kt02_so_7_va_19.expected.srt": "e99810446b83f4f8145b9ce5c4083672bee4916d739fde8e0e611dfcb319cc20",
+  "tests/data_kt/kt02_so_7_va_19.srt": "846d6cd3b56aaa448ba8112f7fcaa356a8683d2747b378102a474ef2873cd5fa",
+  "tests/data_kt/kt03_bom_crlf_khong_xuong_dong_cuoi.expected.srt": "2a13098ef5ed154b45a4017adae4d4fd6f95d402139717ea56feb32f9d98347c",
+  "tests/data_kt/kt03_bom_crlf_khong_xuong_dong_cuoi.srt": "cf8107b47a19a47ed9db858ae99f026eb68d3b4aaac617eb2b11c8117b2d3622",
+  "tests/data_kt/kt04_loi_thoai_giong_timecode.expected.srt": "d48f576d92a337a48177e58cb6782abd737637886d1dd3157ba1bc615f36e348",
+  "tests/data_kt/kt04_loi_thoai_giong_timecode.srt": "2b99bc03a3aa11f5608c1bcb9d656464f322c61aab2ae6cee73aba9d10f53252",
+  "tests/data_kt/kt05_thoai_chi_so_roi_doan_thieu_so.expected.srt": "c59dec438167bcdf25fd46397e29f6910f8d95e904e53166fc84fe2313371f9e",
+  "tests/data_kt/kt05_thoai_chi_so_roi_doan_thieu_so.srt": "468ce5f2c9218ff5636319d8f7881c256d09553f1e22cabd82c028a6d9014cee",
+  "tests/data_kt/kt06_so_co_dau_cach_va_tab_crlf.expected.srt": "18ee5de95be697ce9914b3dad006b4dcb493c47c97b3af780514d6513ab59cc1",
+  "tests/data_kt/kt06_so_co_dau_cach_va_tab_crlf.srt": "b4fb07ba6c271417ed8ad91f6c6154223bda48bec176cf1761660aa641393779",
+  "tests/data_kt/kt07_so_cu_rat_lon.expected.srt": "1af570b82c1711be35ac141943d973a12fc3537353d1e2a3465b8ee41d124e22",
+  "tests/data_kt/kt07_so_cu_rat_lon.srt": "a65be09f7c3d996b80188ea2e2ae24592d91a726c3d7796a7eae8777edeb7dec",
+  "tests/data_kt/kt08_start_0_bom_doan_dau_thieu_so.expected.srt": "2c58682cb01385eba0cfd7fef288f256e74fd4d7647a6aa595a22f7c9514c34c",
+  "tests/data_kt/kt08_start_0_bom_doan_dau_thieu_so.srt": "7e5997875699a5897030b57d33a93cb5bc0a2947363c85427bf5fa6720bcca6f",
+  "tests/data_kt/kt09_start_rat_lon.expected.srt": "0fc4a18b1fe53397b9e311e7ecb77a3c699846ab7611d589480296fb97ab122d",
+  "tests/data_kt/kt09_start_rat_lon.srt": "fe9a7acdd6ab22f5677bddc2237b199c3959f3aa47d7d8b68b8e9579442f3d93",
+  "tests/data_kt/kt10_dong_trong_co_dau_cach.expected.srt": "7786a040e69f4c2a506c3c93987f3653899a7318a34c722ed7069b1b96dc06a2",
+  "tests/data_kt/kt10_dong_trong_co_dau_cach.srt": "89b0b9ffa38e13051e8c92f2a6703628fcd8391e2144addacf9b347b3c097cb8",
+  "tests/data_kt/kt11_bom_dong_trong_dau_tep_khong_co_so.expected.srt": "44cf79022ded419f2265cd994181799de4a1ff719ce37cfb1980b95e12dd16aa",
+  "tests/data_kt/kt11_bom_dong_trong_dau_tep_khong_co_so.srt": "674878f7c5998a0b868ccd899fea3c9030b3178c70e46862cfd8f663c40dd427",
+  "tests/data_kt/kt12_timecode_bien_the.expected.srt": "ce6b3cc6fe07267599493406f2e079b121b6f4805d6cbb640dfa31f3ef9e2346",
+  "tests/data_kt/kt12_timecode_bien_the.srt": "99c6465cf561133996025f300d96b9bd7fed744837aee149d3db3894ae71f3aa",
+  "tests/data_kt/kt13_vi_tri_x1_x2_thieu_so.expected.srt": "222701479c878775d2e912aece52be5ad46072ee375391a0ce72c04391abdfbb",
+  "tests/data_kt/kt13_vi_tri_x1_x2_thieu_so.srt": "018e3a38c1da7c72015aa3782c95c384ab2613f300d23656f2df4fa95ed845dc",
+  "tests/data_kt/kt14_hai_dong_so_lien_tiep.expected.srt": "44c45cb659aedb5ef0800e1e78afd89c486f616b7eee1f2571dca096abaf1208",
+  "tests/data_kt/kt14_hai_dong_so_lien_tiep.srt": "6432bf30687a1c8624e08dc7df96a212ab6ddb7ef4d47b03d20fb4c74d443e1a",
+  "tests/data_kt/kt15_mapping_201_doan.expected.srt": "61588e535ebf8d0352166b08c1a9826d30a27e08ee227ed37c9c893e93bdf59d",
+  "tests/data_kt/kt15_mapping_201_doan.srt": "53f5cb3b26a6b22a8b52606ba4de6a1414a096e3f970f5fa8da5fbece3aacecb",
+  "tests/data_kt/kt16_5000_doan_khong_co_so.expected.srt": "2f99789b7ccc04a4b2512b78ff0260a3b17e3d9625f12b8b323e69f2b089a35f",
+  "tests/data_kt/kt16_5000_doan_khong_co_so.srt": "4be775a8cb1afb3f6501958288bac7db1808916a8ef47c3380148f58bb1e755f",
+  "tests/data_kt/kt18_utf8_bi_cat_o_byte_cuoi.srt": "9b73468c41c207bf8fc6a9c936f6c8f486028ef808e34888fce285a39602a828",
+  "tests/data_kt/kt19_chi_co_dong_giong_timecode.srt": "ad8983504f6b186af7deb685efe5f4fd03c7f1b4a7b205fa7b53c7a78d0cee4b",
+  "tests/data_kt/kt20_ky_tu_ngat_dong_la.expected.srt": "c2e8fcf32b6812b1a0515f50988888fb98ddea2c1859e3b01e0eb818ea297026",
+  "tests/data_kt/kt20_ky_tu_ngat_dong_la.srt": "6544500d50a0ec35ee12b09018ee1666687e4095bb7b0dcdc31d82f2c8a6f0d7",
+  "tests/data_kt/kt21_g16_chu_so_khong_phai_ascii.expected.srt": "4531ea0654d6093cf7484186fa1f26c7809c60d3db3635b7a7645564e76c0ee1",
+  "tests/data_kt/kt21_g16_chu_so_khong_phai_ascii.srt": "328d48e7c8f0b23a2f7e553da73347ad0d0101773a7bb825145b50af3912fc48",
+  "tests/data_kt/kt22_g17_vi_tri_dinh_lien.expected.srt": "9732941500ba27ce93d3edc1d5bc9d93fdf96151b0f6343008194b5911c24eed",
+  "tests/data_kt/kt22_g17_vi_tri_dinh_lien.srt": "2eb044b24b786dd2706c0eb8b4833168f70ba131392778d8a1b57080ee2f18f0",
+  "tests/data_kt/kt23_duoi_viet_hoa.expected.srt": "8376eb491f416c83837565aed9721ddccdb61b82e0f1351ee03ba0254406855b",
+  "tests/data_kt/kt24_g12_timecode_sau_timecode.expected.srt": "d43a419f1cba46c95a16a4e94e608a65e6207801f0d92f63807e268bb241e0e3",
+  "tests/data_kt/kt24_g12_timecode_sau_timecode.srt": "82aa465e8b1a7cc78328fe0c4d898c801fd234544e5fbd2ec2ab524adba1e11c",
+  "tests/data_kt/kt25_g14_khoang_trang_unicode.expected.srt": "d1e89d49a302d816d32a3dbb32cf6a1f83f9b3f2b01eca008e62015ac1befd20",
+  "tests/data_kt/kt25_g14_khoang_trang_unicode.srt": "1dbc36abb46de9c4e7e3f07e78a2d9a7e1dd1e827656f407710885a1a60ae124",
+  "tests/data_kt/kt26_g19_start_khong_phai_so_nguyen_json.srt": "fe9a7acdd6ab22f5677bddc2237b199c3959f3aa47d7d8b68b8e9579442f3d93"
+ }
+}

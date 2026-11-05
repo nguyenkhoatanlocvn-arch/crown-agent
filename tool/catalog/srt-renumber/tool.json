@@ -1,0 +1,39 @@
+{
+ "id": "srt-renumber",
+ "versions": [
+  {
+   "version": "1.0.0",
+   "status": "GOOD",
+   "published_by": "agent-tool",
+   "published_at": "2026-11-05T20:01:52+00:00",
+   "auto": false,
+   "note": "",
+   "release_sha256": "d3b072168f0d5bccf9e7fccf2fe8a12187af5083cb86fa3b4f7ae5b4796b78f0"
+  }
+ ],
+ "history": [
+  {
+   "at": "2026-11-05T20:01:52+00:00",
+   "actor": "agent-tool",
+   "action": "publish",
+   "version": "1.0.0",
+   "from": null,
+   "to": "1.0.0",
+   "note": "việc TJ-20261105-315106"
+  }
+ ],
+ "current_version": "1.0.0",
+ "name": "Đánh lại số phụ đề SRT",
+ "category": "data-files",
+ "summary": "Đánh lại số thứ tự các đoạn phụ đề trong tệp SRT từ 1 (hoặc từ số chỉ định) theo thứ tự xuất hiện; giữ nguyên từng byte của timecode, lời thoại, BOM, kiểu xuống dòng và dòng trống.",
+ "keywords": [
+  "srt",
+  "phụ đề",
+  "subtitle",
+  "đánh số",
+  "đánh lại số",
+  "renumber",
+  "số thứ tự",
+  "timecode"
+ ]
+}
