@@ -8,7 +8,7 @@
  "priority": 5,
  "idempotency_key": null,
  "state": "RUNNING",
- "state_version": 12,
+ "state_version": 13,
  "fencing_token": 1,
  "lease": {
   "holder": "agent-tool-at",
@@ -112,12 +112,13 @@
    "id": "publish",
    "branch": "th",
    "what": "Phát hành vào kho chung",
-   "status": "PENDING",
-   "attempts": 0,
-   "by": null,
+   "status": "RUNNING",
+   "attempts": 1,
+   "by": "agent-tool-at",
    "sub": null,
    "evidence": [],
-   "note": ""
+   "note": "",
+   "started_at": "2026-11-05T20:10:38+00:00"
   },
   {
    "id": "verify",
@@ -135,5 +136,5 @@
  "version": null,
  "result": null,
  "created_at": "2026-11-05T20:09:51+00:00",
- "updated_at": "2026-11-05T20:10:11+00:00"
+ "updated_at": "2026-11-05T20:10:38+00:00"
 }
