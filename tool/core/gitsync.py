@@ -83,9 +83,8 @@ class GitSync:
     def tx(self, message: str, paths: list[str] | None = None):
         """Giao dịch: kéo → (thân lệnh sửa tệp) → commit → đẩy. Lỗi hoặc xung đột thì hủy thay đổi trong paths."""
         paths = paths or ["tool"]
-        left = self.dirty(paths)
-        if left:
-            raise ToolError("Còn thay đổi chưa commit trong vùng đồng bộ: " + ", ".join(left[:5]))
+        # Thay đổi dở của chính phiên này (bản ghi lượt chạy, ghi chú phiên...) được commit trước để không bị giao dịch cuốn mất.
+        self.commit(paths, "tool: lưu thay đổi cục bộ của phiên trước giao dịch")
         self.pull()
         start = self.head()
         try:

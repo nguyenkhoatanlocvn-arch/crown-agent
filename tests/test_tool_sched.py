@@ -214,6 +214,21 @@ class TwoClonesTest(unittest.TestCase):
         log = git(self.tmp / "remote.git", "log", "--oneline", "main")
         self.assertEqual(log.count("phát hành"), 1)                    # remote chỉ có một bản phát hành
 
+    def test_uncommitted_session_files_survive_a_later_transaction(self):
+        """Bản ghi cục bộ của phiên (chưa commit) không bị mất khi giao dịch sau đó thua hoặc lỗi."""
+        ja = JobStore(self.a / "tool")
+        note = self.a / "tool" / "runs" / "sessions" / "AT-x.json"
+        note.write_text("{}", encoding="utf-8")                      # thay đổi dở, chưa commit
+        with self.assertRaises(ToolError):
+            with self.ga.tx("thử lỗi"):
+                ja.claim(self.jid, T)
+                raise ToolError("hỏng")
+        self.assertTrue(note.is_file())
+        with self.ga.tx("ghi tiếp"):
+            ja.claim(self.jid, T)
+        self.gb.pull()
+        self.assertTrue((self.b / "tool" / "runs" / "sessions" / "AT-x.json").is_file())   # đã lên remote, bên kia thấy
+
     def test_failed_body_leaves_no_partial_state(self):
         ja = JobStore(self.a / "tool")
         with self.assertRaises(ToolError):

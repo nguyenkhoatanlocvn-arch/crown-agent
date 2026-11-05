@@ -158,6 +158,13 @@ class Scheduler:
             raise ToolError(f"Phiên {run_id} đã quá hạn thời gian của phiên — dừng")
         return s
 
+    def attach_github(self, run_id: str, github: dict) -> dict:
+        """Lưu kết quả so GitHub vào bản ghi phiên để bước lập kế hoạch dùng lại, không gọi mạng lần hai."""
+        with mutex(self.lock_path):
+            s = self._mine(run_id)
+            s["github"] = github
+            return self._save(s)
+
     def note(self, run_id: str, text: str) -> dict:
         with mutex(self.lock_path):
             s = self._mine(run_id)

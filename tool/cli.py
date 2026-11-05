@@ -388,7 +388,9 @@ def dispatch(args, root: Path) -> int:
         if ac == "begin":
             _j(sched.begin(args.agent, args.marker, args.trigger))
         elif ac == "github":
-            _j(sched.check_github())
+            gh = sched.check_github()
+            sched.attach_github(args.run, gh)
+            _j(gh)
         elif ac == "plan":
             s = sched.get(args.run)
             reqs = read_json(Path(args.requests)) if args.requests else None
