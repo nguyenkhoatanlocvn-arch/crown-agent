@@ -27,7 +27,9 @@ class GitSync:
         self.branch = branch or self._git("rev-parse", "--abbrev-ref", "HEAD").stdout.strip()
 
     def _git(self, *args: str, check: bool = True, timeout: int = 180) -> subprocess.CompletedProcess:
-        r = subprocess.run(["git", "-C", str(self.repo), *args], capture_output=True, text=True, timeout=timeout)
+        # Luôn kèm danh tính: rebase/commit trong máy mới (chưa cấu hình git) vẫn chạy được.
+        ident = ["-c", "user.name=" + self.author.split(" <")[0], "-c", "user.email=" + self.author.split("<")[1].rstrip(">")]
+        r = subprocess.run(["git", "-C", str(self.repo), *ident, *args], capture_output=True, text=True, timeout=timeout)
         if check and r.returncode != 0:
             raise ToolError(f"git {' '.join(args[:3])} lỗi: {(r.stderr or r.stdout).strip()[-400:]}")
         return r
@@ -54,8 +56,7 @@ class GitSync:
         self._git("add", "-A", "--", *paths)
         if self._git("diff", "--cached", "--quiet", "--", *paths, check=False).returncode == 0:
             return False
-        self._git("-c", "user.name=" + self.author.split(" <")[0], "-c",
-                  "user.email=" + self.author.split("<")[1].rstrip(">"), "commit", "-q", "-m", message, "--", *paths)
+        self._git("commit", "-q", "-m", message, "--", *paths)
         return True
 
     def _discard(self, start: str, paths: list[str]) -> None:

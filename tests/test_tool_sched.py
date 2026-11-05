@@ -229,6 +229,24 @@ class TwoClonesTest(unittest.TestCase):
         self.gb.pull()
         self.assertTrue((self.b / "tool" / "runs" / "sessions" / "AT-x.json").is_file())   # đã lên remote, bên kia thấy
 
+    def test_pending_local_work_is_replayed_on_top_of_remote_changes_without_git_identity(self):
+        """Máy mới chưa cấu hình git: phiên có tệp dở + remote đã tiến thêm → giao dịch vẫn nối được và đẩy được."""
+        import os
+        env_backup = {k: os.environ.get(k) for k in ("HOME", "GIT_CONFIG_GLOBAL", "GIT_CONFIG_NOSYSTEM")}
+        os.environ.update(HOME=str(self.tmp / "nohome"), GIT_CONFIG_GLOBAL=str(self.tmp / "none.gitconfig"), GIT_CONFIG_NOSYSTEM="1")
+        self.addCleanup(lambda: [os.environ.pop(k, None) if v is None else os.environ.__setitem__(k, v) for k, v in env_backup.items()])
+        ja, jb = JobStore(self.a / "tool"), JobStore(self.b / "tool")
+        with self.ga.tx("A nhận việc"):                       # remote tiến thêm
+            ja.claim(self.jid, T)
+        (self.b / "tool" / "runs" / "sessions" / "AT-b.json").write_text("{}", encoding="utf-8")   # B có tệp dở
+        j2 = None
+        with self.gb.tx("B tạo việc khác"):                   # tx: commit tệp dở → kéo (rebase lên bản của A) → sửa → đẩy
+            j2 = jb.create(title="Việc B", prompt="việc khác", requested_by="CHAIRMAN", assigned_to=AT)["job_id"]
+        self.ga.pull()
+        self.assertTrue((self.a / "tool" / "runs" / "sessions" / "AT-b.json").is_file())
+        self.assertEqual(ja.get(j2)["title"], "Việc B")
+        self.assertEqual(jb.get(self.jid)["lease"]["holder"], T)
+
     def test_failed_body_leaves_no_partial_state(self):
         ja = JobStore(self.a / "tool")
         with self.assertRaises(ToolError):
