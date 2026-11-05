@@ -1,0 +1,38 @@
+# Thiên Não — làn luật: 12 phiên mỗi ngày, không dùng AI (lệnh DRAGON SINGULARITY mục 06).
+#
+# - Lịch là mốc kích hoạt; bộ máy tự tính mốc theo giờ Việt Nam và tự chống chạy trùng bằng run_id + khóa
+#   trong database, nên lịch trễ, chạy tay thêm hay chạy hai lần đều an toàn.
+# - Trạng thái nằm trên nhánh tn-state của chính repo này → job cần quyền contents: write. Mã chỉ ghi các
+#   tệp state/ trên nhánh đó (crown/statesync.py); nhánh chính nên bật quy tắc bắt buộc pull request.
+# - Không dùng secret nào. Action bên ngoài ghim theo SHA đã rà (actions/checkout v7.0.1, kiểm 06/11/2026).
+# - Dừng khẩn cấp: tạo tệp state/STOP trên nhánh tn-state. Gỡ tệp là chạy lại.
+# - Workflow theo lịch chỉ chạy trên nhánh mặc định.
+name: Thien Nao - chu trinh luat
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 */2 * * *"
+      timezone: "Asia/Ho_Chi_Minh"
+
+concurrency:
+  group: thien-nao-cycle
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  cycle:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    permissions:
+      contents: write
+    steps:
+      - name: Lay ma nguon nhanh mac dinh
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+      - name: Chay mot phien da duoc phe duyet
+        run: python3 scripts/run_cycle.py rule --run-tests
+        env:
+          DRAGON_MODE: ${{ github.event_name == 'schedule' && 'scheduled' || 'manual' }}

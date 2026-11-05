@@ -58,6 +58,8 @@ class Runner:
         self._inbox_text: str | None = None
         self._base_sha: str | None = None        # mã băm bản database gần nhất mình đọc hoặc ghi
         self._loaded = False
+        self.last_report: str | None = None      # báo cáo phiên vừa ghi (để in ra nhật ký của bộ lập lịch)
+        self.session_file = Path(str(self.db_path) + ".session.json")   # nối các lệnh của một phiên AI (nhiều tiến trình)
 
     # ---------- đọc / ghi nhánh trạng thái ----------
     def load(self) -> None:
@@ -89,8 +91,25 @@ class Runner:
         files = S.pack(dump, run_id=run_id, extra=tn.export(run_id))
         if self.state.push(files, message):
             self._base_sha = _sha(dump)
+            self.last_report = files.get("state/REPORT.md")
+            self.session_file.write_text(json.dumps({"run_id": run_id, "base_sha": self._base_sha, "head": self.state.parent}),
+                                         encoding="utf-8")
             return True
         return False
+
+    def _attach(self, run_id: str) -> None:
+        """Tiến trình mới nối vào phiên đang mở (ai-claim và ai-finish là hai lệnh riêng). Chỉ nối khi database
+        trên kho vẫn đúng là bản phiên này đã ghi lúc nhận việc; ngược lại bên khác đã ghi → không ghi đè."""
+        if not self.session_file.exists() or not self.db_path.exists():
+            raise RunnerError(f"Không thấy phiên {run_id} đang mở trên máy này (thiếu database hoặc tệp phiên)")
+        sess = json.loads(self.session_file.read_text(encoding="utf-8"))
+        files = self.state.pull()
+        remote_sha = _sha(S.unpack(files)) if files is not None else None
+        if sess.get("run_id") != run_id or remote_sha != sess.get("base_sha"):
+            raise RunnerError(f"Trạng thái trên kho không còn là bản phiên {run_id} đã ghi lúc nhận việc — không ghi đè")
+        self._base_sha = remote_sha
+        self.stop_text = files.get(STOP_PATH)
+        self._loaded = True
 
     def _save_final(self, tn: TN.ThienNao, run_id: str, message: str) -> None:
         """Ghi kết quả phiên. Nhánh đã đổi trong lúc làm → chỉ ghi nếu database trên nhánh vẫn là bản mình đã đọc."""
@@ -194,6 +213,8 @@ class Runner:
     def ai_finish(self, run_id: str, token: int, status: str = "SUCCEEDED", reported: dict | None = None,
                   error: str | None = None) -> dict:
         """Đóng phiên AI. Khóa đã hết hạn hoặc đã về tay phiên khác → CycleError, không ghi gì lên kho."""
+        if not self._loaded:
+            self._attach(run_id)
         tn = self._tn()
         try:
             summary = tn.ai_close(run_id, token, reported)

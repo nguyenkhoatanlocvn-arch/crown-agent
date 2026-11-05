@@ -128,6 +128,21 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.cmd == "check":
         print(f"OK — {len(reg.leaders)} lãnh đạo, {len(reg.agents)} Agent, {len(reg.companies)} công ty, {len(reg.legacy)} mã cũ")
+        if getattr(reg, "has_tn_file", False):          # có Thiên Não → kiểm cả bảng quyền và khóa hiến pháp
+            from . import policy as P
+            try:
+                pol = P.Policy.load(reg)
+            except P.PolicyError as e:
+                print(e, file=sys.stderr)
+                return 3
+            bad = pol.verify_lock(R.ROOT)
+            if bad:
+                print("Tệp quyền/hiến pháp khác bản đã khóa (registries/CONSTITUTION.lock):", file=sys.stderr)
+                for x in bad:
+                    print(f"  - {x['path']}: {x['problem']}", file=sys.stderr)
+                return 3
+            print(f"OK — bảng quyền hợp lệ; khóa hiến pháp khớp {len(pol.protected_files(R.ROOT))} tệp; "
+                  f"{len(reg.tn_seats)} ghế TN, {len(reg.units)} đơn vị dưới Thiên Não")
         return 0
     if args.cmd == "org":
         cmd_org(reg); return 0

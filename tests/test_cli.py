@@ -34,6 +34,18 @@ class CliTest(unittest.TestCase):
         self.assertLess(out.index("VUA_CEO"), out.index("CFO —"))
         self.assertIn("Agent ACTIVE: 10/20", out)
 
+    def test_check_also_verifies_permission_matrix_and_constitution_lock(self):
+        import json
+        from unittest import mock
+        from crown import policy as P
+        code, out, _ = run("check")
+        self.assertEqual(code, 0)
+        self.assertIn("khóa hiến pháp khớp", out)
+        with mock.patch.object(P.Policy, "verify_lock", return_value=[{"path": "registries/permissions.json", "problem": "nội dung khác bản đã khóa"}]):
+            code, out, err = run("check")
+        self.assertEqual(code, 3)
+        self.assertIn("registries/permissions.json", err)
+
     def test_unknown_agent(self):
         code, _, err = run("agent", "A99")
         self.assertEqual(code, 1)

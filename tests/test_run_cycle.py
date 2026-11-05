@@ -137,6 +137,51 @@ class RuleCycleTest(Sandbox):
         latest = json.loads(self.remote_files()["state/latest.json"])
         self.assertEqual(len([t for t in latest["board"]["tasks"] if t["TASK_NAME"].startswith("Đưa mã web")]), 1)
 
+    def test_inbox_on_state_branch_is_used_when_no_local_inbox_is_given(self):
+        def plain(name):
+            return RN.Runner(self.clone(name), self.tmp / f"{name}.db", clock=self.clock, sleep=self.clock.sleep)
+        plain("a").rule()
+        st = S.GitState(self.clone("chairman"))
+        st.pull()
+        st.push({"state/inbox.json": json.dumps({"items": self.INBOX}, ensure_ascii=False)}, "Chủ tịch thêm việc")
+        self.clock.set_vn(6, 2)
+        plain("b").rule()
+        files = self.remote_files()
+        latest = json.loads(files["state/latest.json"])
+        self.assertEqual([t["STATUS"] for t in latest["board"]["tasks"] if t["TASK_NAME"].startswith("Đưa mã web")], ["ASSIGNED"])
+        self.assertIn("state/inbox.json", files)                        # bộ máy không xóa hộp việc
+
+    def test_bad_inbox_items_are_rejected_one_by_one_without_failing_the_cycle(self):
+        good = self.INBOX[0]
+        items = [
+            {**good, "key": "thieu-truong", "acceptance": ""},
+            {**good, "key": "ghe-la", "seat": "TN-99"},
+            {**good, "key": "tu-nang-quyen", "action_class": "PERMISSION_GRANT"},          # chỉ Chủ tịch → không tạo
+            {**good, "key": "chi-tien", "name": "Mua gói API", "action_class": "SPEND", "work_type": "RESEARCH", "seat": "TN-11"},
+            {**good, "key": "lenh-la", "name": "Việc có trường lạ", "owner": "CHAIRMAN", "approval_id": "tự-cấp", "status": "COMPLETED"},
+            "không phải object",
+            good,
+        ]
+        self.inbox.write_text(json.dumps({"items": items}, ensure_ascii=False), encoding="utf-8")
+        res = self.runner().rule()
+        self.assertEqual(res["status"], "SUCCEEDED")
+        latest = json.loads(self.remote_files()["state/latest.json"])
+        by_name = {t["TASK_NAME"]: t for t in latest["board"]["tasks"]}
+        self.assertEqual(by_name["Đưa mã web đang chạy vào repo"]["STATUS"], "ASSIGNED")
+        self.assertEqual((by_name["Mua gói API"]["STATUS"], by_name["Mua gói API"]["APPROVAL_STATUS"]), ("BACKLOG", "PENDING"))
+        odd = by_name["Việc có trường lạ"]                                # trường lạ bị bỏ qua, không đổi chủ, không tự duyệt
+        self.assertEqual((odd["OWNER_AGENT"], odd["STATUS"], odd["APPROVAL_STATUS"]), ("A18", "ASSIGNED", "NOT_REQUIRED"))
+        rejected = {r["key"] for r in latest["phase_details"]["PLANNING"]["rejected"]}
+        self.assertEqual(rejected, {"thieu-truong", "ghe-la", "tu-nang-quyen"})
+        self.assertEqual(len(latest["board"]["tasks"]), 3)
+
+    def test_broken_inbox_file_is_reported_not_fatal(self):
+        self.inbox.write_text("{ đây không phải JSON", encoding="utf-8")
+        res = self.runner().rule()
+        self.assertEqual(res["status"], "SUCCEEDED")
+        latest = json.loads(self.remote_files()["state/latest.json"])
+        self.assertTrue(any(l["source"] == "inbox" for l in latest["lessons"]))
+
     def test_failing_tests_create_exactly_one_repair_task_per_day(self):
         bad = {"ran": 210, "failed": 2, "ok": False, "tail": "FAILED (failures=2)"}
         self.runner("a").rule(tests=bad)

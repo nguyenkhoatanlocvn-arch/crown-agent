@@ -1,6 +1,8 @@
 {
   "note": "Mã băm tệp quyền/hiến pháp. Chỉ cập nhật trong PR do Chủ tịch gộp.",
   "files": {
+    ".github/workflows/ci.yml": "871e63d6641de436d9fe592779de52bb5814e907a3811c107baa2f7775e42b63",
+    ".github/workflows/thien-nao-cycle.yml": "c1c19598488efa93e203b4da92234c535ab34c265b66822670f04cac8838514a",
     "crown/policy.py": "65a474a86262cc0568a897dd76ecc70af988b5f6b885c597ec8ba713ece5ac5a",
     "registries/approvals.json": "b43d90b7f36524ac9f91f77f1c64224a02d101a943b073ee79c22bb382a0a443",
     "registries/leaders.json": "b927f620ae74066659eb94d443fceaa23f4867e1244950d9657bde4787d8c0bb",

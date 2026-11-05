@@ -6,3 +6,5 @@ __pycache__/
 runtime/test/
 runtime/hoang_thanh_local/
 runtime/live_run/
+runtime/tn/
+*.session.json

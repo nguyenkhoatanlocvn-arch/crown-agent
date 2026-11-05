@@ -1,0 +1,26 @@
+# Kiểm tra mỗi pull request và mỗi lần nhánh chính đổi: bộ test, sổ đăng ký, bảng quyền, khóa hiến pháp.
+# Chỉ đọc, không secret. Action ghim theo SHA đã rà (actions/checkout v7.0.1, kiểm 06/11/2026).
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+
+permissions: {}
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Lay ma nguon
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Bo kiem thu
+        run: python3 -m unittest discover -s tests -t .
+      - name: So dang ky, bang quyen, khoa hien phap
+        run: python3 -m crown check
