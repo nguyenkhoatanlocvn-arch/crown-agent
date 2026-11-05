@@ -17,3 +17,4 @@
 {"at": "2026-11-05T20:11:31+00:00", "actor": "agent-tool-at", "action": "step_done", "detail": "build: diễn tập (b): 1.0.1 cố ý lỗi CRLF→LF; bộ thử đầy đủ bắt được (56/72), bộ thử bị rút 16 ca có chủ ý", "state": "RUNNING", "token": 1}
 {"at": "2026-11-05T20:11:38+00:00", "actor": "agent-tool-at", "action": "step_start", "detail": "test · Agent con tool-kt-04", "state": "RUNNING", "token": 1}
 {"at": "2026-11-05T20:11:41+00:00", "actor": "agent-tool-at", "action": "step_done", "detail": "test: DIỄN TẬP: bộ thử rút gọn có chủ ý (bỏ 16 ca CRLF/CR) — không phải kiểm thử độc lập thật", "state": "RUNNING", "token": 1}
+{"at": "2026-11-05T20:11:45+00:00", "actor": "agent-tool-at", "action": "step_start", "detail": "publish", "state": "RUNNING", "token": 1}

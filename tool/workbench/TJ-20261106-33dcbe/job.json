@@ -8,7 +8,7 @@
  "priority": 5,
  "idempotency_key": null,
  "state": "RUNNING",
- "state_version": 18,
+ "state_version": 19,
  "fencing_token": 1,
  "lease": {
   "holder": "agent-tool-at",
@@ -112,13 +112,13 @@
    "id": "publish",
    "branch": "th",
    "what": "Phát hành vào kho chung",
-   "status": "PENDING",
-   "attempts": 0,
+   "status": "RUNNING",
+   "attempts": 1,
    "by": "agent-tool-at",
    "sub": null,
    "evidence": [],
-   "note": "mở lại: diễn tập (b): 1.0.0 đã có trong kho → đổi sang 1.0.1, bản CỐ Ý lỗi để thử quay lui",
-   "started_at": "2026-11-05T20:10:38+00:00"
+   "note": "",
+   "started_at": "2026-11-05T20:11:45+00:00"
   },
   {
    "id": "verify",
@@ -136,5 +136,5 @@
  "version": null,
  "result": null,
  "created_at": "2026-11-05T20:09:51+00:00",
- "updated_at": "2026-11-05T20:11:41+00:00"
+ "updated_at": "2026-11-05T20:11:45+00:00"
 }
