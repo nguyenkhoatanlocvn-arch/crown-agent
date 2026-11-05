@@ -214,7 +214,7 @@ def run(argv):
     except OSError as e:
         raise ToolFail(f"Không dùng được thư mục kết quả '{out_dir}' ({_why(e)}).") from None
     _write(dst, data)
-    return report
+    return report, dst
 
 
 def _stderr(message):
@@ -223,19 +223,37 @@ def _stderr(message):
         sys.stderr.buffer.write(line.encode("utf-8"))
         sys.stderr.flush()
     except Exception:
-        sys.stderr.write(line.encode("ascii", "backslashreplace").decode("ascii"))
+        try:
+            sys.stderr.write(line.encode("ascii", "backslashreplace").decode("ascii"))
+        except Exception:
+            pass  # stderr cũng không ghi được: vẫn phải thoát đúng mã lỗi
+
+
+def _emit(report):
+    """Ghi dòng báo cáo thẳng ra stdout (fd 1), không qua bộ đệm, để lỗi ghi lộ ra ngay tại đây."""
+    view = memoryview((json.dumps(report, ensure_ascii=True) + "\n").encode("ascii"))
+    while view:
+        view = view[os.write(1, view):]
 
 
 def main(argv):
     try:
-        report = run(argv)
+        report, dst = run(argv)
     except ToolFail as e:
         _stderr(str(e))
         return EXIT_ERROR
     except Exception as e:  # lỗi ngoài dự kiến cũng phải ra mã 2 và một dòng tiếng Việt
         _stderr(f"Sự cố không lường trước ({type(e).__name__}) — không có kết quả.")
         return EXIT_ERROR
-    sys.stdout.write(json.dumps(report, ensure_ascii=True) + "\n")
+    try:
+        _emit(report)
+    except OSError as e:  # không báo cáo được thì coi như lượt chạy lỗi: không để lại tệp kết quả
+        try:
+            os.remove(dst)
+        except OSError:
+            pass
+        _stderr(f"Không ghi được báo cáo ra stdout ({_why(e)}) — đã hủy tệp kết quả.")
+        return EXIT_ERROR
     return 0
 
 

@@ -8,7 +8,7 @@
  "priority": 5,
  "idempotency_key": "nghiem-thu-2026-11-05-srt",
  "state": "RUNNING",
- "state_version": 14,
+ "state_version": 16,
  "fencing_token": 2,
  "lease": {
   "holder": "agent-tool",
@@ -106,12 +106,13 @@
    "branch": "kt",
    "what": "Kiểm thử độc lập trong vùng cách ly",
    "status": "RUNNING",
-   "attempts": 2,
+   "attempts": 3,
    "by": "agent-tool",
    "sub": "tool-kt-02",
    "evidence": [],
    "note": "",
-   "started_at": "2026-11-05T19:15:52+00:00"
+   "started_at": "2026-11-05T19:32:52+00:00",
+   "finished_at": "2026-11-05T19:31:54+00:00"
   },
   {
    "id": "publish",
@@ -140,5 +141,5 @@
  "version": null,
  "result": null,
  "created_at": "2026-11-05T16:33:00+00:00",
- "updated_at": "2026-11-05T19:15:52+00:00"
+ "updated_at": "2026-11-05T19:32:52+00:00"
 }

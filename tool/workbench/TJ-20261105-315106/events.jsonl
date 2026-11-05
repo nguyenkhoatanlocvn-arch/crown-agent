@@ -13,3 +13,5 @@
 {"at": "2026-11-05T16:50:07+00:00", "actor": "agent-tool", "action": "step_start", "detail": "test · Agent con tool-kt-01", "state": "RUNNING", "token": 1}
 {"at": "2026-11-05T19:15:52+00:00", "actor": "agent-tool", "action": "claim", "detail": "tiếp tục sau khi lease của agent-tool hết hạn, từ bước test", "state": "RUNNING", "token": 2}
 {"at": "2026-11-05T19:15:52+00:00", "actor": "agent-tool", "action": "step_start", "detail": "test · Agent con tool-kt-02", "state": "RUNNING", "token": 2}
+{"at": "2026-11-05T19:31:54+00:00", "actor": "agent-tool", "action": "step_fail", "detail": "test: tool-kt-02: 65/65 ca đạt nhưng kết luận FAIL vì 2 phát hiện khi soát: (1) báo cáo có khóa ignored_timecodes và luật đi kèm chưa có trong SPEC; (2) stdout không ghi được → thoát 1/120 và để lại tệp kết quả. Sửa một lần rồi kiểm lại.", "state": "RUNNING", "token": 2}
+{"at": "2026-11-05T19:32:52+00:00", "actor": "agent-tool", "action": "step_start", "detail": "test · Agent con tool-kt-02", "state": "RUNNING", "token": 2}

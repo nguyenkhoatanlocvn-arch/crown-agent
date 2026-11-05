@@ -3,6 +3,8 @@
 - Mã việc: TJ-20261105-315106 · Yêu cầu của Chủ tịch: "Viết tool đánh lại số phụ đề từ 1, giữ nguyên timecode và lời thoại".
 - Nguồn đặc tả: `OBSERVATION.md` (hành vi nhìn thấy trong video mẫu) + câu lệnh của Chủ tịch. KHÔNG đọc mã bên trong của tiện ích mẫu.
 - Người viết: `tool-pt-01`. Người lập trình chỉ được dùng tệp này và thư mục `testdata/`.
+- Sửa đổi 2026-11-06 02:35 (Thiên Công, sau vòng kiểm thử 1 của `tool-kt-02`): mục 2 thêm khóa `ignored_timecodes` và luật lỗi khi không ghi được
+  stdout; thêm mục 5b (G12–G21).
 
 ## 1. Việc tool làm
 Nhận một tệp `.srt`, trả một tệp `.srt` cùng tên, trong đó số thứ tự các đoạn phụ đề được đánh lại 1, 2, 3, … theo thứ tự xuất hiện.
@@ -11,10 +13,11 @@ Mọi byte khác của tệp giữ nguyên.
 ## 2. Hợp đồng chạy (theo PLAYBOOK mục 5)
 - Gọi: `python main.py request.json`; `request.json = {"inputs": {"input": "in/<tên>.srt"}, "out_dir": "out", "params": {"start": 1}}`.
 - Kết quả: `out/<tên>.srt` (cùng tên tệp đầu vào). Dòng cuối stdout là JSON:
-  `{"ok": true, "cues": <số đoạn>, "changed": <số dòng số đã đổi>, "inserted": <số dòng số đã chèn>, "mapping": [["3", 1], ["8", 2], ...]}`
-  (`mapping`: số cũ dạng chuỗi → số mới; đoạn thiếu số ghi số cũ là `null`; chỉ liệt kê tối đa 200 cặp đầu).
+  `{"ok": true, "cues": <số đoạn>, "changed": <số dòng số đã đổi>, "inserted": <số dòng số đã chèn>, "mapping": [["3", 1], ["8", 2], ...], "ignored_timecodes": <số dòng timecode không mở đầu đoạn nào, xem G12>}`
+  (`mapping`: số cũ dạng chuỗi → số mới; đoạn thiếu số ghi số cũ là `null`; chỉ liệt kê tối đa 200 cặp đầu). Báo cáo không có khóa nào khác.
 - Tham số `start` (số nguyên ≥ 0, mặc định 1): số của đoạn đầu tiên.
-- Lỗi: thoát mã 2, in một dòng tiếng Việt ra stderr, KHÔNG tạo tệp kết quả.
+- Lỗi: thoát mã 2, in một dòng tiếng Việt ra stderr, KHÔNG tạo tệp kết quả. Áp dụng cho mọi lỗi, kể cả khi không ghi được dòng báo cáo
+  ra stdout (khi đó tệp kết quả vừa ghi phải bị hủy).
 - Chỉ thư viện chuẩn Python; không mạng, không gọi tiến trình khác; manifest khai `network: false`, `subprocess: []`.
 
 ## 3. Hành vi đã THẤY trong video (bắt buộc, có dữ liệu thử)
@@ -47,6 +50,22 @@ Mọi byte khác của tệp giữ nguyên.
 | G9 | Tệp không giải mã được UTF-8 → lỗi mã 2 (không đoán bảng mã, không làm hỏng chữ) | Tệp có byte 0xFF 0xFE … |
 | G10 | `start` khác 1 (vd. 100) đánh 100, 101, …; `start` âm hoặc không phải số nguyên → lỗi mã 2 | Hai ca |
 | G11 | Tệp 5.000 đoạn xử lý xong trong giới hạn 30 giây | Một ca sinh tự động |
+
+### 5b. Làm rõ sau kiểm thử độc lập (2026-11-06, theo 10 điểm mơ hồ do tool-kt-02 nêu)
+Người lập trình đã chọn cách hiểu chặt cho các chỗ đặc tả chưa nói. Nay ghi thành giả định chính thức; mỗi dòng có ca thử.
+| Mã | Giả định | Ca thử |
+|---|---|---|
+| G12 | Dòng timecode đứng ngay sau một dòng chữ (không trống, không phải dòng số) hoặc ngay sau một dòng timecode khác KHÔNG mở đầu đoạn nào: để nguyên, không đếm vào `cues`, đếm vào `ignored_timecodes`. Tệp không có đoạn hợp lệ nào → lỗi mã 2 | `s4-timecode-sau-loi-thoai-bo-qua`, `g8-timecode-khong-mo-doan` |
+| G13 | Chèn dòng số cho đoạn thiếu số mà dòng timecode là dòng cuối, không có ký tự xuống dòng: dùng kiểu xuống dòng gần nhất đã gặp trong tệp; chưa gặp thì LF | `g5-timecode-cuoi-khong-xuong-dong`, `g5-chi-mot-dong-timecode` |
+| G14 | "Khoảng trắng" gồm mọi khoảng trắng Unicode và U+FEFF nằm giữa tệp; dòng chỉ có khoảng trắng được coi là dòng trống | `s4-bom-giua-tep-ghep`, `g5-sau-dong-chi-co-dau-cach` |
+| G15 | Số có số 0 đứng đầu ("003", "01") được viết lại không có số 0 đầu và tính là đã đổi; `mapping` giữ nguyên chuỗi cũ | `s4-khoang-trang-quanh-so` |
+| G16 | Dòng số viết bằng chữ số không phải ASCII (vd. chữ số toàn chiều rộng) là dòng chữ, không phải dòng số (khi đó áp dụng G12) | ca `kt-` bổ sung ở vòng kiểm lại |
+| G17 | Thông tin vị trí sau giờ kết thúc phải cách bằng khoảng trắng; dính liền (vd. `00:00:02,000X1:40`) thì dòng đó không phải timecode | ca `kt-` bổ sung ở vòng kiểm lại |
+| G18 | `` đơn lẻ và `
+` cũng là ký tự xuống dòng và được giữ nguyên | `g2-cr-mac-cu`, `g2-crcrlf` |
+| G19 | `start` phải là số nguyên JSON ≥ 0 (1.0, null, "5", true đều bị từ chối); tham số không có tên trong đặc tả bị từ chối, mã 2 | các ca `g10-*`, `tham-so-la` |
+| G20 | Tên tệp đầu vào có đuôi viết hoa (`.SRT`) được chấp nhận; tệp kết quả giữ nguyên tên | ca `kt-` bổ sung ở vòng kiểm lại |
+| G21 | Theo mục 4, một dòng chỉ gồm chữ số nằm ngay trước dòng timecode kế tiếp (không có dòng trống ngăn) là dòng số của đoạn sau và bị thay, kể cả khi người viết coi nó là lời thoại. Đây là giới hạn đã biết với tệp thiếu dòng trống giữa hai đoạn | `s4-thieu-dong-trong-giua-doan` |
 
 ## 6. Quyết định thiết kế (em quyết, Chủ tịch bác được)
 - **D1 — Không thêm ký tự nào ngoài dòng số.** Tiện ích mẫu trả kết quả dài hơn 1 ký tự so với bản "chỉ đổi số" (251 so với 250;

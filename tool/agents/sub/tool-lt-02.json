@@ -1,0 +1,30 @@
+{
+ "id": "tool-lt-02",
+ "name": "Lập trình #02",
+ "branch": "lt",
+ "branch_name": "Lập trình",
+ "kind": "agent",
+ "status": "ACTIVE",
+ "state": "DONE",
+ "assigned_by": "agent-tool",
+ "job_id": "TJ-20261105-315106",
+ "step": "test",
+ "output": "sửa main.py theo phát hiện (2) của tool-kt-02",
+ "tier": "SANDBOX_WRITE",
+ "write_scope": [
+  "tool/workbench/TJ-20261105-315106/"
+ ],
+ "limits": {
+  "max_runtime_s": 1200,
+  "paid_usd": 0,
+  "max_output_mb": 50
+ },
+ "worker": "session",
+ "created_at": "2026-11-05T19:31:54+00:00",
+ "expires_at": "2026-11-05T19:51:54+00:00",
+ "finished_at": "2026-11-05T19:32:52+00:00",
+ "result": "main.py: báo cáo ghi thẳng fd 1 trong try; lỗi ghi → hủy tệp kết quả, thoát 2 (đã thử stdout đóng và /dev/full)",
+ "evidence": [
+  "tool/workbench/TJ-20261105-315106/build/main.py"
+ ]
+}

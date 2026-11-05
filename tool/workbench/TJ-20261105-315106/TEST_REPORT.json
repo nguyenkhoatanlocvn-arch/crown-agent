@@ -1,0 +1,44 @@
+{
+ "tester": "tool-kt-02",
+ "builder_cases": 45,
+ "independent_cases": 20,
+ "total_passed": 65,
+ "total_cases": 65,
+ "verdict": "FAIL",
+ "coverage_gaps": [
+  "Counts: builder_cases = 44 in tests/cases.json + 1 manifest example (vi-du:phim_mau) that the harness adds; independent = 20 kt- cases; harness line: 'ĐẠT: 65/65 ca', netns=True.",
+  "No H1-H5 / G1-G11 / D1-D3 is without a meaningful developer case. Checked by reading every data file and by 28 single-behaviour mutants of main.py run on a scratch copy: every H/G-breaking mutant is caught by at least one developer case.",
+  "Gaps in the developer suite, now closed by kt- cases (each proven by a mutant that only the kt- case catches): G9 file cut mid-character at the last byte (kt-18); G10 large start must stay exact, no float round trip (kt-09); section 4 look-alikes: 4-digit hours and a timecode embedded in a sentence (kt-04); only CR/LF end a line, VT/FF/FS/GS/RS/NEL/U+2028/U+2029 inside dialogue must not split it (kt-20).",
+  "Also added: H4 with a file name containing spaces, brackets and Vietnamese letters (kt-17; developer names were ASCII only); G1+G2+G4 together with real changes (kt-03; developer's only such file had changed=0); mapping cap boundary at 201 cues (kt-15); 5,000 insertions with BOM+CRLF inside the 30 s limit (kt-16); NFC+NFD+non-canonical mark order in one file (kt-01); two digit lines before a timecode and orphan numbers (kt-14).",
+  "Still open because the case format cannot express them (checked by hand instead, see failures and permission_review): the report has no keys beyond SPEC section 2; exactly one stderr line and empty stdout on error; out/ holds only the one file on success; behaviour when stdout cannot be written."
+ ],
+ "failures": [
+  {
+   "case": "review:report-shape (not a test case; the harness compares report keys one by one and cannot see extra keys)",
+   "expected": "last stdout line is {ok, cues, changed, inserted, mapping} as written in SPEC section 2",
+   "got": "{ok, cues, changed, inserted, mapping, ignored_timecodes}. The rule behind the sixth key (a timecode line directly after a non-blank, non-number line is not a cue: left as is, not counted; a file whose only timecodes are of that kind exits 2) is not in SPEC sections 4, 5 or 6; it exists only in main.py, manifest.interface.report and two developer cases.",
+   "spec_ref": "SPEC section 2 (report), section 5 header (every assumption must be listed with a case), PLAYBOOK section 4"
+  },
+  {
+   "case": "review:stdout-unwritable (not a test case; the harness always gives the tool a pipe)",
+   "expected": "any error: exit code 2, one Vietnamese line on stderr, no output file",
+   "got": "stdout closed: exit 1, 8-line Python traceback, out/a.srt left behind. stdout=/dev/full: exit 120, out/a.srt left behind. Cause: the report is printed at main.py line 238, outside the try/except of lines 230-237, after the file was written at line 216. Low severity: cannot happen through `python -m tool run`.",
+   "spec_ref": "SPEC section 2, 'Lỗi'"
+  }
+ ],
+ "ambiguities": [
+  "Timecode line directly after a text line or another timecode line: SPEC section 4 and G5 only cover 'index line before it' and 'file start / after a blank line'. Build skips it and counts ignored_timecodes; if no other timecode exists it exits 2, although G8 literally says 'no timecode line' (developer cases s4-timecode-sau-loi-thoai-bo-qua, g8-timecode-khong-mo-doan).",
+  "G5 says the inserted line uses the timecode line's own line ending; when that line is the last line and has none, build uses the last line ending seen, else LF (developer cases g5-timecode-cuoi-khong-xuong-dong, g5-chi-mot-dong-timecode).",
+  "What counts as whitespace / a blank line: build uses all Unicode whitespace (NBSP, U+3000, U+2028 ...) plus U+FEFF anywhere in the file, and treats a whitespace-only line as blank for G5 (developer cases s4-bom-giua-tep-ghep, g5-sau-dong-chi-co-dau-cach).",
+  "Leading zeros: '003' becomes '3' and mapping keeps '003' (developer case s4-khoang-trang-quanh-so). Whether '01' on cue 1 is 'already correct' under D3 is not stated; build rewrites it to '1' and counts it as changed.",
+  "Index line written with non-ASCII digits (e.g. full-width): build treats it as text, so the cue's timecode falls under the first ambiguity and is skipped.",
+  "Text after the end time: SPEC says position info may follow; build accepts any text after whitespace and rejects a suffix glued on without whitespace (e.g. '...02,000X1:40').",
+  "Line endings other than LF/CRLF: lone CR and CR CR LF are treated as line endings by the build (developer cases g2-cr-mac-cu, g2-crcrlf); G2 names only CRLF, LF and mixed.",
+  "start given as JSON 1.0, null or \"5\": build rejects all three with exit 2; an unknown parameter (e.g. 'star') is also rejected (developer case tham-so-la). SPEC only says 'negative or not an integer'.",
+  "Upper-case extension '.SRT' is accepted by main.py; manifest lists only '.srt'.",
+  "By the letter of section 4, a digit-only dialogue line that is directly followed (no blank line) by the next timecode is that cue's index line and is overwritten (developer case s4-thieu-dong-trong-giua-doan). This follows the SPEC text but sits uneasily with G6."
+ ],
+ "permission_review": "Permissions: clean. main.py imports only errno, json, os, re, sys; no network, no subprocess/os.system/exec*/spawn*, no eval/exec/compile/__import__; harness lint_permissions returns []; manifest permissions {network:false, subprocess:[]} match the code; all runs had netns=True. Writes: only os.makedirs(out_dir) and out_dir/<basename(input)> (plus os.remove of that same file after a failed write); '../' in the input path cannot escape (basename); refuses to write over the input (exit 2, input bytes unchanged). Errors: 12 direct error runs (missing file, wrong extension, bad UTF-8, empty file, broken request JSON, request not an object, no inputs, negative/null/1.0 start, out_dir = input dir, no argv) all gave exit 2, exactly one Vietnamese stderr line, empty stdout, nothing in out/. Success: one stdout line, one file in out/. Manifest id/version/category/name/keywords/example match SPEC section 8 and the example files are byte-identical to testdata/. Two contract deviations found (listed under failures): the report carries a sixth key not in SPEC section 2, and a failed stdout write exits 1/120 and leaves the output file. These two are the only reason the verdict is FAIL; all 65 cases pass.",
+ "command": "python3 -m tool test tool/workbench/TJ-20261105-315106/build",
+ "at": "2026-11-05T19:30:55Z"
+}
