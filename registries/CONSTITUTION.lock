@@ -1,0 +1,11 @@
+{
+  "note": "Mã băm tệp quyền/hiến pháp. Chỉ cập nhật trong PR do Chủ tịch gộp.",
+  "files": {
+    "crown/policy.py": "65a474a86262cc0568a897dd76ecc70af988b5f6b885c597ec8ba713ece5ac5a",
+    "registries/approvals.json": "b43d90b7f36524ac9f91f77f1c64224a02d101a943b073ee79c22bb382a0a443",
+    "registries/leaders.json": "b927f620ae74066659eb94d443fceaa23f4867e1244950d9657bde4787d8c0bb",
+    "registries/permissions.json": "ee3203e44d853edb648c918d94628ee97abf8a5be9a5d2be7f50b9187e59d2d0",
+    "registries/thien_nao.json": "583c873d3ef8c2e85a33267e761d85322a47e19f5124643a9c3a04c057ac3112",
+    "registries/vuong_toa.json": "626f0a965e1eb8a5248b0bbf8a39484c168a28a4e71a057c2a404e994d100865"
+  }
+}

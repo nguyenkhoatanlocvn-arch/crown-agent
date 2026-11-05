@@ -1,0 +1,67 @@
+{
+  "version": "2026-11-05.1",
+  "decision_ref": "Lệnh DRAGON SINGULARITY V1.0 mục 02 (Hiến pháp quyền lực), mục 16 (Security Constitution); Chủ tịch 05/11/2026",
+  "note": "Bảng quyền D03. Chỉ Chủ tịch sửa tệp này (gộp PR). Không Agent nào, kể cả Thiên Não, được tự sửa để nâng quyền cho mình.",
+  "classes": {
+    "AUTONOMOUS": "Được tự làm nếu có trong dòng quyền của mình",
+    "SENSITIVE": "Phải có phê duyệt riêng của Chủ tịch cho từng việc (registries/approvals.json)",
+    "CHAIRMAN_ONLY": "Chỉ Chủ tịch làm; Agent chỉ được đề xuất"
+  },
+  "actions": {
+    "TASK_MANAGE": {"class": "AUTONOMOUS", "desc": "Tạo, giao và sắp xếp nhiệm vụ"},
+    "RESOURCE_ALLOCATE": {"class": "AUTONOMOUS", "desc": "Phân bổ tài nguyên và mô hình trong ngân sách đã duyệt"},
+    "AGENT_LAUNCH": {"class": "AUTONOMOUS", "desc": "Khởi chạy Agent đã được cấp quyền"},
+    "SCHEDULE_MANAGE": {"class": "AUTONOMOUS", "desc": "Xây dựng và thay đổi lịch công việc"},
+    "REPORT_READ": {"class": "AUTONOMOUS", "desc": "Đọc báo cáo, trạng thái, nhật ký"},
+    "TEST_RUN": {"class": "AUTONOMOUS", "desc": "Chạy kiểm thử"},
+    "WORKFLOW_COORDINATE": {"class": "AUTONOMOUS", "desc": "Điều phối quy trình giữa các Agent"},
+    "CODE_BRANCH_WRITE": {"class": "AUTONOMOUS", "desc": "Tạo nhánh mã nguồn, sửa lỗi trong môi trường thử nghiệm, mở pull request"},
+    "RESEARCH": {"class": "AUTONOMOUS", "desc": "Nghiên cứu và đề xuất nâng cấp"},
+    "STATE_WRITE": {"class": "AUTONOMOUS", "desc": "Ghi trạng thái chu trình vào nhánh tn-state"},
+    "DEPLOY_LOW_RISK": {"class": "AUTONOMOUS", "desc": "Triển khai bản sửa nhỏ, ít rủi ro trong giới hạn đã phê duyệt"},
+    "EMERGENCY_STOP_SET": {"class": "AUTONOMOUS", "desc": "Bật dừng khẩn cấp trong phạm vi của mình"},
+
+    "SPEND": {"class": "SENSITIVE", "desc": "Chi tiền, mua dịch vụ, thay đổi hạn mức"},
+    "REAL_MONEY_TRADE": {"class": "SENSITIVE", "desc": "Giao dịch tài chính bằng tiền thật"},
+    "SECRET_ACCESS": {"class": "SENSITIVE", "desc": "Đọc hoặc tiết lộ bí mật ngoài phạm vi cần thiết"},
+    "DELETE_CRITICAL_DATA": {"class": "SENSITIVE", "desc": "Xóa dữ liệu quan trọng"},
+    "DEPLOY_HIGH_RISK": {"class": "SENSITIVE", "desc": "Triển khai thay đổi rủi ro cao lên production (xác thực, tài chính, dữ liệu, hạ tầng)"},
+
+    "ROOT_ADMIN_CHANGE": {"class": "CHAIRMAN_ONLY", "desc": "Thay đổi quyền quản trị gốc"},
+    "SECURITY_RULE_CHANGE": {"class": "CHAIRMAN_ONLY", "desc": "Thay đổi quy tắc bảo mật và cơ chế dừng khẩn cấp"},
+    "CONSTITUTION_CHANGE": {"class": "CHAIRMAN_ONLY", "desc": "Sửa hiến pháp, bảng quyền, sổ lãnh đạo"},
+    "PERMISSION_GRANT": {"class": "CHAIRMAN_ONLY", "desc": "Cấp thêm quyền cho bất kỳ Agent nào"},
+    "EMERGENCY_STOP_CLEAR": {"class": "CHAIRMAN_ONLY", "desc": "Gỡ dừng khẩn cấp"}
+  },
+  "grants": {
+    "CHAIRMAN": ["*"],
+    "THIEN_NAO": ["TASK_MANAGE", "RESOURCE_ALLOCATE", "AGENT_LAUNCH", "SCHEDULE_MANAGE", "REPORT_READ", "TEST_RUN",
+                  "WORKFLOW_COORDINATE", "CODE_BRANCH_WRITE", "RESEARCH", "STATE_WRITE", "DEPLOY_LOW_RISK", "EMERGENCY_STOP_SET"],
+    "VUA_CEO": ["TASK_MANAGE", "AGENT_LAUNCH", "REPORT_READ", "TEST_RUN", "WORKFLOW_COORDINATE", "CODE_BRANCH_WRITE",
+                "RESEARCH", "EMERGENCY_STOP_SET"],
+    "CFO": ["REPORT_READ", "RESEARCH", "RESOURCE_ALLOCATE", "EMERGENCY_STOP_SET"],
+    "CMO-01": ["TASK_MANAGE", "REPORT_READ", "RESEARCH", "EMERGENCY_STOP_SET"],
+    "CMO-02": ["TASK_MANAGE", "REPORT_READ", "RESEARCH", "EMERGENCY_STOP_SET"],
+    "TN-ENGINE": ["TASK_MANAGE", "REPORT_READ", "TEST_RUN", "WORKFLOW_COORDINATE", "STATE_WRITE"],
+    "A03-NB": ["TASK_MANAGE", "REPORT_READ", "TEST_RUN", "RESEARCH", "WORKFLOW_COORDINATE"],
+    "A21-AT": ["TASK_MANAGE", "REPORT_READ", "TEST_RUN", "RESEARCH", "WORKFLOW_COORDINATE"],
+    "A17": ["REPORT_READ", "RESEARCH", "TEST_RUN", "EMERGENCY_STOP_SET"],
+    "A20": ["REPORT_READ", "RESEARCH", "TEST_RUN"],
+    "@tier:READ": ["REPORT_READ", "RESEARCH"],
+    "@tier:SANDBOX_WRITE": ["REPORT_READ", "RESEARCH", "TEST_RUN", "CODE_BRANCH_WRITE"],
+    "@tier:OPERATIONAL_WRITE": ["REPORT_READ", "RESEARCH", "TEST_RUN", "CODE_BRANCH_WRITE", "TASK_MANAGE"]
+  },
+  "estop_allowed": ["REPORT_READ", "EMERGENCY_STOP_SET"],
+  "protected_paths": [
+    "registries/permissions.json",
+    "registries/approvals.json",
+    "registries/leaders.json",
+    "registries/thien_nao.json",
+    "registries/vuong_toa.json",
+    "registries/models.json",
+    "registries/CONSTITUTION.lock",
+    "crown/policy.py",
+    ".github/workflows/"
+  ],
+  "high_risk_domains": ["xác thực", "tài chính", "dữ liệu", "hạ tầng"]
+}

@@ -1,5 +1,5 @@
 {
-  "version": "2026-11-05",
+  "version": "2026-11-05.2",
   "note": "Ai được đặt mục tiêu tại Vương Tọa và trong phạm vi nào. Chỉ Chủ tịch sửa file này. Agent Vua chỉ đọc.",
   "principals": {
     "CHAIRMAN": {
@@ -7,6 +7,12 @@
       "scopes": ["*"],
       "can_stop": true,
       "can_approve": true
+    },
+    "THIEN_NAO": {
+      "role": "Thiên Não Tối Thượng — điều hành thường ngày thay mặt Chủ tịch. Ủy nhiệm: lệnh DRAGON SINGULARITY V1.0 + Chủ tịch 05/11/2026 ~23:35. Không có phạm vi MONEY, không duyệt thay Chủ tịch.",
+      "scopes": ["SKILL", "DOCS", "WEB", "CODE"],
+      "can_stop": true,
+      "can_approve": false
     },
     "VUA_CEO": {
       "role": "Vương Tọa AI (phiên VUA). Chưa có văn bản ủy nhiệm phạm vi đặt mục tiêu; giữ rỗng tới khi Chủ tịch ghi scopes.",

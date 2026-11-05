@@ -1,0 +1,5 @@
+{
+  "version": "2026-11-05.1",
+  "note": "Phê duyệt riêng của Chủ tịch cho từng việc nhạy cảm. Chỉ Chủ tịch thêm dòng (sửa trực tiếp trên GitHub hoặc gộp PR). Mỗi dòng: id, action (loại SENSITIVE), principal, granted_by = CHAIRMAN, granted_at, expires_at, scope.",
+  "approvals": []
+}
