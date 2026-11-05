@@ -1,0 +1,28 @@
+{
+ "id": "tool-lt-03",
+ "name": "Lập trình #03",
+ "branch": "lt",
+ "branch_name": "Lập trình",
+ "kind": "agent",
+ "status": "ACTIVE",
+ "state": "ACTIVE",
+ "assigned_by": "agent-tool-at",
+ "job_id": "TJ-20261106-33dcbe",
+ "step": "build",
+ "output": "build/ = bản sao nguyên văn srt-renumber@1.0.0 từ kho",
+ "tier": "SANDBOX_WRITE",
+ "write_scope": [
+  "tool/workbench/TJ-20261106-33dcbe/"
+ ],
+ "limits": {
+  "max_runtime_s": 1200,
+  "paid_usd": 0,
+  "max_output_mb": 50
+ },
+ "worker": "session",
+ "created_at": "2026-11-05T20:09:58+00:00",
+ "expires_at": "2026-11-05T20:29:58+00:00",
+ "finished_at": null,
+ "result": null,
+ "evidence": []
+}
