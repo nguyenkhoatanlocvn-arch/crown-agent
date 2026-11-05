@@ -7,7 +7,7 @@ Vương Tọa giao một mục tiêu → nhận mã nhiệm vụ → theo dõi t
 |---|---|
 | `.claude/workflows/agent-vua-vuong-toa.js` | Workflow Claude Code (meta.name `agent-vua-vuong-toa`). JS quyết định thứ tự, rẽ nhánh, điểm dừng |
 | `crown/vua.py` | Lớp sổ: nhận lệnh theo `request_id`, quyền Vương Tọa, kế hoạch, điểm kiểm, khóa lượt chạy, hạn mức Hội đồng, hộp thư đồng bộ có đối soát, tra cứu, cửa phòng |
-| `registries/vuong_toa.json` | Ai được giao việc tại Vương Tọa, phạm vi nào. Chỉ Chủ tịch sửa |
+| `registries/vuong_toa.json` | Ai được giao việc tại Vương Tọa, phạm vi nào. Chủ tịch: mọi phạm vi. VUA_CEO: SKILL, DOCS (Chủ tịch ủy nhiệm 05/11 23:39). MONEY chỉ Chủ tịch |
 | `tests/test_vua.py` | 17 test đơn vị lớp sổ |
 | `tests/workflow/harness.mjs`, `run_scenarios.mjs` | Chạy thử workflow cục bộ: lệnh sổ chạy thật trên SQLite, phần việc dùng fixture (43 kiểm) |
 | `tests/workflow/live_step.mjs` | Chạy thật từng bước: dừng ở mỗi vai cần Agent, Agent Vua giao đúng prompt cho Agent thật |
