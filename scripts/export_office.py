@@ -2,8 +2,8 @@
 
 Không đoán: hoạt động của mỗi Agent suy ra từ nhiệm vụ trong runtime/tasks.db.
   WORKING  = đang giữ lease một nhiệm vụ RUNNING còn hạn
-  REVIEW   = nhiệm vụ của mình đang chờ người khác duyệt
-  BLOCKED  = nhiệm vụ của mình bị chặn / chờ duyệt / hết hạn mức
+  REVIEW   = nhiệm vụ của mình đang chờ duyệt (kết quả hoặc quyết định Chủ tịch)
+  BLOCKED  = nhiệm vụ của mình bị chặn / hết hạn mức / gián đoạn
   WAITING  = có nhiệm vụ DRAFT/READY chưa ai nhận
   IDLE     = ACTIVE nhưng không có việc
   OFF      = mới đăng ký, chưa kích hoạt
@@ -38,9 +38,9 @@ def activity_of(mid: str, status: str):
         if t["state"] == "RUNNING" and t["lease_owner"] == mid and lease_ok:
             found.append(("WORKING", t))
         elif t["owner_agent_id"] == mid:
-            if t["state"] == "REVIEW":
+            if t["state"] in ("REVIEW", "WAITING_APPROVAL"):   # chờ duyệt → lồng đèn vàng
                 found.append(("REVIEW", t))
-            elif t["state"] in ("BLOCKED", "WAITING_APPROVAL", "PAUSED_QUOTA", "INTERRUPTED"):
+            elif t["state"] in ("BLOCKED", "PAUSED_QUOTA", "INTERRUPTED"):
                 found.append(("BLOCKED", t))
             elif t["state"] in ("DRAFT", "READY"):
                 found.append(("WAITING", t))

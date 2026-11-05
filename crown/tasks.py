@@ -104,10 +104,16 @@ class TaskStore:
         self.db.execute("PRAGMA journal_mode=WAL")
         self.db.executescript(SCHEMA)
         cols = {r["name"] for r in self.db.execute("PRAGMA table_info(tasks)")}
-        if "attempt_evidence_start" not in cols:  # nâng cấp DB cũ, không mất dữ liệu
-            self.db.execute("ALTER TABLE tasks ADD COLUMN attempt_evidence_start INTEGER NOT NULL DEFAULT 0")
-        if "pending_retry" not in cols:  # 1 = lần nhận tới là thử lại sau thất bại/gián đoạn
-            self.db.execute("ALTER TABLE tasks ADD COLUMN pending_retry INTEGER NOT NULL DEFAULT 0")
+        # Nâng cấp DB cũ, không mất dữ liệu. Nhiều tiến trình có thể cùng nâng cấp một lúc
+        # (gửi trùng đồng thời): tiến trình đến sau gặp "duplicate column" là bình thường.
+        for col in ("attempt_evidence_start",   # bằng chứng tính từ lần nhận việc hiện tại
+                    "pending_retry"):           # 1 = lần nhận tới là thử lại sau thất bại/gián đoạn
+            if col not in cols:
+                try:
+                    self.db.execute(f"ALTER TABLE tasks ADD COLUMN {col} INTEGER NOT NULL DEFAULT 0")
+                except sqlite3.OperationalError as e:
+                    if "duplicate column" not in str(e):
+                        raise
         # Khôi phục lịch sử người làm cho DB tạo trước khi có bảng task_workers (idempotent).
         self.db.execute("""INSERT OR IGNORE INTO task_workers(task_id, worker)
                            SELECT task_id, actor FROM events WHERE to_state='RUNNING' AND note LIKE '%token=%'

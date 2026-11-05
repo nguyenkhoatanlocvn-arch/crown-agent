@@ -92,6 +92,10 @@ def _print_task(t: dict) -> None:
 
 
 def main(argv: list[str] | None = None) -> int:
+    argv = sys.argv[1:] if argv is None else argv
+    if argv[:1] == ["vua"]:  # lớp Vương Tọa → Agent Vua, in JSON cho workflow
+        from . import vua
+        return vua.main(argv[1:])
     p = argparse.ArgumentParser(prog="crown", description="CROWN AGENT — sổ đăng ký và sổ nhiệm vụ")
     sub = p.add_subparsers(dest="cmd", required=True)
     sub.add_parser("org"); sub.add_parser("companies"); sub.add_parser("legacy"); sub.add_parser("check")

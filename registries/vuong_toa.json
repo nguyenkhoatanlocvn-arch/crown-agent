@@ -1,0 +1,26 @@
+{
+  "version": "2026-11-05",
+  "note": "Ai được đặt mục tiêu tại Vương Tọa và trong phạm vi nào. Chỉ Chủ tịch sửa file này. Agent Vua chỉ đọc.",
+  "principals": {
+    "CHAIRMAN": {
+      "role": "Vương Tọa — Chủ tịch Nguyễn Khoa Tấn Lộc",
+      "scopes": ["*"],
+      "can_stop": true,
+      "can_approve": true
+    },
+    "VUA_CEO": {
+      "role": "Vương Tọa AI (phiên VUA). Chưa có văn bản ủy nhiệm phạm vi đặt mục tiêu; giữ rỗng tới khi Chủ tịch ghi scopes.",
+      "scopes": [],
+      "can_stop": true,
+      "can_approve": false
+    }
+  },
+  "domains": {
+    "SKILL": "Thẩm định, viết, kiểm skill (chỉ văn bản, không chạy script ngoài)",
+    "DOCS": "Tài liệu nội bộ, báo cáo, kế hoạch",
+    "WEB": "Giao diện Hoàng thành (không đổi quyền truy cập)",
+    "CODE": "Mã CROWN trên nhánh/worktree riêng",
+    "MONEY": "Bất cứ gì chạm tiền thật, bot BTC, ví, mua dịch vụ"
+  },
+  "chairman_only_domains": ["MONEY"]
+}

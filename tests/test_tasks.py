@@ -184,3 +184,18 @@ class TaskTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ConcurrentInitTest(unittest.TestCase):
+    """Nhiều tiến trình cùng mở một DB mới (gửi trùng đồng thời) không được chết vì nâng cấp cột."""
+
+    def test_parallel_processes_open_fresh_db(self):
+        import subprocess, sys
+        root = Path(__file__).resolve().parent.parent
+        code = "import sys; from crown.tasks import TaskStore; TaskStore(sys.argv[1]).close()"
+        for i in range(15):
+            db = Path(tempfile.mkdtemp()) / f"f{i}.db"
+            procs = [subprocess.Popen([sys.executable, "-c", code, str(db)], cwd=root, stderr=subprocess.PIPE, text=True)
+                     for _ in range(5)]
+            errs = [p.communicate()[1] for p in procs]
+            self.assertTrue(all(p.returncode == 0 for p in procs), "\n".join(e for e in errs if e))

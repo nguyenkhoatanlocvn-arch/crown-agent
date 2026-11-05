@@ -3,3 +3,5 @@ __pycache__/
 .worktrees/
 .env
 *.key
+runtime/test/
+runtime/hoang_thanh_local/
