@@ -63,6 +63,19 @@ class FieldsTest(Base):
         self.assertEqual(self.tb.row(self.make(seat="TN-02", dedupe_key="a", action_class="TASK_MANAGE")["task_id"])["OWNER_AGENT"], "A10")
         self.assertEqual(self.tb.row(self.make(seat="TN-07", dedupe_key="b", action_class="REPORT_READ")["task_id"])["OWNER_AGENT"], "TN-07")
 
+    def test_rule_engine_unit_can_own_a_task_without_a_seat(self):
+        r = self.tb.row(self.make(seat=None, owner="TN-ENGINE", action_class="STATE_WRITE", work_type="PERIODIC_CHECK",
+                                  dedupe_key="daily:2026-11-05")["task_id"])
+        self.assertEqual((r["OWNER_AGENT"], r["seat"], r["STATUS"]), ("TN-ENGINE", None, "BACKLOG"))
+
+    def test_owner_without_seat_must_be_a_unit_and_seat_and_owner_are_exclusive(self):
+        for over in ({"seat": None, "owner": "A18"},            # Agent nhận việc qua ghế, không nhận trực tiếp
+                     {"seat": None, "owner": "NOBODY"},
+                     {"seat": None, "owner": None},
+                     {"seat": "TN-05", "owner": "TN-ENGINE"}):
+            with self.assertRaises(T.BoardError, msg=str(over)):
+                self.make(dedupe_key="x-" + str(over), **over)
+
     def test_same_dedupe_key_never_creates_a_second_task(self):
         a = self.make()
         b = self.make(name="Tên khác nhưng cùng khóa")

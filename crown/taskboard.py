@@ -81,10 +81,13 @@ class TaskBoard:
         return dict(row)
 
     # ---------- tạo (không trùng) ----------
-    def create(self, *, name: str, objective: str, acceptance: str, seat: str, project: str, priority: str,
-               risk_level: str, work_type: str, action_class: str, dedupe_key: str, deadline: str | None = None,
+    def create(self, *, name: str, objective: str, acceptance: str, project: str, priority: str,
+               risk_level: str, work_type: str, action_class: str, dedupe_key: str, seat: str | None = None,
+               owner: str | None = None, deadline: str | None = None,
                estimated_cost: float = 0, dependencies: list[str] | None = None, actor: str = "THIEN_NAO",
                run_id: str | None = None) -> dict:
+        """Việc của Agent đi qua ghế TN (`seat`). Việc làm bằng luật giao thẳng cho một đơn vị dưới
+        Thiên Não (`owner`, ví dụ TN-ENGINE). Phải có đúng một trong hai."""
         if not name.strip() or not objective.strip() or not acceptance.strip() or not project.strip():
             raise BoardError("Nhiệm vụ phải có tên, mục tiêu, tiêu chí hoàn thành và dự án")
         if not str(dedupe_key).strip():
@@ -95,8 +98,12 @@ class TaskBoard:
             raise BoardError(f"Mức rủi ro phải thuộc {RISKS}")
         if work_type not in WORK_TYPES:
             raise BoardError(f"Loại việc phải thuộc {WORK_TYPES}")
-        if seat not in self.reg.tn_seats:
+        if (seat is None) == (owner is None):
+            raise BoardError("Phải có đúng một trong hai: ghế TN (seat) hoặc đơn vị dưới Thiên Não (owner)")
+        if seat is not None and seat not in self.reg.tn_seats:
             raise BoardError(f"Ghế '{seat}' không có trong sổ Thiên Não")
+        if owner is not None and owner not in self.reg.units:
+            raise BoardError(f"'{owner}' không phải đơn vị dưới Thiên Não — Agent nhận việc qua ghế TN")
         if deadline is not None:
             try:
                 if datetime.fromisoformat(deadline).tzinfo is None:
@@ -106,7 +113,7 @@ class TaskBoard:
         old = self.db.execute("SELECT task_id FROM tn_task_meta WHERE dedupe_key=?", (dedupe_key,)).fetchone()
         if old:
             return {"task_id": old["task_id"], "created": False}
-        owner = self.reg.seat_owner(seat)
+        owner = owner if seat is None else self.reg.seat_owner(seat)
         self.policy.require(actor, "TASK_MANAGE")
         d = self.policy.decide(owner, action_class)
         if d.verdict == "DENY":                     # việc người làm không bao giờ được phép → không tạo

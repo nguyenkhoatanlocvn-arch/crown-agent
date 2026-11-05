@@ -264,6 +264,17 @@ class StopAndBreakerTest(Base):
         self.clock.tick(minutes=1)
         self.assertEqual(self.cy.begin("rule")["action"], "RUN")
 
+    def test_stop_file_from_outside_blocks_the_run_without_touching_the_stored_switch(self):
+        b = self.cy.begin("rule", external_stop="Chủ tịch dừng để kiểm tra")
+        self.assertEqual((b["action"], b["reason"], b["persist"]), ("SKIP", "ESTOP", True))
+        row = self.cy.run(b["run_id"])
+        self.assertEqual(row["status"], "SKIPPED")
+        self.assertIn("Chủ tịch dừng để kiểm tra", row["error"])
+        self.assertFalse(self.cy.estop().get("active"))          # gỡ tệp là chạy lại; công tắc trong database không bị đổi
+        self.assertIsNone(self.cy.lock()["run_id"])
+        self.clock.tick(hours=2)
+        self.assertEqual(self.cy.begin("rule")["action"], "RUN")
+
     def test_agent_without_right_cannot_set_stop(self):
         with self.assertRaises(P.PolicyError):
             self.cy.estop_set("A04", "không có quyền")

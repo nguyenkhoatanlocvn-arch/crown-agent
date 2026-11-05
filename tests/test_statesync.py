@@ -112,6 +112,23 @@ class GitStateTest(Sandbox):
         self.assertTrue(a.push({"state/x.txt": "A\n"}, "A"))
         self.assertFalse(b.push({"state/x.txt": "B\n"}, "B"))
 
+    def test_two_writers_with_identical_content_cannot_both_win(self):
+        # Hai máy cùng trạng thái, cùng giây, cùng thông điệp: commit giống hệt nhau thì git coi là "đã có" và
+        # cả hai cùng tưởng mình thắng. Mỗi người ghi phải để lại dấu riêng.
+        for parent_exists in (False, True):
+            with self.subTest(parent_exists=parent_exists):
+                tag = "1" if parent_exists else "0"
+                if parent_exists:
+                    first = self.state("first")
+                    first.pull()
+                    self.assertTrue(first.push({"state/x.txt": "gốc\n"}, "gốc"))
+                a, b = self.state("a" + tag), self.state("b" + tag)
+                a.pull(); b.pull()
+                same = {"state/x.txt": "giống nhau\n"}
+                wins = [a.push(dict(same), "cùng thông điệp"), b.push(dict(same), "cùng thông điệp")]
+                self.assertEqual(wins, [True, False])
+                git(self.remote, "update-ref", "-d", "refs/heads/tn-state")
+
     def test_push_without_changes_makes_no_commit(self):
         a = self.state("a")
         a.pull()

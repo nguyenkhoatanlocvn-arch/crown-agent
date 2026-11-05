@@ -19,6 +19,7 @@ import os
 import sqlite3
 import subprocess
 import tempfile
+import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -99,6 +100,9 @@ class GitState:
         self.timeout = timeout
         self.parent: str | None = None      # đầu nhánh đã đọc lần gần nhất
         self._pulled = False
+        # Dấu riêng của người ghi. Hai máy cùng nội dung, cùng giây sẽ tạo ra commit giống hệt nhau; git coi
+        # commit thứ hai là "đã có" và cả hai cùng thắng. Dấu này làm mỗi commit là duy nhất.
+        self.writer = uuid.uuid4().hex[:12]
 
     def _git(self, *args, env: dict | None = None, stdin: str | None = None, check: bool = True):
         e = dict(os.environ)
@@ -151,7 +155,7 @@ class GitState:
             tree = self._git("write-tree", env=env).stdout.strip()
         if self.parent and tree == self._git("rev-parse", f"{self.parent}^{{tree}}").stdout.strip():
             return True                 # không có gì đổi → không tạo commit
-        args = ["commit-tree", tree, "-m", message] + (["-p", self.parent] if self.parent else [])
+        args = ["commit-tree", tree, "-m", f"{message}\n\nWriter: {self.writer}"] + (["-p", self.parent] if self.parent else [])
         commit = self._git(*args).stdout.strip()
         r = self._git("push", "-q", self.remote, f"{commit}:{self._ref}", check=False)
         if r.returncode != 0:

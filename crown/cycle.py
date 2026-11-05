@@ -299,7 +299,9 @@ class Cycle:
         return timedelta(seconds=int(self.cfg["lock_ttl_seconds"][lane]))
 
     # ---------- bắt đầu phiên ----------
-    def begin(self, lane: str, trigger: str = "schedule") -> dict:
+    def begin(self, lane: str, trigger: str = "schedule", external_stop: str | None = None) -> dict:
+        """`external_stop`: nội dung tệp dừng (state/STOP) đọc từ nhánh trạng thái. Có tệp = dừng, kể cả khi
+        công tắc trong database đang tắt; bộ máy không bao giờ tự gỡ tệp."""
         if lane not in LANES:
             raise CycleError(f"Làn '{lane}' không tồn tại (chỉ có {LANES})")
         actor = LANE_ACTOR[lane]
@@ -328,13 +330,16 @@ class Cycle:
                 out["persist"] = True
 
             # 2. Dừng khẩn cấp: ghi lại là đã bỏ qua, không làm gì khác.
-            estop = self.estop().get("active", False)
+            stored = self.estop()
+            estop = bool(stored.get("active", False)) or external_stop is not None
             row = self.db.execute("SELECT * FROM tn_runs WHERE run_id=?", (run_id,)).fetchone()
             if estop:
+                why = ("tệp state/STOP: " + external_stop.strip()[:300]) if external_stop is not None \
+                    else str(stored.get("reason", ""))
                 if row is None:
                     self.db.execute(
                         "INSERT INTO tn_runs(run_id, lane, slot, status, trigger_kind, started_at, finished_at, error) VALUES (?,?,?,?,?,?,?,?)",
-                        (run_id, lane, sid, "SKIPPED", trigger, self._iso(now), self._iso(now), "ESTOP: " + str(self.estop().get("reason", ""))))
+                        (run_id, lane, sid, "SKIPPED", trigger, self._iso(now), self._iso(now), "ESTOP: " + why))
                 self.db.execute("COMMIT")
                 return {**out, "reason": "ESTOP", "persist": True}
             self.policy.require(actor, "STATE_WRITE")
