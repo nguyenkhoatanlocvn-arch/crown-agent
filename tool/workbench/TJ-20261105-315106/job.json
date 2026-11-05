@@ -8,7 +8,7 @@
  "priority": 5,
  "idempotency_key": "nghiem-thu-2026-11-05-srt",
  "state": "RUNNING",
- "state_version": 18,
+ "state_version": 19,
  "fencing_token": 2,
  "lease": {
   "holder": "agent-tool",
@@ -121,13 +121,16 @@
    "id": "publish",
    "branch": "th",
    "what": "Phát hành vào kho chung",
-   "status": "RUNNING",
+   "status": "DONE",
    "attempts": 1,
    "by": "agent-tool",
    "sub": null,
-   "evidence": [],
-   "note": "",
-   "started_at": "2026-11-05T20:01:46+00:00"
+   "evidence": [
+    "tool/catalog/srt-renumber/1.0.0/RELEASE.json"
+   ],
+   "note": "srt-renumber@1.0.0, 129 tệp, 72 ca thử chạy lại lúc phát hành đều đạt",
+   "started_at": "2026-11-05T20:01:46+00:00",
+   "finished_at": "2026-11-05T20:02:18+00:00"
   },
   {
    "id": "verify",
@@ -145,5 +148,5 @@
  "version": null,
  "result": null,
  "created_at": "2026-11-05T16:33:00+00:00",
- "updated_at": "2026-11-05T20:01:46+00:00"
+ "updated_at": "2026-11-05T20:02:18+00:00"
 }
