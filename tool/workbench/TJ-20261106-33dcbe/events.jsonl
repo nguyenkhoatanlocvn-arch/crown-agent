@@ -1,2 +1,9 @@
 {"at": "2026-11-05T20:09:51+00:00", "actor": "CHAIRMAN", "action": "create", "detail": "giao cho agent-tool-at; nguồn nghiem-thu", "state": "READY", "token": 0}
 {"at": "2026-11-05T20:09:54+00:00", "actor": "agent-tool-at", "action": "claim", "detail": "nhận việc", "state": "RUNNING", "token": 1}
+{"at": "2026-11-05T20:09:56+00:00", "actor": "agent-tool-at", "action": "step_start", "detail": "intake", "state": "RUNNING", "token": 1}
+{"at": "2026-11-05T20:09:56+00:00", "actor": "agent-tool-at", "action": "step_done", "detail": "intake: diễn tập: kịch bản ghi trong DRILL.md", "state": "RUNNING", "token": 1}
+{"at": "2026-11-05T20:09:56+00:00", "actor": "agent-tool-at", "action": "step_skip", "detail": "research: diễn tập: không cần nguồn ngoài", "state": "RUNNING", "token": 1}
+{"at": "2026-11-05T20:09:56+00:00", "actor": "agent-tool-at", "action": "step_start", "detail": "analyze", "state": "RUNNING", "token": 1}
+{"at": "2026-11-05T20:09:56+00:00", "actor": "agent-tool-at", "action": "step_done", "detail": "analyze: diễn tập: kịch bản ghi trong DRILL.md", "state": "RUNNING", "token": 1}
+{"at": "2026-11-05T20:09:56+00:00", "actor": "agent-tool-at", "action": "step_start", "detail": "spec", "state": "RUNNING", "token": 1}
+{"at": "2026-11-05T20:09:56+00:00", "actor": "agent-tool-at", "action": "step_done", "detail": "spec: diễn tập: kịch bản ghi trong DRILL.md", "state": "RUNNING", "token": 1}

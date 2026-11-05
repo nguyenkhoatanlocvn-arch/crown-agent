@@ -8,7 +8,7 @@
  "priority": 5,
  "idempotency_key": null,
  "state": "RUNNING",
- "state_version": 1,
+ "state_version": 8,
  "fencing_token": 1,
  "lease": {
   "holder": "agent-tool-at",
@@ -24,45 +24,58 @@
    "id": "intake",
    "branch": "th",
    "what": "Nhận mẫu vào inbox, băm tệp, ghi nguồn",
-   "status": "PENDING",
-   "attempts": 0,
-   "by": null,
+   "status": "DONE",
+   "attempts": 1,
+   "by": "agent-tool-at",
    "sub": null,
-   "evidence": [],
-   "note": ""
+   "evidence": [
+    "tool/workbench/TJ-20261106-33dcbe/DRILL.md"
+   ],
+   "note": "diễn tập: kịch bản ghi trong DRILL.md",
+   "started_at": "2026-11-05T20:09:56+00:00",
+   "finished_at": "2026-11-05T20:09:56+00:00"
   },
   {
    "id": "research",
    "branch": "gh",
    "what": "Tìm nguồn/skill liên quan, ghi giấy phép; hoặc ghi lý do bỏ qua",
-   "status": "PENDING",
+   "status": "SKIPPED",
    "attempts": 0,
-   "by": null,
+   "by": "agent-tool-at",
    "sub": null,
    "evidence": [],
-   "note": ""
+   "note": "diễn tập: không cần nguồn ngoài",
+   "finished_at": "2026-11-05T20:09:56+00:00"
   },
   {
    "id": "analyze",
    "branch": "pt",
    "what": "Lấy khung hình/đọc mẫu, ghi thao tác, thay đổi màn hình, đầu vào, kết quả",
-   "status": "PENDING",
-   "attempts": 0,
-   "by": null,
+   "status": "DONE",
+   "attempts": 1,
+   "by": "agent-tool-at",
    "sub": null,
-   "evidence": [],
-   "note": ""
+   "evidence": [
+    "tool/workbench/TJ-20261106-33dcbe/DRILL.md"
+   ],
+   "note": "diễn tập: kịch bản ghi trong DRILL.md",
+   "started_at": "2026-11-05T20:09:56+00:00",
+   "finished_at": "2026-11-05T20:09:56+00:00"
   },
   {
    "id": "spec",
    "branch": "pt",
    "what": "Viết đặc tả + giả định cần kiểm + dữ liệu thử",
-   "status": "PENDING",
-   "attempts": 0,
-   "by": null,
+   "status": "DONE",
+   "attempts": 1,
+   "by": "agent-tool-at",
    "sub": null,
-   "evidence": [],
-   "note": ""
+   "evidence": [
+    "tool/workbench/TJ-20261106-33dcbe/DRILL.md"
+   ],
+   "note": "diễn tập: kịch bản ghi trong DRILL.md",
+   "started_at": "2026-11-05T20:09:56+00:00",
+   "finished_at": "2026-11-05T20:09:56+00:00"
   },
   {
    "id": "build",
@@ -113,5 +126,5 @@
  "version": null,
  "result": null,
  "created_at": "2026-11-05T20:09:51+00:00",
- "updated_at": "2026-11-05T20:09:54+00:00"
+ "updated_at": "2026-11-05T20:09:56+00:00"
 }
