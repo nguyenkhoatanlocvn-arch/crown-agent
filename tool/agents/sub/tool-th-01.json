@@ -5,7 +5,7 @@
  "branch_name": "Tích hợp",
  "kind": "agent",
  "status": "ACTIVE",
- "state": "ACTIVE",
+ "state": "DONE",
  "assigned_by": "agent-tool",
  "job_id": "TJ-20261105-315106",
  "step": "verify",
@@ -22,7 +22,9 @@
  "worker": "claude-subagent",
  "created_at": "2026-11-05T20:02:20+00:00",
  "expires_at": "2026-11-05T20:32:20+00:00",
- "finished_at": null,
- "result": null,
- "evidence": []
+ "finished_at": "2026-11-05T20:03:36+00:00",
+ "result": "A15 (worker Claude riêng, không biết tên tool) tìm 'đánh số phụ đề' → srt-renumber@1.0.0 → chạy tệp tiếng Việt khác mẫu: 7,19 → 1,2; timecode và lời thoại giống hệt",
+ "evidence": [
+  "tool/runs/2026-11-06/R-20261106-030245-cbb1d8/run.json"
+ ]
 }
