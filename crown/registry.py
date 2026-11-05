@@ -31,6 +31,8 @@ class Registry:
     companies: dict[str, dict]
     legacy: dict[str, dict] = field(default_factory=dict)
     subagents: dict[str, dict] = field(default_factory=dict)   # 2026-11-05: Agent con (A03.1...) thuộc một Agent cha
+    departments: dict[str, dict] = field(default_factory=dict)  # 2026-11-05: bộ phận có Agent đồng điều hành (dept_*.json)
+    executives: dict[str, dict] = field(default_factory=dict)   # Agent đồng điều hành của các bộ phận, theo ID
 
     def member(self, member_id: str) -> dict:
         if member_id in self.leaders:
@@ -39,12 +41,15 @@ class Registry:
             return self.agents[member_id]
         if member_id in self.subagents:
             return self.subagents[member_id]
+        if member_id in self.executives:
+            return self.executives[member_id]
         raise KeyError(member_id)
 
     def boss_of(self, member_id: str) -> str | None:
         m = self.member(member_id)
         if member_id in self.leaders: return m.get("supervisor")
         if member_id in self.subagents: return m.get("parent")
+        if member_id in self.executives: return m.get("supervisor")
         return m.get("leader")
 
     def chain(self, member_id: str) -> list[str]:
@@ -127,13 +132,31 @@ def load(reg_dir: Path = REG_DIR) -> Registry:
     companies = _index(_items(co, "companies", "companies.json", errors), "companies.json", errors)
     sub_path = reg_dir / "subagents.json"
     subagents = _index(_items(_load_json(sub_path), "subagents", "subagents.json", errors), "subagents.json", errors) if sub_path.exists() else {}
+    departments: dict[str, dict] = {}
+    executives: dict[str, dict] = {}
+    for dp in sorted(reg_dir.glob("dept_*.json")):
+        d = _load_json(dp)
+        dep = d.get("department") if isinstance(d, dict) else None
+        if not isinstance(dep, dict) or not isinstance(dep.get("id"), str):
+            errors.append(f"{dp.name}: thiếu 'department' có 'id'")
+            continue
+        if dep["id"] in departments:
+            errors.append(f"{dp.name}: bộ phận trùng ID '{dep['id']}'")
+        execs = _index(_items(d, "executives", dp.name, errors), dp.name, errors)
+        for eid, e in execs.items():
+            if eid in executives:
+                errors.append(f"{dp.name}: Agent điều hành trùng ID '{eid}'")
+            e["department"] = dep["id"]
+            executives[eid] = e
+        departments[dep["id"]] = {**d, "executive_ids": sorted(execs)}
     legacy = lg.get("units") if isinstance(lg, dict) else None
     if not isinstance(legacy, dict) or not all(isinstance(v, dict) for v in legacy.values()):
         errors.append("legacy_map.json: 'units' phải là object mã → {maps_to: [...]}")
         legacy = {}
     if errors:
         raise RegistryError("Sổ đăng ký không hợp lệ:\n- " + "\n- ".join(errors))
-    reg = Registry(leaders=leaders, agents=agents, companies=companies, legacy=legacy, subagents=subagents)
+    reg = Registry(leaders=leaders, agents=agents, companies=companies, legacy=legacy, subagents=subagents,
+                   departments=departments, executives=executives)
     validate(reg)
     return reg
 
@@ -214,7 +237,7 @@ def validate(reg: Registry) -> None:
 
     # 6. Không chu trình chỉ huy, mọi chuỗi kết thúc ở Chủ tịch (chỉ chạy khi cấu trúc đã đúng kiểu).
     if not errors:
-        for mid in list(reg.leaders) + list(reg.agents):
+        for mid in list(reg.leaders) + list(reg.agents) + list(reg.executives):
             try:
                 c = reg.chain(mid)
                 if c[-1] != "CHAIRMAN":
@@ -260,6 +283,75 @@ def validate(reg: Registry) -> None:
                 sub_scopes.append((sid, cw))
         if clean_path(sa.get("memory_ns", "")) is None or not clean_path(sa.get("memory_ns", "")).startswith(clean_path(reg.agents[par]["memory_ns"]) or "-"):
             errors.append(f"{sid}: bộ nhớ phải nằm trong {reg.agents[par].get('memory_ns')}")
+
+    # 10. Bộ phận có Agent đồng điều hành (2026-11-05, lệnh Chủ tịch): ngang một lãnh đạo CHỈ trong phạm vi bộ phận.
+    taken = set(reg.leaders) | set(reg.agents) | set(reg.subagents)
+    domains: list[tuple[str, str]] = []
+    for did, d in reg.departments.items():
+        dom = clean_path((d.get("department") or {}).get("domain"))
+        if dom is None:
+            errors.append(f"Bộ phận {did}: 'domain' phải là đường dẫn sạch")
+            continue
+        if not d.get("decision_ref"):
+            errors.append(f"Bộ phận {did}: thiếu decision_ref (lập bộ phận là quyết định của Chủ tịch)")
+        if not d.get("executive_ids"):
+            errors.append(f"Bộ phận {did}: phải có ít nhất một Agent điều hành")
+        for aid, sc in scopes:
+            if scopes_overlap(dom, sc):
+                errors.append(f"Bộ phận {did}: vùng '{dom}' chồng vùng ghi của {aid} ('{sc}')")
+        for od, odom in domains:
+            if scopes_overlap(dom, odom):
+                errors.append(f"Bộ phận {did}: vùng '{dom}' chồng bộ phận {od} ('{odom}')")
+        domains.append((did, dom))
+        for eid in d.get("executive_ids", []):
+            e = reg.executives[eid]
+            if eid in taken:
+                errors.append(f"{eid}: ID trùng với lãnh đạo/Agent đã có")
+            for k in ("name", "role", "status", "tier", "peer_of", "peer_scope", "memory_ns", "write_scope", "out_of_scope"):
+                if k not in e:
+                    errors.append(f"{eid}: thiếu trường '{k}'")
+            if e.get("kind") != "agent":
+                errors.append(f"{eid}: Agent điều hành phải kind=agent")
+            if e.get("supervisor") != "CHAIRMAN":
+                errors.append(f"{eid}: Agent điều hành bộ phận báo thẳng Chủ tịch (supervisor=CHAIRMAN)")
+            if e.get("status") not in AGENT_STATUSES:
+                errors.append(f"{eid}: trạng thái '{e.get('status')}' không hợp lệ")
+            if e.get("tier") not in TIERS:
+                errors.append(f"{eid}: mức quyền '{e.get('tier')}' không hợp lệ")
+            elif e["tier"] == "SENSITIVE":
+                errors.append(f"{eid}: chỉ Chủ tịch giữ quyền SENSITIVE")
+            peers = e.get("peer_of")
+            if not isinstance(peers, list) or not peers or any(p not in reg.leaders or p == "CHAIRMAN" for p in peers):
+                errors.append(f"{eid}: peer_of phải là danh sách lãnh đạo có thật, không gồm Chủ tịch")
+            else:
+                for p in peers:  # ngang quyền, không vượt quyền
+                    pt = reg.leaders[p].get("tier")
+                    if e.get("tier") in TIERS and pt in TIERS and TIERS.index(e["tier"]) > TIERS.index(pt):
+                        errors.append(f"{eid}: quyền {e['tier']} cao hơn lãnh đạo ngang cấp {p} ({pt})")
+            if not isinstance(e.get("peer_scope"), str) or not e.get("peer_scope", "").strip():
+                errors.append(f"{eid}: peer_scope phải ghi rõ phạm vi ngang quyền")
+            ws = e.get("write_scope")
+            if not isinstance(ws, list) or not ws or not all(clean_path(x) and clean_path(x).startswith(dom) for x in ws):
+                errors.append(f"{eid}: vùng ghi phải nằm trong vùng bộ phận '{dom}'")
+            ns = clean_path(e.get("memory_ns"))
+            if ns is None or not ns.startswith(dom):
+                errors.append(f"{eid}: bộ nhớ phải nằm trong vùng bộ phận '{dom}'")
+            co = e.get("clone_of")
+            if co is not None and (co == eid or co not in d.get("executive_ids", [])):
+                errors.append(f"{eid}: clone_of phải là Agent điều hành khác cùng bộ phận")
+        seen_b = set()
+        for b in d.get("branches", []) if isinstance(d.get("branches"), list) else []:
+            bid = b.get("id") if isinstance(b, dict) else None
+            if not isinstance(bid, str) or not re.fullmatch(r"[a-z0-9]{1,8}", bid) or bid in seen_b:
+                errors.append(f"Bộ phận {did}: nhánh '{bid}' không hợp lệ hoặc trùng")
+                continue
+            seen_b.add(bid)
+            if b.get("tier") not in TIERS or b.get("tier") == "SENSITIVE":
+                errors.append(f"Bộ phận {did}: nhánh {bid} có mức quyền không hợp lệ")
+        lim = d.get("limits", {})
+        if not isinstance(lim, dict) or not isinstance(lim.get("max_concurrent_subagents", 2), int) \
+                or lim.get("max_concurrent_subagents", 2) < 1:
+            errors.append(f"Bộ phận {did}: limits.max_concurrent_subagents phải là số nguyên ≥ 1")
 
     if len(reg.legacy) != EXPECTED_LEGACY_COUNT:
         errors.append(f"Bảng mã cũ phải có đủ {EXPECTED_LEGACY_COUNT} đơn vị KING AI (đang có {len(reg.legacy)})")

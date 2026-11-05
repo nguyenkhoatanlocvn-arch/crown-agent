@@ -48,6 +48,11 @@ def cmd_org(reg: R.Registry) -> None:
             leader_line(sub, depth + 1)
 
     leader_line("CHAIRMAN", 0)
+    for did, d in sorted(reg.departments.items()):
+        print(f"  ▦ {d['department'].get('name', did)} (vùng {d['department'].get('domain')})")
+        for eid in d["executive_ids"]:
+            e = reg.executives[eid]
+            print(f"    {STATUS_ICON.get(e['status'], '?')} {eid} — {e['name']} [{e['tier']}] · ngang {', '.join(e['peer_of'])} trong: {e['peer_scope']}")
     n_active = sum(a["status"] == "ACTIVE" for a in reg.agents.values())
     print(f"\n● đang giao việc  ○ đã đăng ký, chưa kích hoạt   |   Agent ACTIVE: {n_active}/20")
 

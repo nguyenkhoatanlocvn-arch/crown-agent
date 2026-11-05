@@ -1,0 +1,58 @@
+{
+  "version": "2026-11-05.1",
+  "decision_ref": "Lệnh Chủ tịch 2026-11-05 22:58 (lập mục TOOL trong Hoàng Thành Rồng)",
+  "note": "Bộ phận TOOL có HAI Agent đồng điều hành. Trong các quyết định về TOOL, hai Agent ngang quyền với Vương Tọa và Agent Vua; Chủ tịch giữ quyền dừng cuối cùng. Giới hạn cứng của hiến chương Agent Vua (mục 4) vẫn áp dụng: không tiền thật, không bí mật, không mua, không tạo tài khoản.",
+  "department": {
+    "id": "TOOL",
+    "name": "Bộ phận TOOL — Thiên Công",
+    "domain": "tool/",
+    "final_stop": "CHAIRMAN",
+    "related": "A04 (Tool & App Observatory) quan sát công cụ bên ngoài; TOOL tự làm công cụ nội bộ. Hai bên không chung vùng ghi."
+  },
+  "executives": [
+    {
+      "id": "agent-tool",
+      "name": "Agent TOOL — Thiên Công",
+      "short": "Thiên Công",
+      "kind": "agent",
+      "supervisor": "CHAIRMAN",
+      "status": "ACTIVE",
+      "tier": "OPERATIONAL_WRITE",
+      "peer_of": ["VUA_CEO"],
+      "peer_scope": "Quyết định về TOOL (tạo, kiểm thử, phát hành, khôi phục phiên bản tool và skill TOOL)",
+      "role": "Nhận lệnh trực tiếp của Chủ tịch, phân việc, tạo tool, kiểm thử, phát hành và khôi phục phiên bản",
+      "memory_ns": "tool/agents/agent-tool/",
+      "write_scope": ["tool/"],
+      "out_of_scope": ["Tiền thật, khóa API, mật khẩu", "Mua dịch vụ khi chưa có ngân sách CFO", "Sửa bot BTC, BOARD, RISK_POLICY, sổ đăng ký của bộ phận khác"]
+    },
+    {
+      "id": "agent-tool-at",
+      "name": "Agent TOOL AT — Thiên Công AT",
+      "short": "Thiên Công AT",
+      "kind": "agent",
+      "clone_of": "agent-tool",
+      "supervisor": "CHAIRMAN",
+      "status": "ACTIVE",
+      "tier": "OPERATIONAL_WRITE",
+      "peer_of": ["VUA_CEO"],
+      "peer_scope": "Quyết định về TOOL (toàn bộ quyền của Thiên Công)",
+      "role": "Bản nhân của Thiên Công: tự lập kế hoạch, chọn việc ưu tiên, lên lịch, giao việc và tích hợp tool khi Chủ tịch vắng mặt",
+      "memory_ns": "tool/agents/agent-tool-at/",
+      "write_scope": ["tool/"],
+      "out_of_scope": ["Tiền thật, khóa API, mật khẩu", "Mua dịch vụ khi chưa có ngân sách CFO", "Sửa bot BTC, BOARD, RISK_POLICY, sổ đăng ký của bộ phận khác", "Quá một bản phát hành tự động mỗi phiên"]
+    }
+  ],
+  "branches": [
+    {"id": "gh", "name": "Nghiên cứu GitHub", "tier": "READ",
+     "mission": "Tìm nguồn, ghi chức năng cần lấy, URL, commit, giấy phép, phụ thuộc, chi phí, ca thử. Chỉ đọc, không chạy mã ngoài."},
+    {"id": "pt", "name": "Phân tích mẫu", "tier": "SANDBOX_WRITE",
+     "mission": "Đọc video/ảnh/tệp mẫu: lấy khung hình theo mốc thời gian, ghi thao tác, màn hình đổi ra sao, đầu vào, kết quả; viết đặc tả và giả định."},
+    {"id": "lt", "name": "Lập trình", "tier": "SANDBOX_WRITE",
+     "mission": "Viết công cụ mới từ đặc tả và dữ liệu thử. Không chép mã bên trong của tiện ích mẫu."},
+    {"id": "kt", "name": "Kiểm thử", "tier": "SANDBOX_WRITE",
+     "mission": "Chạy thử trong vùng cách ly, viết ca thử độc lập. Không kiểm bài do chính mình viết."},
+    {"id": "th", "name": "Tích hợp", "tier": "SANDBOX_WRITE",
+     "mission": "Đóng gói bản phát hành, gọi thử từ kho chung, chuẩn bị quay lui. Chữ ký phát hành thuộc Agent điều hành."}
+  ],
+  "limits": {"max_concurrent_subagents": 2, "max_auto_releases_per_session": 1}
+}

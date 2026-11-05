@@ -6,3 +6,8 @@ __pycache__/
 runtime/test/
 runtime/hoang_thanh_local/
 runtime/live_run/
+# TOOL: mẫu riêng tư, khung hình và kết quả chạy không vào git (chỉ giữ băm + bản ghi)
+tool/inbox/*/private/
+tool/workbench/*/frames/
+tool/runs/*/*/out/
+*.lock/
