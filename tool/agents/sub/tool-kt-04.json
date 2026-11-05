@@ -5,7 +5,7 @@
  "branch_name": "Kiểm thử",
  "kind": "agent",
  "status": "ACTIVE",
- "state": "ACTIVE",
+ "state": "DONE",
  "assigned_by": "agent-tool-at",
  "job_id": "TJ-20261106-33dcbe",
  "step": "test",
@@ -22,7 +22,9 @@
  "worker": "session",
  "created_at": "2026-11-05T20:11:36+00:00",
  "expires_at": "2026-11-05T20:31:36+00:00",
- "finished_at": null,
- "result": null,
- "evidence": []
+ "finished_at": "2026-11-05T20:11:43+00:00",
+ "result": "DIỄN TẬP: 56/56 trên bộ thử rút gọn",
+ "evidence": [
+  "tool/workbench/TJ-20261106-33dcbe/TEST_b_rut_gon.txt"
+ ]
 }
