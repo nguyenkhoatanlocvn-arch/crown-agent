@@ -34,6 +34,31 @@ PROCESS_OS_CALLS = {"system", "popen", "fork", "forkpty", "kill", "killpg", "sta
 NEVER_BUILTINS = {"eval", "exec", "compile", "__import__", "breakpoint"}
 
 
+def safe_rel(tool_dir: Path, rel: str) -> Path | None:
+    """Đường dẫn tương đối nằm TRONG thư mục tool, hoặc None nếu thoát ra ngoài (tuyệt đối, '..', liên kết tượng trưng)."""
+    if not isinstance(rel, str) or not rel or rel.startswith(("/", "\\")) or "\\" in rel or ":" in rel:
+        return None
+    parts = rel.split("/")
+    if any(x in ("", ".", "..") for x in parts):
+        return None
+    base = Path(tool_dir).resolve()
+    p = base.joinpath(*parts)
+    cur = base
+    for x in parts:  # không thành phần nào được là liên kết tượng trưng
+        cur = cur / x
+        if cur.is_symlink():
+            return None
+    try:
+        p.resolve().relative_to(base)
+    except ValueError:
+        return None
+    return p
+
+
+def symlinks_in(tool_dir: Path) -> list[str]:
+    return [p.relative_to(tool_dir).as_posix() for p in Path(tool_dir).rglob("*") if p.is_symlink()]
+
+
 def lint_permissions(tool_dir: Path, manifest: dict) -> list[str]:
     """Soát mã nguồn so với quyền khai trong manifest. Trả danh sách vi phạm (rỗng = đạt)."""
     tool_dir = Path(tool_dir)
@@ -116,6 +141,10 @@ def execute(tool_dir: Path, manifest: dict, inputs: dict[str, Path], params: dic
     max_out = int(lim.get("max_output_mb", 50))
     mem = int(lim.get("memory_mb", 2048))
     entry = manifest.get("entry", "main.py")
+    if safe_rel(tool_dir, entry) is None or not safe_rel(tool_dir, entry).is_file():
+        raise ToolError(f"Tệp chạy '{entry}' không nằm trong thư mục tool")
+    if symlinks_in(tool_dir):
+        raise ToolError("Thư mục tool có liên kết tượng trưng — từ chối chạy")
     work = Path(tempfile.mkdtemp(prefix="toolrun-"))
     code = work / "tool"
     shutil.copytree(tool_dir, code, symlinks=False, ignore=shutil.ignore_patterns("__pycache__", "*.pyc", ".git"))
@@ -205,6 +234,12 @@ def run_cases(tool_dir: Path, manifest: dict) -> dict:
         report["lint"].append("Không có ca thử nào (tests/cases.json hoặc examples trong manifest)")
     for c in cases:
         res = {"name": c.get("name", "?"), "ok": False, "detail": "", "duration_s": None}
+        refs = list(c.get("inputs", {}).values()) + list((c.get("expect", {}).get("files") or {}).values())
+        outside = [v for v in refs if safe_rel(tool_dir, v) is None]
+        if outside:
+            res["detail"] = "đường dẫn ca thử thoát ra ngoài thư mục tool: " + ", ".join(map(str, outside))
+            report["cases"].append(res)
+            continue
         try:
             r = execute(tool_dir, manifest, {k: tool_dir / v for k, v in c.get("inputs", {}).items()}, c.get("params"))
         except ToolError as e:

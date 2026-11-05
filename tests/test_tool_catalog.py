@@ -96,6 +96,33 @@ class PublishGateTest(Base):
             bad = {k: v for k, v in m.items() if k != key}
             self.assertTrue(validate_manifest(bad, b), key)
 
+    def test_manifest_and_case_paths_cannot_leave_the_tool_folder(self):
+        import os
+        secret = self.tmp / "ngoai.txt"
+        secret.write_text("dữ liệu ngoài thư mục tool\n", encoding="utf-8")
+        for mutate, word in (
+                (lambda m, b: m.update(entry="../main.py"), "không thấy tệp chạy"),
+                (lambda m, b: m["examples"][0]["inputs"].update(input="../../ngoai.txt"), "ngoài thư mục tool"),
+                (lambda m, b: m["examples"][0]["inputs"].update(input=str(secret)), "ngoài thư mục tool"),
+                (lambda m, b: m["examples"][0].update(expected={"../x.txt": "examples/mau.expected.txt"}), "không hợp lệ"),
+                (lambda m, b: m["interface"]["inputs"][0].update(name="../in"), "tên mỗi đầu vào"),
+                (lambda m, b: os.symlink(secret, b / "examples" / "lien_ket.txt"), "liên kết tượng trưng")):
+            b = make_build(self.tmp / "trav")
+            m = read_json(b / "manifest.json")
+            mutate(m, b)
+            (b / "manifest.json").write_text(json.dumps(m, ensure_ascii=False), encoding="utf-8")
+            errs = validate_manifest(m, b)
+            self.assertTrue(any(word in x for x in errs), (word, errs))
+            with self.assertRaisesRegex(ToolError, "Manifest không hợp lệ"):
+                self.cat.publish(b, T)
+        b = make_build(self.tmp / "trav2")               # ca thử trỏ ra ngoài: ca đó trượt, không đọc tệp ngoài
+        cases = read_json(b / "tests" / "cases.json")
+        cases["cases"].append({"name": "doc-ngoai", "inputs": {"input": "../../../ngoai.txt"}, "expect": {"exit_code": 0}})
+        (b / "tests" / "cases.json").write_text(json.dumps(cases), encoding="utf-8")
+        rep = sandbox.run_cases(b, read_json(b / "manifest.json"))
+        bad = next(c for c in rep["cases"] if c["name"] == "doc-ngoai")
+        self.assertFalse(rep["ok"]); self.assertIn("thoát ra ngoài thư mục tool", bad["detail"])
+
     def test_sandbox_strips_environment_and_network(self):
         import os
         os.environ["TOOL_TEST_SECRET"] = "khoa-bi-mat"

@@ -59,6 +59,8 @@ def validate_manifest(m: dict, tool_dir: Path | None = None) -> list[str]:
     itf = m.get("interface")
     if not isinstance(itf, dict) or not isinstance(itf.get("inputs"), list) or not isinstance(itf.get("outputs"), list):
         e.append("interface phải có inputs[] và outputs[]")
+    elif any(not isinstance(i, dict) or not re.fullmatch(r"[a-z][a-z0-9_]{0,31}", str(i.get("name", ""))) for i in itf["inputs"]):
+        e.append("tên mỗi đầu vào phải dạng chữ thường/số/gạch dưới (vd. input)")
     perms = m.get("permissions")
     if not isinstance(perms, dict) or "network" not in perms or "subprocess" not in perms:
         e.append("permissions phải khai rõ network (true/false) và subprocess (danh sách lệnh, có thể rỗng)")
@@ -78,16 +80,30 @@ def validate_manifest(m: dict, tool_dir: Path | None = None) -> list[str]:
         for ex in exs:
             if not isinstance(ex.get("inputs"), dict) or not isinstance(ex.get("expected"), dict) or not ex["expected"]:
                 e.append("mỗi ví dụ phải có inputs{} và expected{tệp kết quả: tệp mong đợi}")
-            elif tool_dir is not None:
-                for p in list(ex["inputs"].values()) + list(ex["expected"].values()):
-                    if not (Path(tool_dir) / p).is_file():
-                        e.append(f"ví dụ tham chiếu tệp không có: {p}")
+            else:
+                for name in ex["expected"]:
+                    if not isinstance(name, str) or name.startswith("/") or ".." in name.split("/") or "\\" in name:
+                        e.append(f"tên tệp kết quả của ví dụ không hợp lệ: {name!r}")
+                if tool_dir is not None:
+                    for p in list(ex["inputs"].values()) + list(ex["expected"].values()):
+                        sp = sandbox.safe_rel(Path(tool_dir), p)
+                        if sp is None:
+                            e.append(f"ví dụ tham chiếu đường dẫn ngoài thư mục tool: {p!r}")
+                        elif not sp.is_file():
+                            e.append(f"ví dụ tham chiếu tệp không có: {p}")
     cost = m.get("cost_usd_per_run", 0)
     if not isinstance(cost, (int, float)) or cost < 0:
         e.append("cost_usd_per_run phải là số ≥ 0")
-    if tool_dir is not None and isinstance(m.get("entry", "main.py"), str):
-        if not (Path(tool_dir) / m.get("entry", "main.py")).is_file():
-            e.append(f"không thấy tệp chạy '{m.get('entry', 'main.py')}'")
+    entry = m.get("entry", "main.py")
+    if not isinstance(entry, str) or not entry.endswith(".py"):
+        e.append("entry phải là tệp .py trong thư mục tool")
+    elif tool_dir is not None:
+        sp = sandbox.safe_rel(Path(tool_dir), entry)
+        if sp is None or not sp.is_file():
+            e.append(f"không thấy tệp chạy '{entry}' trong thư mục tool")
+        links = sandbox.symlinks_in(Path(tool_dir))
+        if links:
+            e.append("thư mục tool không được có liên kết tượng trưng: " + ", ".join(links[:5]))
     return e
 
 
