@@ -1,0 +1,456 @@
+{
+ "note": "Bản xuất sổ runtime/tasks.db (máy cloud của phiên, mode LIVE) cho request VT-20261105-001. Sổ gốc không nằm trong git.",
+ "tasks": [
+  {
+   "task_id": "T-5a0bacbbcd",
+   "parent_id": null,
+   "company_id": null,
+   "owner_agent_id": "VUA_CEO",
+   "objective": "Giao A03 thẩm định skill verification-before-completion của obra/superpowers để dùng cho bước nghiệm thu của Agent Vua.",
+   "acceptance_criteria": "Liên kết đúng SKILL.md ghim theo commit | Ghi commit nguồn và giấy phép | Nêu phạm vi quyền cần dùng khi Agent Vua áp dụng skill | Hai ví dụ: một đạt, một trượt | Một Agent khác kiểm bằng chứng | Sau khi được duyệt, đồng bộ kết quả sang tab SKILL và đọc lại được",
+   "dependencies": "[]",
+   "state": "VERIFIED_DONE",
+   "state_version": 8,
+   "lease_owner": null,
+   "lease_expiry": null,
+   "fencing_token": 3,
+   "last_worker": "VUA_CEO",
+   "budget_reservation": 0.0,
+   "approval_refs": "[]",
+   "artifact_refs": "[]",
+   "evidence_refs": "[\"Vi\\u1ec7c con \\u0111\\u1ea1t: S1=T-67d2f9bdeb:VERIFIED_DONE, S2=T-f9045edfb9:VERIFIED_DONE\", \"Vi\\u1ec7c con \\u0111\\u1ea1t: S1=T-67d2f9bdeb:VERIFIED_DONE, S2=T-f9045edfb9:VERIFIED_DONE\"]",
+   "next_action": "A20 nghiệm thu gốc",
+   "retry_count": 1,
+   "idempotency_key": "VT-20261105-001",
+   "created_at": "2026-11-05T16:06:05.352791+00:00",
+   "started_at": "2026-11-05T16:06:05.529351+00:00",
+   "updated_at": "2026-11-05T16:21:46.298297+00:00",
+   "attempt_evidence_start": 1,
+   "pending_retry": 0
+  },
+  {
+   "task_id": "T-67d2f9bdeb",
+   "parent_id": "T-5a0bacbbcd",
+   "company_id": null,
+   "owner_agent_id": "A03",
+   "objective": "Thẩm định skill verification-before-completion trong repo obra/superpowers để Agent Vua dùng ở bước nghiệm thu",
+   "acceptance_criteria": "Đầu ra: JSON gồm: skill_md_url (github.com/obra/superpowers/blob/<commit đầy đủ>/skills/verification-before-completion/SKILL.md), commit, license, sha256 của SKILL.md, permissions (công cụ/quyền tối thiểu khi áp dụng, những gì KHÔNG cần), examples: [{kind:'pass', claim, evidence, why}, {kind:'fail', claim, why_fail}], fit_for_vua (cách gắn vào bước nghiệm thu), risks | Đạt khi: URL mở được và đúng commit; sha256 khớp nội dung tại commit; license đọc từ file LICENSE tại commit; quyền nêu cụ thể; có đúng 1 ví dụ đạt và 1 ví dụ trượt bám theo cổng 5 bước của skill",
+   "dependencies": "[]",
+   "state": "VERIFIED_DONE",
+   "state_version": 3,
+   "lease_owner": null,
+   "lease_expiry": null,
+   "fencing_token": 1,
+   "last_worker": "A03",
+   "budget_reservation": 0.0,
+   "approval_refs": "[]",
+   "artifact_refs": "[]",
+   "evidence_refs": "[\"git clone --depth 1 https://github.com/obra/superpowers .../scratchpad/a03/sp : th\\u00e0nh c\\u00f4ng\", \"git rev-parse HEAD -> 22f0b463e7a5e579904dd6211a520321035526f7 (git log -1: 2026-11-03T14:17:07-08:00 'Release v7.0.2: brainstorming tuning, harness bootstrap fixes, SDD helper fixes (#2657)')\", \"sha256sum skills/verification-before-completion/SKILL.md -> 2befe7fc55bcadaa3d97dd9e8efeb633d2561c0ebe74c5a8b17c4d9e7e4520b3 (wc -l = 120 d\\u00f2ng; th\\u01b0 m\\u1ee5c ch\\u1ec9 c\\u00f3 SKILL.md)\", \"cat LICENSE t\\u1ea1i commit -> 'MIT License / Copyright (c) 2025 Jesse Vincent' (sha256 LICENSE a37e0e9697144819e1d965176ac4ae5bc3fa02d11e7812036bbcadf6dafe2400)\", \"WebFetch https://github.com/obra/superpowers/blob/22f0b463e7a5e579904dd6211a520321035526f7/skills/verification-before-completion/SKILL.md -> m\\u1edf \\u0111\\u01b0\\u1ee3c, ti\\u00eau \\u0111\\u1ec1 \\u0111\\u1ea7u 'Verification Before Completion'\", \"Kh\\u00f4ng ch\\u1ea1y script n\\u00e0o c\\u1ee7a repo; ch\\u1ec9 \\u0111\\u1ecdc file; kh\\u00f4ng ghi v\\u00e0o /home/claude/crown-agent\"]",
+   "next_action": "chờ A20 kiểm",
+   "retry_count": 0,
+   "idempotency_key": "VT-20261105-001:S1",
+   "created_at": "2026-11-05T16:06:05.601422+00:00",
+   "started_at": "2026-11-05T16:06:05.909114+00:00",
+   "updated_at": "2026-11-05T16:12:18.805976+00:00",
+   "attempt_evidence_start": 0,
+   "pending_retry": 0
+  },
+  {
+   "task_id": "T-f9045edfb9",
+   "parent_id": "T-5a0bacbbcd",
+   "company_id": null,
+   "owner_agent_id": "A03",
+   "objective": "Sau khi A20 duyệt, đồng bộ kết quả thẩm định sang tab SKILL của Hoàng thành",
+   "acceptance_criteria": "Đầu ra: Biên nhận đọc lại từ office/skill_state có op_id VT-20261105-001:S2 | Đạt khi: Đọc lại doc skill_state thấy bản ghi mang op_id",
+   "dependencies": "[\"T-67d2f9bdeb\"]",
+   "state": "VERIFIED_DONE",
+   "state_version": 7,
+   "lease_owner": null,
+   "lease_expiry": null,
+   "fencing_token": 2,
+   "last_worker": "A03",
+   "budget_reservation": 0.0,
+   "approval_refs": "[]",
+   "artifact_refs": "[]",
+   "evidence_refs": "[\"bi\\u00ean nh\\u1eadn hoang-thanh: office/skill_state version 26 (updatedAt 2026-11-05T16:13:11Z), \\u0111\\u1ecdc l\\u1ea1i \\u1edf quy\\u1ec1n view: vua_vetting['VT-20261105-001_S2'].op_id = 'VT-20261105-001:S2', verdict PASS (A20), commit 22f0b463\\u2026, sha256 2befe7fc\\u2026; pipeline 37 m\\u1ee5c v\\u00e0 runs 20 m\\u1ee5c c\\u1ee7a A03-NB gi\\u1eef nguy\\u00ean\", \"bi\\u00ean nh\\u1eadn hoang-thanh: office/skill_state version 27 (updatedAt 2026-11-05T16:17:28Z), \\u0111\\u1ecdc l\\u1ea1i quy\\u1ec1n view: vua_vetting['VT-20261105-001_S2'].op_ids = ['VT-20261105-001:S2','VT-20261105-001:S2#1'], at = 2026-11-05T16:13:11Z, commit 22f0b463\\u2026, sha256 2befe7fc\\u20264520b3, verdict PASS (A20). \\u0110\\u1ebfm t\\u1eebng id: pipeline 36 m\\u1ee5c (CROWN-001 \\u2026 S083) \\u2014 b\\u1eb1ng v25 tr\\u01b0\\u1edbc khi ghi, kh\\u00f4ng m\\u1ea5t m\\u1ee5c; runs 20 m\\u1ee5c; run_count 30 l\\u00e0 b\\u1ed9 \\u0111\\u1ebfm c\\u1ed9ng d\\u1ed3n c\\u1ee7a A03-NB (trang ghi '20 g\\u1ea7n nh\\u1ea5t'), kh\\u00f4ng do l\\u01b0\\u1ee3t ghi n\\u00e0y thay \\u0111\\u1ed5i.\"]",
+   "next_action": "chờ A20 kiểm",
+   "retry_count": 1,
+   "idempotency_key": "VT-20261105-001:S2",
+   "created_at": "2026-11-05T16:06:05.604793+00:00",
+   "started_at": "2026-11-05T16:12:18.993799+00:00",
+   "updated_at": "2026-11-05T16:21:00.784775+00:00",
+   "attempt_evidence_start": 1,
+   "pending_retry": 0
+  }
+ ],
+ "events": [
+  {
+   "event_id": 1,
+   "task_id": "T-5a0bacbbcd",
+   "at": "2026-11-05T16:06:05.352849+00:00",
+   "actor": "VUA_CEO",
+   "from_state": null,
+   "to_state": "READY",
+   "note": "tạo nhiệm vụ"
+  },
+  {
+   "event_id": 2,
+   "task_id": "T-5a0bacbbcd",
+   "at": "2026-11-05T16:06:05.529397+00:00",
+   "actor": "VUA_CEO",
+   "from_state": "READY",
+   "to_state": "RUNNING",
+   "note": "nhận việc; token=1"
+  },
+  {
+   "event_id": 3,
+   "task_id": "T-67d2f9bdeb",
+   "at": "2026-11-05T16:06:05.601488+00:00",
+   "actor": "VUA_CEO",
+   "from_state": null,
+   "to_state": "READY",
+   "note": "tạo nhiệm vụ"
+  },
+  {
+   "event_id": 4,
+   "task_id": "T-f9045edfb9",
+   "at": "2026-11-05T16:06:05.604843+00:00",
+   "actor": "VUA_CEO",
+   "from_state": null,
+   "to_state": "READY",
+   "note": "tạo nhiệm vụ"
+  },
+  {
+   "event_id": 5,
+   "task_id": "T-67d2f9bdeb",
+   "at": "2026-11-05T16:06:05.909163+00:00",
+   "actor": "A03",
+   "from_state": "READY",
+   "to_state": "RUNNING",
+   "note": "nhận việc; token=1"
+  },
+  {
+   "event_id": 6,
+   "task_id": "T-67d2f9bdeb",
+   "at": "2026-11-05T16:11:22.096970+00:00",
+   "actor": "A03",
+   "from_state": "RUNNING",
+   "to_state": "RUNNING",
+   "note": "evidence=git clone --depth 1 https://github.com/obra/superpowers .../scratchpad/a03/sp : thành công"
+  },
+  {
+   "event_id": 7,
+   "task_id": "T-67d2f9bdeb",
+   "at": "2026-11-05T16:11:22.098533+00:00",
+   "actor": "A03",
+   "from_state": "RUNNING",
+   "to_state": "RUNNING",
+   "note": "evidence=git rev-parse HEAD -> 22f0b463e7a5e579904dd6211a520321035526f7 (git log -1: 2026-11-03T14:17:07-08:00 'Release v7.0.2: brainstorming tuning, harness bootstrap fixes, SDD helper fixes (#2657)')"
+  },
+  {
+   "event_id": 8,
+   "task_id": "T-67d2f9bdeb",
+   "at": "2026-11-05T16:11:22.099011+00:00",
+   "actor": "A03",
+   "from_state": "RUNNING",
+   "to_state": "RUNNING",
+   "note": "evidence=sha256sum skills/verification-before-completion/SKILL.md -> 2befe7fc55bcadaa3d97dd9e8efeb633d2561c0ebe74c5a8b17c4d9e7e4520b3 (wc -l = 120 dòng; thư mục chỉ có SKILL.md)"
+  },
+  {
+   "event_id": 9,
+   "task_id": "T-67d2f9bdeb",
+   "at": "2026-11-05T16:11:22.099767+00:00",
+   "actor": "A03",
+   "from_state": "RUNNING",
+   "to_state": "RUNNING",
+   "note": "evidence=cat LICENSE tại commit -> 'MIT License / Copyright (c) 2025 Jesse Vincent' (sha256 LICENSE a37e0e9697144819e1d965176ac4ae5bc3fa02d11e7812036bbcadf6dafe2400)"
+  },
+  {
+   "event_id": 10,
+   "task_id": "T-67d2f9bdeb",
+   "at": "2026-11-05T16:11:22.100220+00:00",
+   "actor": "A03",
+   "from_state": "RUNNING",
+   "to_state": "RUNNING",
+   "note": "evidence=WebFetch https://github.com/obra/superpowers/blob/22f0b463e7a5e579904dd6211a520321035526f7/skills/verification-before-completion/SKILL.md -> mở được, tiêu đề đầu 'Verification Before Completion'"
+  },
+  {
+   "event_id": 11,
+   "task_id": "T-67d2f9bdeb",
+   "at": "2026-11-05T16:11:22.100595+00:00",
+   "actor": "A03",
+   "from_state": "RUNNING",
+   "to_state": "RUNNING",
+   "note": "evidence=Không chạy script nào của repo; chỉ đọc file; không ghi vào /home/claude/crown-agent; next=chờ A20 kiểm"
+  },
+  {
+   "event_id": 12,
+   "task_id": "T-67d2f9bdeb",
+   "at": "2026-11-05T16:11:22.164029+00:00",
+   "actor": "A03",
+   "from_state": "RUNNING",
+   "to_state": "REVIEW",
+   "note": "gửi kiểm"
+  },
+  {
+   "event_id": 13,
+   "task_id": "T-67d2f9bdeb",
+   "at": "2026-11-05T16:12:18.806037+00:00",
+   "actor": "A20",
+   "from_state": "REVIEW",
+   "to_state": "VERIFIED_DONE",
+   "note": "PASS bởi A20: [đạt] Clone độc lập vào thư mục trống mới và checkout đúng commit 22f0b463e7a5e579904dd6211a520321035526f7; [đạt] URL blob mở được và ghim đúng commit đầy đủ; [đạt] sha256 của SKILL.md tại commit khớp giá trị nộp; [đạt] License đọc từ file LICENSE tại commit là MIT, Copyright (c) 2025 Jesse Vincent; [đạt] Quyền nêu cụ thể và đúng với nội dung skill; [đạt] Có đúng 1 ví dụ đạt và 1 ví dụ trượt bám cổng 5 bước (IDENTIFY, RUN, READ, VERIFY, ONLY THEN); [đạt] fit_for_vua và risks bám đúng nội dung skill"
+  },
+  {
+   "event_id": 14,
+   "task_id": "T-f9045edfb9",
+   "at": "2026-11-05T16:12:18.993839+00:00",
+   "actor": "A03",
+   "from_state": "READY",
+   "to_state": "RUNNING",
+   "note": "nhận việc; token=1"
+  },
+  {
+   "event_id": 15,
+   "task_id": "T-f9045edfb9",
+   "at": "2026-11-05T16:14:58.130693+00:00",
+   "actor": "A03",
+   "from_state": "RUNNING",
+   "to_state": "RUNNING",
+   "note": "evidence=biên nhận hoang-thanh: office/skill_state version 26 (updatedAt 2026-11-05T16:13:11Z), đọc lại ở quyền view: vua_vetting['VT-20261105-001_S2'].op_id = 'VT-20261105-001:S2', verdict PASS (A20), commit 22f0b463…, sha256 2befe7fc…; pipeline 37 mục và runs 20 mục của A03-NB giữ nguyên; next=chờ A20 kiểm"
+  },
+  {
+   "event_id": 16,
+   "task_id": "T-f9045edfb9",
+   "at": "2026-11-05T16:14:58.202754+00:00",
+   "actor": "A03",
+   "from_state": "RUNNING",
+   "to_state": "REVIEW",
+   "note": "đồng bộ có biên nhận"
+  },
+  {
+   "event_id": 17,
+   "task_id": "T-f9045edfb9",
+   "at": "2026-11-05T16:17:04.209517+00:00",
+   "actor": "A20",
+   "from_state": "REVIEW",
+   "to_state": "FAILED",
+   "note": "FAIL bởi A20: [đạt] (1) Có vua_vetting[\"VT-20261105-001_S2\"].op_id == \"VT-20261105-001:S2\"; [đạt] (2) commit/sha256/verdict khớp kết quả S1; [trượt] (3) Dữ liệu cũ của A03-NB còn nguyên; số mục khớp biên nhận (37 và 20); [đạt] (4) Version của doc; [trượt] Phụ: dấu thời gian bản ghi vetting"
+  },
+  {
+   "event_id": 18,
+   "task_id": "T-f9045edfb9",
+   "at": "2026-11-05T16:17:04.272437+00:00",
+   "actor": "VUA_CEO",
+   "from_state": "FAILED",
+   "to_state": "READY",
+   "note": "làm lại theo A20"
+  },
+  {
+   "event_id": 19,
+   "task_id": "T-f9045edfb9",
+   "at": "2026-11-05T16:17:04.334239+00:00",
+   "actor": "A03",
+   "from_state": "READY",
+   "to_state": "RUNNING",
+   "note": "nhận việc; token=2"
+  },
+  {
+   "event_id": 20,
+   "task_id": "T-5a0bacbbcd",
+   "at": "2026-11-05T16:17:57.019494+00:00",
+   "actor": "VUA_CEO",
+   "from_state": "RUNNING",
+   "to_state": "BLOCKED",
+   "note": "chờ: S2:RUNNING"
+  },
+  {
+   "event_id": 21,
+   "task_id": "T-5a0bacbbcd",
+   "at": "2026-11-05T16:20:09.884677+00:00",
+   "actor": "VUA_CEO",
+   "from_state": "BLOCKED",
+   "to_state": "READY",
+   "note": "tiếp tục từ điểm kiểm đã xác nhận"
+  },
+  {
+   "event_id": 22,
+   "task_id": "T-5a0bacbbcd",
+   "at": "2026-11-05T16:20:09.955371+00:00",
+   "actor": "VUA_CEO",
+   "from_state": "READY",
+   "to_state": "RUNNING",
+   "note": "nhận việc; token=2"
+  },
+  {
+   "event_id": 23,
+   "task_id": "T-f9045edfb9",
+   "at": "2026-11-05T16:20:10.926725+00:00",
+   "actor": "A03",
+   "from_state": "RUNNING",
+   "to_state": "RUNNING",
+   "note": "evidence=biên nhận hoang-thanh: office/skill_state version 27 (updatedAt 2026-11-05T16:17:28Z), đọc lại quyền view: vua_vetting['VT-20261105-001_S2'].op_ids = ['VT-20261105-001:S2','VT-20261105-001:S2#1'], at = 2026-11-05T16:13:11Z, commit 22f0b463…, sha256 2befe7fc…4520b3, verdict PASS (A20). Đếm từng id: pipeline 36 mục (CROWN-001 … S083) — bằng v25 trước khi ghi, không mất mục; runs 20 mục; run_count 30 là bộ đếm cộng dồn của A03-NB (trang ghi '20 gần nhất'), không do lượt ghi này thay đổi.; next=chờ A20 kiểm"
+  },
+  {
+   "event_id": 24,
+   "task_id": "T-f9045edfb9",
+   "at": "2026-11-05T16:20:10.997303+00:00",
+   "actor": "A03",
+   "from_state": "RUNNING",
+   "to_state": "REVIEW",
+   "note": "đồng bộ có biên nhận"
+  },
+  {
+   "event_id": 25,
+   "task_id": "T-f9045edfb9",
+   "at": "2026-11-05T16:21:00.784820+00:00",
+   "actor": "A20",
+   "from_state": "REVIEW",
+   "to_state": "VERIFIED_DONE",
+   "note": "PASS bởi A20: [đạt] (1) op_ids chứa VT-20261105-001:S2#1; [đạt] (2) commit và sha256 khớp; [đạt] (3) at là mốc ISO đầy đủ; [đạt] (4a) Đếm pipeline = 36 mục; [đạt] (4b) runs = 20 mục, run_count = 30 (bộ đếm cộng dồn); [đạt] (5) Version doc"
+  },
+  {
+   "event_id": 26,
+   "task_id": "T-5a0bacbbcd",
+   "at": "2026-11-05T16:21:01.012938+00:00",
+   "actor": "VUA_CEO",
+   "from_state": "RUNNING",
+   "to_state": "RUNNING",
+   "note": "evidence=Việc con đạt: S1=T-67d2f9bdeb:VERIFIED_DONE, S2=T-f9045edfb9:VERIFIED_DONE; next=A20 nghiệm thu gốc"
+  },
+  {
+   "event_id": 27,
+   "task_id": "T-5a0bacbbcd",
+   "at": "2026-11-05T16:21:01.077152+00:00",
+   "actor": "VUA_CEO",
+   "from_state": "RUNNING",
+   "to_state": "REVIEW",
+   "note": "mọi việc con VERIFIED_DONE"
+  },
+  {
+   "event_id": 28,
+   "task_id": "T-5a0bacbbcd",
+   "at": "2026-11-05T16:21:45.502721+00:00",
+   "actor": "VUA_CEO",
+   "from_state": "REVIEW",
+   "to_state": "RUNNING",
+   "note": "nhận lại để sửa theo review; token=3"
+  },
+  {
+   "event_id": 29,
+   "task_id": "T-5a0bacbbcd",
+   "at": "2026-11-05T16:21:46.169445+00:00",
+   "actor": "VUA_CEO",
+   "from_state": "RUNNING",
+   "to_state": "RUNNING",
+   "note": "evidence=Việc con đạt: S1=T-67d2f9bdeb:VERIFIED_DONE, S2=T-f9045edfb9:VERIFIED_DONE; next=A20 nghiệm thu gốc"
+  },
+  {
+   "event_id": 30,
+   "task_id": "T-5a0bacbbcd",
+   "at": "2026-11-05T16:21:46.233950+00:00",
+   "actor": "VUA_CEO",
+   "from_state": "RUNNING",
+   "to_state": "REVIEW",
+   "note": "mọi việc con VERIFIED_DONE"
+  },
+  {
+   "event_id": 31,
+   "task_id": "T-5a0bacbbcd",
+   "at": "2026-11-05T16:21:46.298339+00:00",
+   "actor": "A20",
+   "from_state": "REVIEW",
+   "to_state": "VERIFIED_DONE",
+   "note": "PASS bởi A20: [đạt] Liên kết đúng SKILL.md ghim theo commit; [đạt] Ghi commit nguồn và giấy phép; [đạt] Nêu phạm vi quyền cần dùng khi Agent Vua áp dụng skill; [đạt] Hai ví dụ: một đạt, một trượt; [đạt] Một Agent khác kiểm bằng chứng; [đạt] Sau khi được duyệt, đồng bộ kết quả sang tab SKILL và đọc lại được"
+  }
+ ],
+ "vua_requests": [
+  {
+   "request_id": "VT-20261105-001",
+   "root_task_id": "T-5a0bacbbcd",
+   "issued_by": "CHAIRMAN",
+   "domain": "SKILL",
+   "payload_hash": "4429a42b23ec15052e8fcc6b3ee9e5b3a9da28cbb0755454e31cb3ef3e8af521",
+   "payload": "{\"acceptance\":[\"Liên kết đúng SKILL.md ghim theo commit\",\"Ghi commit nguồn và giấy phép\",\"Nêu phạm vi quyền cần dùng khi Agent Vua áp dụng skill\",\"Hai ví dụ: một đạt, một trượt\",\"Một Agent khác kiểm bằng chứng\",\"Sau khi được duyệt, đồng bộ kết quả sang tab SKILL và đọc lại được\"],\"issued_by\":\"CHAIRMAN\",\"mode\":\"LIVE\",\"objective\":\"Giao A03 thẩm định skill verification-before-completion của obra/superpowers để dùng cho bước nghiệm thu của Agent Vua.\",\"scope\":{\"domain\":\"SKILL\",\"skill\":\"verification-before-completion\",\"source_repo\":\"obra/superpowers\",\"write\":\"chỉ đọc nguồn; đồng bộ tab SKILL sau khi duyệt\"}}",
+   "mode": "LIVE",
+   "created_at": "2026-11-05T16:06:05.354010+00:00"
+  }
+ ],
+ "vua_steps": [
+  {
+   "request_id": "VT-20261105-001",
+   "step": "intake",
+   "at": "2026-11-05T16:06:05.354590+00:00",
+   "detail": "{\"issued_by\":\"CHAIRMAN\",\"root\":\"T-5a0bacbbcd\"}"
+  },
+  {
+   "request_id": "VT-20261105-001",
+   "step": "plan",
+   "at": "2026-11-05T16:06:05.606052+00:00",
+   "detail": "{\"map\":{\"S1\":\"T-67d2f9bdeb\",\"S2\":\"T-f9045edfb9\"},\"subtasks\":[{\"acceptance\":\"URL mở được và đúng commit; sha256 khớp nội dung tại commit; license đọc từ file LICENSE tại commit; quyền nêu cụ thể; có đúng 1 ví dụ đạt và 1 ví dụ trượt bám theo cổng 5 bước của skill\",\"depends_on\":[],\"key\":\"S1\",\"kind\":\"work\",\"objective\":\"Thẩm định skill verification-before-completion trong repo obra/superpowers để Agent Vua dùng ở bước nghiệm thu\",\"output\":\"JSON gồm: skill_md_url (github.com/obra/superpowers/blob/<commit đầy đủ>/skills/verification-before-completion/SKILL.md), commit, license, sha256 của SKILL.md, permissions (công cụ/quyền tối thiểu khi áp dụng, những gì KHÔNG cần), examples: [{kind:'pass', claim, evidence, why}, {kind:'fail', claim, why_fail}], fit_for_vua (cách gắn vào bước nghiệm thu), risks\",\"owner\":\"A03\",\"parallel_ok\":false,\"write_scope\":[\"agents/A03/\"]},{\"acceptance\":\"Đọc lại doc skill_state thấy bản ghi mang op_id\",\"depends_on\":[\"S1\"],\"key\":\"S2\",\"kind\":\"sync\",\"objective\":\"Sau khi A20 duyệt, đồng bộ kết quả thẩm định sang tab SKILL của Hoàng thành\",\"output\":\"Biên nhận đọc lại từ office/skill_state có op_id VT-20261105-001:S2\",\"owner\":\"A03\",\"parallel_ok\":false,\"write_scope\":[\"hoang-thanh:office/skill_state\"]}]}"
+  },
+  {
+   "request_id": "VT-20261105-001",
+   "step": "S1:result",
+   "at": "2026-11-05T16:11:21.899441+00:00",
+   "detail": "{\"artifacts\":[],\"blocked_reason\":\"\",\"evidence\":[\"git clone --depth 1 https://github.com/obra/superpowers .../scratchpad/a03/sp : thành công\",\"git rev-parse HEAD -> 22f0b463e7a5e579904dd6211a520321035526f7 (git log -1: 2026-11-03T14:17:07-08:00 'Release v7.0.2: brainstorming tuning, harness bootstrap fixes, SDD helper fixes (#2657)')\",\"sha256sum skills/verification-before-completion/SKILL.md -> 2befe7fc55bcadaa3d97dd9e8efeb633d2561c0ebe74c5a8b17c4d9e7e4520b3 (wc -l = 120 dòng; thư mục chỉ có SKILL.md)\",\"cat LICENSE tại commit -> 'MIT License / Copyright (c) 2025 Jesse Vincent' (sha256 LICENSE a37e0e9697144819e1d965176ac4ae5bc3fa02d11e7812036bbcadf6dafe2400)\",\"WebFetch https://github.com/obra/superpowers/blob/22f0b463e7a5e579904dd6211a520321035526f7/skills/verification-before-completion/SKILL.md -> mở được, tiêu đề đầu 'Verification Before Completion'\",\"Không chạy script nào của repo; chỉ đọc file; không ghi vào /home/claude/crown-agent\"],\"result\":{\"commit\":\"22f0b463e7a5e579904dd6211a520321035526f7\",\"examples\":[{\"claim\":\"Bản vá retry cho client Binance đã sửa lỗi: toàn bộ test pass.\",\"evidence\":\"Bước 1 IDENTIFY: lệnh chứng minh là bộ test của dự án. Bước 2 RUN: chạy đầy đủ, mới trong lượt này (vd: pytest -q). Bước 3 READ: đọc hết output, exit code 0, 0 failed. Bước 4 VERIFY: output khớp tuyên bố. Bước 5: mới nêu 'Test pass' kèm dòng kết quả (vd '34 passed', exit 0) dán nguyên văn.\",\"kind\":\"pass\",\"why\":\"Đủ cả 5 bước của cổng; bằng chứng mới, đầy đủ, kiểm lại được, đúng mẫu '[Run test command] [See: 34/34 pass] All tests pass' trong skill.\"},{\"claim\":\"Xong rồi, lỗi đã sửa, chắc chắn test sẽ pass.\",\"kind\":\"fail\",\"why_fail\":\"Bỏ bước 2-4 (không chạy lệnh, không đọc output/exit code, không đối chiếu) nhưng vẫn làm bước 5; dùng từ 'chắc chắn', 'xong rồi' là cờ đỏ (tương đương 'should work now', 'Confidence ≠ evidence'). Bảng Common Failures: 'Bug fixed' cần test triệu chứng gốc pass, 'code đã đổi' không đủ. Theo skill: bỏ bước nào = không phải kiểm chứng.\"}],\"fit_for_vua\":\"Gắn làm cổng bắt buộc ở bước nghiệm thu của Agent Vua, trước khi đánh dấu một nhiệm vụ DONE hoặc chuyển sang nhiệm vụ kế: (1) mỗi báo cáo agent con phải kèm trường evidence = lệnh + output/exit code chạy trong lượt đó; (2) Vua không tin 'agent báo thành công' mà tự chạy lại lệnh kiểm hoặc kiểm diff (đúng mục Agent delegation); (3) với yêu cầu nhiều dòng thì lập checklist từng dòng (mục Requirements), không coi 'test pass' là 'đủ yêu cầu'; (4) nhiệm vụ sửa lỗi cần red-green (test phải FAIL khi revert fix). Phù hợp luật sẵn có của dự án: 'mọi tuyên bố hoàn thành phải có bằng chứng'. Nên chép nội dung thành skill nội bộ có ghi nguồn, commit và giữ nguyên giấy phép MIT.\",\"license\":\"MIT (đọc từ file LICENSE tại commit: 'MIT License, Copyright (c) 2025 Jesse Vincent'; cho phép dùng/sao chép/sửa/phân phối, yêu cầu giữ nguyên thông báo bản quyền và giấy phép trong bản sao)\",\"permissions\":{\"khong_can\":[\"Không cần mạng/internet khi áp dụng (chỉ cần khi tải skill)\",\"Không cần ghi file ngoài vùng của chính mình; skill không yêu cầu ghi gì\",\"Không cần khóa/API key/mật khẩu/bí mật\",\"Không cần chạy script, hook, package.json hay index.js của repo superpowers\",\"Không cần quyền push/commit/mở PR (skill chỉ chặn tuyên bố khi chưa kiểm)\",\"Không cần cài thêm công cụ hay tool bên ngoài\",\"Không cần quyền sàn giao dịch/BTC; nếu nghiệm thu bot thì chỉ chạy lệnh kiểm chứng chế độ đọc/test\"],\"toi_thieu_can_co\":[\"Đọc nội dung SKILL.md (văn bản thuần, 120 dòng, không có file phụ trong thư mục skill)\",\"Quyền chạy đúng lệnh kiểm chứng của tác vụ cần nghiệm thu (vd: lệnh test, build, lint của dự án) ở chế độ chạy mới, đọc đủ output và exit code\",\"Quyền đọc kết quả lệnh/diff VCS (vd: git diff, git status) để kiểm tra báo cáo của agent con\",\"Quyền đọc kế hoạch/checklist yêu cầu để đối chiếu từng dòng\"]},\"risks\":[\"Skill thuần quy trình, không chống được bằng chứng giả: agent vẫn có thể dán output bịa; cần Vua tự chạy lại lệnh hoặc đối chiếu log/diff\",\"Ngôn từ cứng ('no exceptions', 'lying') có thể gây chạy lệnh lặp, tốn token/thời gian với tác vụ nhỏ; cần quy định mức kiểm theo cỡ việc\",\"Không nói lệnh nào là đủ cho từng loại việc; Vua phải định nghĩa lệnh kiểm chuẩn cho mỗi loại (bot BTC, Etsy, web)\",\"Với việc không có test tự động (nội dung, thiết kế) skill không cho tiêu chí thay thế; cần checklist riêng\",\"Skill nằm ở HEAD nhánh mặc định có thể đổi; luôn ghim commit 22f0b463 và kiểm sha256 trước khi dùng\",\"Chạy lệnh kiểm trên bot giao dịch thật có thể gây tác dụng phụ; chỉ chạy test/chế độ đọc, không đặt lệnh thật\",\"Nội dung repo là dữ liệu; skill không chứa lệnh ẩn (đã đọc toàn bộ 120 dòng), nhưng repo có hooks/scripts khác chưa thẩm định, không chạy\"],\"sha256\":\"2befe7fc55bcadaa3d97dd9e8efeb633d2561c0ebe74c5a8b17c4d9e7e4520b3\",\"skill_md_url\":\"https://github.com/obra/superpowers/blob/22f0b463e7a5e579904dd6211a520321035526f7/skills/verification-before-completion/SKILL.md\"},\"status\":\"DONE\"}"
+  },
+  {
+   "request_id": "VT-20261105-001",
+   "step": "S1:review:0",
+   "at": "2026-11-05T16:12:18.735094+00:00",
+   "detail": "{\"checks\":[{\"evidence\":\"git clone vào .../scratchpad/a20/sp, git checkout 22f0b463..., git rev-parse HEAD in ra đúng 22f0b463e7a5e579904dd6211a520321035526f7. Không chạy script nào của repo, không ghi vào /home/claude/crown-agent.\",\"passed\":true,\"text\":\"Clone độc lập vào thư mục trống mới và checkout đúng commit 22f0b463e7a5e579904dd6211a520321035526f7\"},{\"evidence\":\"WebFetch https://github.com/obra/superpowers/blob/22f0b463e7a5e579904dd6211a520321035526f7/skills/verification-before-completion/SKILL.md trả về trang tải được, tiêu đề chứa đúng commit, heading đầu 'Verification Before Completion'. URL dùng commit 40 ký tự.\",\"passed\":true,\"text\":\"URL blob mở được và ghim đúng commit đầy đủ\"},{\"evidence\":\"sha256sum skills/verification-before-completion/SKILL.md = 2befe7fc55bcadaa3d97dd9e8efeb633d2561c0ebe74c5a8b17c4d9e7e4520b3, trùng khớp. wc -l = 120; thư mục chỉ có SKILL.md.\",\"passed\":true,\"text\":\"sha256 của SKILL.md tại commit khớp giá trị nộp\"},{\"evidence\":\"head LICENSE tại commit: 'MIT License / Copyright (c) 2025 Jesse Vincent'. sha256 LICENSE = a37e0e9697144819e1d965176ac4ae5bc3fa02d11e7812036bbcadf6dafe2400, khớp báo cáo.\",\"passed\":true,\"text\":\"License đọc từ file LICENSE tại commit là MIT, Copyright (c) 2025 Jesse Vincent\"},{\"evidence\":\"Đọc đủ 120 dòng SKILL.md: skill thuần quy trình; danh sách tối thiểu và danh sách 'không cần' cụ thể, không mâu thuẫn skill.\",\"passed\":true,\"text\":\"Quyền nêu cụ thể và đúng với nội dung skill\"},{\"evidence\":\"Gate Function dòng 24-36 gồm 5 bước. Ví dụ đạt đi qua 5 bước, khớp mẫu dòng 78. Ví dụ trượt bỏ bước 2-4, khớp Red Flags và 'Skip any step = lying'. Lưu ý nhỏ: từ 'chắc chắn' không có nguyên văn trong skill, báo cáo ghi 'tương đương', chấp nhận được.\",\"passed\":true,\"text\":\"Có đúng 1 ví dụ đạt và 1 ví dụ trượt bám cổng 5 bước (IDENTIFY, RUN, READ, VERIFY, ONLY THEN)\"},{\"evidence\":\"Agent delegation dòng 100-103, requirements checklist dòng 94-98, red-green dòng 82-86 đều có trong SKILL.md.\",\"passed\":true,\"text\":\"fit_for_vua và risks bám đúng nội dung skill\"}],\"must_fix\":[],\"verdict\":\"PASS\"}"
+  },
+  {
+   "request_id": "VT-20261105-001",
+   "step": "S2:review:0",
+   "at": "2026-11-05T16:17:04.143050+00:00",
+   "detail": "{\"checks\":[{\"evidence\":\"ArtifactData get as_level=view: op_id đúng, request_id VT-20261105-001, task_ids.S2 = T-f9045edfb9.\",\"passed\":true,\"text\":\"(1) Có vua_vetting[\\\"VT-20261105-001_S2\\\"].op_id == \\\"VT-20261105-001:S2\\\"\"},{\"evidence\":\"commit 22f0b463e7a5e579904dd6211a520321035526f7, sha256 2befe7fc…4520b3 khớp từng ký tự; verdict PASS (A20), stage VETTED.\",\"passed\":true,\"text\":\"(2) commit/sha256/verdict khớp kết quả S1\"},{\"evidence\":\"Đếm pipeline được 36 mục, biên nhận khai 37. runs 20 mục khớp. run_count = 30 khác độ dài runs (20).\",\"passed\":false,\"text\":\"(3) Dữ liệu cũ của A03-NB còn nguyên; số mục khớp biên nhận (37 và 20)\"},{\"evidence\":\"version 26, updatedAt 2026-11-05T16:13:11.068434Z.\",\"passed\":true,\"text\":\"(4) Version của doc\"},{\"evidence\":\"at = \\\"16:2xZ\\\" thiếu phút/giây, muộn hơn updatedAt.\",\"passed\":false,\"text\":\"Phụ: dấu thời gian bản ghi vetting\"}],\"must_fix\":[\"Biên nhận ghi pipeline 37 mục nhưng thực tế 36: đối chiếu bản trước, sửa biên nhận.\",\"run_count 30 vs runs 20: làm rõ bộ đếm cộng dồn hay mất mục; ghi rõ trong biên nhận.\",\"Sửa trường at thành mốc thời gian đầy đủ.\"],\"verdict\":\"FAIL\"}"
+  },
+  {
+   "request_id": "VT-20261105-001",
+   "step": "manual_fix:outbox:S2#1",
+   "at": "2026-11-05T16:20:09.563320+00:00",
+   "detail": "{\"by\":\"VUA_CEO (thao tác tay, có ghi điểm kiểm)\",\"new_sha\":\"7b95146682e344e3\",\"old_sha\":\"7c3a0b978084af0e\",\"why\":\"lỗi workflow bản trước: payload chứa góp ý người kiểm nên lượt tiếp tục tính lại payload khác → outbox_put từ chối; đã sửa workflow (góp ý ghi sổ riêng, payload ổn định)\"}"
+  },
+  {
+   "request_id": "VT-20261105-001",
+   "step": "S2:feedback:1",
+   "at": "2026-11-05T16:20:09.630009+00:00",
+   "detail": "{\"feedback\":[\"Biên nhận ghi pipeline 37 mục nhưng thực tế 36: đối chiếu bản trước, sửa biên nhận.\",\"run_count 30 vs runs 20: làm rõ bộ đếm cộng dồn hay mất mục; ghi rõ trong biên nhận.\",\"Sửa trường at thành mốc thời gian đầy đủ.\"]}"
+  },
+  {
+   "request_id": "VT-20261105-001",
+   "step": "S2:review:1",
+   "at": "2026-11-05T16:21:00.716802+00:00",
+   "detail": "{\"checks\":[{\"evidence\":\"ArtifactData get view: op_ids = [VT-20261105-001:S2, VT-20261105-001:S2#1]\",\"passed\":true,\"text\":\"(1) op_ids chứa VT-20261105-001:S2#1\"},{\"evidence\":\"commit 22f0b463e7a5…, sha256 2befe7fc…4520b3 khớp từng ký tự\",\"passed\":true,\"text\":\"(2) commit và sha256 khớp\"},{\"evidence\":\"at = 2026-11-05T16:13:11Z\",\"passed\":true,\"text\":\"(3) at là mốc ISO đầy đủ\"},{\"evidence\":\"Liệt kê id CROWN-001 … S083, tổng 36, không trùng; khớp biên nhận mới\",\"passed\":true,\"text\":\"(4a) Đếm pipeline = 36 mục\"},{\"evidence\":\"Đếm theo mốc at: 3+2+4+4+4+3 = 20; run_count 30\",\"passed\":true,\"text\":\"(4b) runs = 20 mục, run_count = 30 (bộ đếm cộng dồn)\"},{\"evidence\":\"version 27, updatedAt 2026-11-05T16:17:28.78Z\",\"passed\":true,\"text\":\"(5) Version doc\"}],\"must_fix\":[],\"verdict\":\"PASS\"}"
+  }
+ ],
+ "outbox": [
+  {
+   "op_id": "VT-20261105-001:S2",
+   "request_id": "VT-20261105-001",
+   "target": "hoang-thanh",
+   "payload": "{\"deps\":[{\"key\":\"S1\",\"owner\":\"A03\"}],\"mode\":\"LIVE\",\"request_id\":\"VT-20261105-001\",\"results\":{\"S1\":{\"commit\":\"22f0b463e7a5e579904dd6211a520321035526f7\",\"examples\":[{\"claim\":\"Bản vá retry cho client Binance đã sửa lỗi: toàn bộ test pass.\",\"evidence\":\"Bước 1 IDENTIFY: lệnh chứng minh là bộ test của dự án. Bước 2 RUN: chạy đầy đủ, mới trong lượt này (vd: pytest -q). Bước 3 READ: đọc hết output, exit code 0, 0 failed. Bước 4 VERIFY: output khớp tuyên bố. Bước 5: mới nêu 'Test pass' kèm dòng kết quả (vd '34 passed', exit 0) dán nguyên văn.\",\"kind\":\"pass\",\"why\":\"Đủ cả 5 bước của cổng; bằng chứng mới, đầy đủ, kiểm lại được, đúng mẫu '[Run test command] [See: 34/34 pass] All tests pass' trong skill.\"},{\"claim\":\"Xong rồi, lỗi đã sửa, chắc chắn test sẽ pass.\",\"kind\":\"fail\",\"why_fail\":\"Bỏ bước 2-4 (không chạy lệnh, không đọc output/exit code, không đối chiếu) nhưng vẫn làm bước 5; dùng từ 'chắc chắn', 'xong rồi' là cờ đỏ (tương đương 'should work now', 'Confidence ≠ evidence'). Bảng Common Failures: 'Bug fixed' cần test triệu chứng gốc pass, 'code đã đổi' không đủ. Theo skill: bỏ bước nào = không phải kiểm chứng.\"}],\"fit_for_vua\":\"Gắn làm cổng bắt buộc ở bước nghiệm thu của Agent Vua, trước khi đánh dấu một nhiệm vụ DONE hoặc chuyển sang nhiệm vụ kế: (1) mỗi báo cáo agent con phải kèm trường evidence = lệnh + output/exit code chạy trong lượt đó; (2) Vua không tin 'agent báo thành công' mà tự chạy lại lệnh kiểm hoặc kiểm diff (đúng mục Agent delegation); (3) với yêu cầu nhiều dòng thì lập checklist từng dòng (mục Requirements), không coi 'test pass' là 'đủ yêu cầu'; (4) nhiệm vụ sửa lỗi cần red-green (test phải FAIL khi revert fix). Phù hợp luật sẵn có của dự án: 'mọi tuyên bố hoàn thành phải có bằng chứng'. Nên chép nội dung thành skill nội bộ có ghi nguồn, commit và giữ nguyên giấy phép MIT.\",\"license\":\"MIT (đọc từ file LICENSE tại commit: 'MIT License, Copyright (c) 2025 Jesse Vincent'; cho phép dùng/sao chép/sửa/phân phối, yêu cầu giữ nguyên thông báo bản quyền và giấy phép trong bản sao)\",\"permissions\":{\"khong_can\":[\"Không cần mạng/internet khi áp dụng (chỉ cần khi tải skill)\",\"Không cần ghi file ngoài vùng của chính mình; skill không yêu cầu ghi gì\",\"Không cần khóa/API key/mật khẩu/bí mật\",\"Không cần chạy script, hook, package.json hay index.js của repo superpowers\",\"Không cần quyền push/commit/mở PR (skill chỉ chặn tuyên bố khi chưa kiểm)\",\"Không cần cài thêm công cụ hay tool bên ngoài\",\"Không cần quyền sàn giao dịch/BTC; nếu nghiệm thu bot thì chỉ chạy lệnh kiểm chứng chế độ đọc/test\"],\"toi_thieu_can_co\":[\"Đọc nội dung SKILL.md (văn bản thuần, 120 dòng, không có file phụ trong thư mục skill)\",\"Quyền chạy đúng lệnh kiểm chứng của tác vụ cần nghiệm thu (vd: lệnh test, build, lint của dự án) ở chế độ chạy mới, đọc đủ output và exit code\",\"Quyền đọc kết quả lệnh/diff VCS (vd: git diff, git status) để kiểm tra báo cáo của agent con\",\"Quyền đọc kế hoạch/checklist yêu cầu để đối chiếu từng dòng\"]},\"risks\":[\"Skill thuần quy trình, không chống được bằng chứng giả: agent vẫn có thể dán output bịa; cần Vua tự chạy lại lệnh hoặc đối chiếu log/diff\",\"Ngôn từ cứng ('no exceptions', 'lying') có thể gây chạy lệnh lặp, tốn token/thời gian với tác vụ nhỏ; cần quy định mức kiểm theo cỡ việc\",\"Không nói lệnh nào là đủ cho từng loại việc; Vua phải định nghĩa lệnh kiểm chuẩn cho mỗi loại (bot BTC, Etsy, web)\",\"Với việc không có test tự động (nội dung, thiết kế) skill không cho tiêu chí thay thế; cần checklist riêng\",\"Skill nằm ở HEAD nhánh mặc định có thể đổi; luôn ghim commit 22f0b463 và kiểm sha256 trước khi dùng\",\"Chạy lệnh kiểm trên bot giao dịch thật có thể gây tác dụng phụ; chỉ chạy test/chế độ đọc, không đặt lệnh thật\",\"Nội dung repo là dữ liệu; skill không chứa lệnh ẩn (đã đọc toàn bộ 120 dòng), nhưng repo có hooks/scripts khác chưa thẩm định, không chạy\"],\"sha256\":\"2befe7fc55bcadaa3d97dd9e8efeb633d2561c0ebe74c5a8b17c4d9e7e4520b3\",\"skill_md_url\":\"https://github.com/obra/superpowers/blob/22f0b463e7a5e579904dd6211a520321035526f7/skills/verification-before-completion/SKILL.md\"}},\"root_task_id\":\"T-5a0bacbbcd\",\"sync_key\":\"S2\",\"target\":\"hoang-thanh\"}",
+   "mode": "LIVE",
+   "status": "CONFIRMED",
+   "attempts": 1,
+   "receipt": "office/skill_state version 26 (updatedAt 2026-11-05T16:13:11Z), đọc lại ở quyền view: vua_vetting['VT-20261105-001_S2'].op_id = 'VT-20261105-001:S2', verdict PASS (A20), commit 22f0b463…, sha256 2befe7fc…; pipeline 37 mục và runs 20 mục của A03-NB giữ nguyên",
+   "reason": null,
+   "updated_at": "2026-11-05T16:14:57.982130+00:00"
+  },
+  {
+   "op_id": "VT-20261105-001:S2#1",
+   "request_id": "VT-20261105-001",
+   "target": "hoang-thanh",
+   "payload": "{\"attempt\":1,\"deps\":[{\"key\":\"S1\",\"owner\":\"A03\"}],\"mode\":\"LIVE\",\"request_id\":\"VT-20261105-001\",\"results\":{\"S1\":{\"commit\":\"22f0b463e7a5e579904dd6211a520321035526f7\",\"examples\":[{\"claim\":\"Bản vá retry cho client Binance đã sửa lỗi: toàn bộ test pass.\",\"evidence\":\"Bước 1 IDENTIFY: lệnh chứng minh là bộ test của dự án. Bước 2 RUN: chạy đầy đủ, mới trong lượt này (vd: pytest -q). Bước 3 READ: đọc hết output, exit code 0, 0 failed. Bước 4 VERIFY: output khớp tuyên bố. Bước 5: mới nêu 'Test pass' kèm dòng kết quả (vd '34 passed', exit 0) dán nguyên văn.\",\"kind\":\"pass\",\"why\":\"Đủ cả 5 bước của cổng; bằng chứng mới, đầy đủ, kiểm lại được, đúng mẫu '[Run test command] [See: 34/34 pass] All tests pass' trong skill.\"},{\"claim\":\"Xong rồi, lỗi đã sửa, chắc chắn test sẽ pass.\",\"kind\":\"fail\",\"why_fail\":\"Bỏ bước 2-4 (không chạy lệnh, không đọc output/exit code, không đối chiếu) nhưng vẫn làm bước 5; dùng từ 'chắc chắn', 'xong rồi' là cờ đỏ (tương đương 'should work now', 'Confidence ≠ evidence'). Bảng Common Failures: 'Bug fixed' cần test triệu chứng gốc pass, 'code đã đổi' không đủ. Theo skill: bỏ bước nào = không phải kiểm chứng.\"}],\"fit_for_vua\":\"Gắn làm cổng bắt buộc ở bước nghiệm thu của Agent Vua, trước khi đánh dấu một nhiệm vụ DONE hoặc chuyển sang nhiệm vụ kế: (1) mỗi báo cáo agent con phải kèm trường evidence = lệnh + output/exit code chạy trong lượt đó; (2) Vua không tin 'agent báo thành công' mà tự chạy lại lệnh kiểm hoặc kiểm diff (đúng mục Agent delegation); (3) với yêu cầu nhiều dòng thì lập checklist từng dòng (mục Requirements), không coi 'test pass' là 'đủ yêu cầu'; (4) nhiệm vụ sửa lỗi cần red-green (test phải FAIL khi revert fix). Phù hợp luật sẵn có của dự án: 'mọi tuyên bố hoàn thành phải có bằng chứng'. Nên chép nội dung thành skill nội bộ có ghi nguồn, commit và giữ nguyên giấy phép MIT.\",\"license\":\"MIT (đọc từ file LICENSE tại commit: 'MIT License, Copyright (c) 2025 Jesse Vincent'; cho phép dùng/sao chép/sửa/phân phối, yêu cầu giữ nguyên thông báo bản quyền và giấy phép trong bản sao)\",\"permissions\":{\"khong_can\":[\"Không cần mạng/internet khi áp dụng (chỉ cần khi tải skill)\",\"Không cần ghi file ngoài vùng của chính mình; skill không yêu cầu ghi gì\",\"Không cần khóa/API key/mật khẩu/bí mật\",\"Không cần chạy script, hook, package.json hay index.js của repo superpowers\",\"Không cần quyền push/commit/mở PR (skill chỉ chặn tuyên bố khi chưa kiểm)\",\"Không cần cài thêm công cụ hay tool bên ngoài\",\"Không cần quyền sàn giao dịch/BTC; nếu nghiệm thu bot thì chỉ chạy lệnh kiểm chứng chế độ đọc/test\"],\"toi_thieu_can_co\":[\"Đọc nội dung SKILL.md (văn bản thuần, 120 dòng, không có file phụ trong thư mục skill)\",\"Quyền chạy đúng lệnh kiểm chứng của tác vụ cần nghiệm thu (vd: lệnh test, build, lint của dự án) ở chế độ chạy mới, đọc đủ output và exit code\",\"Quyền đọc kết quả lệnh/diff VCS (vd: git diff, git status) để kiểm tra báo cáo của agent con\",\"Quyền đọc kế hoạch/checklist yêu cầu để đối chiếu từng dòng\"]},\"risks\":[\"Skill thuần quy trình, không chống được bằng chứng giả: agent vẫn có thể dán output bịa; cần Vua tự chạy lại lệnh hoặc đối chiếu log/diff\",\"Ngôn từ cứng ('no exceptions', 'lying') có thể gây chạy lệnh lặp, tốn token/thời gian với tác vụ nhỏ; cần quy định mức kiểm theo cỡ việc\",\"Không nói lệnh nào là đủ cho từng loại việc; Vua phải định nghĩa lệnh kiểm chuẩn cho mỗi loại (bot BTC, Etsy, web)\",\"Với việc không có test tự động (nội dung, thiết kế) skill không cho tiêu chí thay thế; cần checklist riêng\",\"Skill nằm ở HEAD nhánh mặc định có thể đổi; luôn ghim commit 22f0b463 và kiểm sha256 trước khi dùng\",\"Chạy lệnh kiểm trên bot giao dịch thật có thể gây tác dụng phụ; chỉ chạy test/chế độ đọc, không đặt lệnh thật\",\"Nội dung repo là dữ liệu; skill không chứa lệnh ẩn (đã đọc toàn bộ 120 dòng), nhưng repo có hooks/scripts khác chưa thẩm định, không chạy\"],\"sha256\":\"2befe7fc55bcadaa3d97dd9e8efeb633d2561c0ebe74c5a8b17c4d9e7e4520b3\",\"skill_md_url\":\"https://github.com/obra/superpowers/blob/22f0b463e7a5e579904dd6211a520321035526f7/skills/verification-before-completion/SKILL.md\"}},\"root_task_id\":\"T-5a0bacbbcd\",\"sync_key\":\"S2\",\"target\":\"hoang-thanh\"}",
+   "mode": "LIVE",
+   "status": "CONFIRMED",
+   "attempts": 1,
+   "receipt": "office/skill_state version 27 (updatedAt 2026-11-05T16:17:28Z), đọc lại quyền view: vua_vetting['VT-20261105-001_S2'].op_ids = ['VT-20261105-001:S2','VT-20261105-001:S2#1'], at = 2026-11-05T16:13:11Z, commit 22f0b463…, sha256 2befe7fc…4520b3, verdict PASS (A20). Đếm từng id: pipeline 36 mục (CROWN-001 … S083) — bằng v25 trước khi ghi, không mất mục; runs 20 mục; run_count 30 là bộ đếm cộng dồn của A03-NB (trang ghi '20 gần nhất'), không do lượt ghi này thay đổi.",
+   "reason": null,
+   "updated_at": "2026-11-05T16:20:10.787193+00:00"
+  }
+ ],
+ "council_usage": []
+}

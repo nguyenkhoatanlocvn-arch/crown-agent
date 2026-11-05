@@ -1,0 +1,101 @@
+{
+  "ok": true,
+  "kind": "XONG_CHỜ_ĐỌC_LẠI",
+  "request_id": "VT-20261105-001",
+  "task_id": "T-5a0bacbbcd",
+  "root_state": "VERIFIED_DONE",
+  "mode": "LIVE",
+  "label": "CHẠY THẬT (chỉ gọi \"đã chạy thật\" sau khi đọc lại trên Hoàng thành)",
+  "children": {
+    "S1": {
+      "task_id": "T-67d2f9bdeb",
+      "owner": "A03",
+      "state": "VERIFIED_DONE",
+      "retry": 0,
+      "evidence": [
+        "git clone --depth 1 https://github.com/obra/superpowers .../scratchpad/a03/sp : thành công",
+        "git rev-parse HEAD -> 22f0b463e7a5e579904dd6211a520321035526f7 (git log -1: 2026-11-03T14:17:07-08:00 'Release v7.0.2: brainstorming tuning, harness bootstrap fixes, SDD helper fixes (#2657)')",
+        "sha256sum skills/verification-before-completion/SKILL.md -> 2befe7fc55bcadaa3d97dd9e8efeb633d2561c0ebe74c5a8b17c4d9e7e4520b3 (wc -l = 120 dòng; thư mục chỉ có SKILL.md)",
+        "cat LICENSE tại commit -> 'MIT License / Copyright (c) 2025 Jesse Vincent' (sha256 LICENSE a37e0e9697144819e1d965176ac4ae5bc3fa02d11e7812036bbcadf6dafe2400)",
+        "WebFetch https://github.com/obra/superpowers/blob/22f0b463e7a5e579904dd6211a520321035526f7/skills/verification-before-completion/SKILL.md -> mở được, tiêu đề đầu 'Verification Before Completion'",
+        "Không chạy script nào của repo; chỉ đọc file; không ghi vào /home/claude/crown-agent"
+      ],
+      "last": "PASS bởi A20: [đạt] Clone độc lập vào thư mục trống mới và checkout đúng commit 22f0b463e7a5e579904dd6211a520321035526f7; [đạt] URL blob mở được và ghim đúng commit đầy đủ; [đạt] sha256 của SKILL.md tại commit khớp giá trị nộp; [đạt] License đọc từ file LICENSE tại commit là MIT, Copyright (c) 2025 Jesse Vincent; [đạt] Quyền nêu cụ thể và đúng với nội dung skill; [đạt] Có đúng 1 ví dụ đạt và 1 ví dụ trượt bám cổng 5 bước (IDENTIFY, RUN, READ, VERIFY, ONLY THEN); [đạt] fit_for_vua và risks bám đúng nội dung skill"
+    },
+    "S2": {
+      "task_id": "T-f9045edfb9",
+      "owner": "A03",
+      "state": "VERIFIED_DONE",
+      "retry": 1,
+      "evidence": [
+        "biên nhận hoang-thanh: office/skill_state version 26 (updatedAt 2026-11-05T16:13:11Z), đọc lại ở quyền view: vua_vetting['VT-20261105-001_S2'].op_id = 'VT-20261105-001:S2', verdict PASS (A20), commit 22f0b463…, sha256 2befe7fc…; pipeline 37 mục và runs 20 mục của A03-NB giữ nguyên",
+        "biên nhận hoang-thanh: office/skill_state version 27 (updatedAt 2026-11-05T16:17:28Z), đọc lại quyền view: vua_vetting['VT-20261105-001_S2'].op_ids = ['VT-20261105-001:S2','VT-20261105-001:S2#1'], at = 2026-11-05T16:13:11Z, commit 22f0b463…, sha256 2befe7fc…4520b3, verdict PASS (A20). Đếm từng id: pipeline 36 mục (CROWN-001 … S083) — bằng v25 trước khi ghi, không mất mục; runs 20 mục; run_count 30 là bộ đếm cộng dồn của A03-NB (trang ghi '20 gần nhất'), không do lượt ghi này thay đổi."
+      ],
+      "last": "PASS bởi A20: [đạt] (1) op_ids chứa VT-20261105-001:S2#1; [đạt] (2) commit và sha256 khớp; [đạt] (3) at là mốc ISO đầy đủ; [đạt] (4a) Đếm pipeline = 36 mục; [đạt] (4b) runs = 20 mục, run_count = 30 (bộ đếm cộng dồn); [đạt] (5) Version doc"
+    }
+  },
+  "outbox": [
+    {
+      "op_id": "VT-20261105-001:S2",
+      "target": "hoang-thanh",
+      "status": "CONFIRMED",
+      "attempts": 1,
+      "receipt": "office/skill_state version 26 (updatedAt 2026-11-05T16:13:11Z), đọc lại ở quyền view: vua_vetting['VT-20261105-001_S2'].op_id = 'VT-20261105-001:S2', verdict PASS (A20), commit 22f0b463…, sha256 2befe7fc…; pipeline 37 mục và runs 20 mục của A03-NB giữ nguyên",
+      "reason": null
+    },
+    {
+      "op_id": "VT-20261105-001:S2#1",
+      "target": "hoang-thanh",
+      "status": "CONFIRMED",
+      "attempts": 1,
+      "receipt": "office/skill_state version 27 (updatedAt 2026-11-05T16:17:28Z), đọc lại quyền view: vua_vetting['VT-20261105-001_S2'].op_ids = ['VT-20261105-001:S2','VT-20261105-001:S2#1'], at = 2026-11-05T16:13:11Z, commit 22f0b463…, sha256 2befe7fc…4520b3, verdict PASS (A20). Đếm từng id: pipeline 36 mục (CROWN-001 … S083) — bằng v25 trước khi ghi, không mất mục; runs 20 mục; run_count 30 là bộ đếm cộng dồn của A03-NB (trang ghi '20 gần nhất'), không do lượt ghi này thay đổi.",
+      "reason": null
+    }
+  ],
+  "doors": {
+    "A03": {
+      "activity": "IDLE",
+      "door": "phòng sáng, không có việc"
+    },
+    "VUA_CEO": {
+      "activity": "IDLE",
+      "door": "phòng sáng, không có việc"
+    }
+  },
+  "steps": [
+    "S1:result",
+    "S1:review:0",
+    "S2:feedback:1",
+    "S2:review:0",
+    "S2:review:1",
+    "intake",
+    "manual_fix:outbox:S2#1",
+    "plan"
+  ],
+  "notes": [
+    "Mã nhiệm vụ T-5a0bacbbcd cho request VT-20261105-001 (gửi trùng → trả về nhiệm vụ cũ) · mode LIVE",
+    "Vương Tọa cưỡng chế nhận khóa (takeover)",
+    "Dùng lại kế hoạch đã ghi sổ"
+  ],
+  "sources": [
+    {
+      "repo": "obra/superpowers",
+      "commit": "22f0b463e7a5e579904dd6211a520321035526f7",
+      "license": "MIT",
+      "used": "writing-plans (chia việc), verification-before-completion (cổng bằng chứng)"
+    },
+    {
+      "repo": "affaan-m/everything-claude-code",
+      "commit": "b38be6a7f6350964d59328b52f0624e1d1d552d1",
+      "license": "MIT",
+      "used": "skills/team-agent-orchestration (một chủ mỗi việc, vùng ghi không chồng)"
+    },
+    {
+      "repo": "anthropics/skills",
+      "commit": "ca45fc496a3436251f191354091d557da31c15b5",
+      "license": "Apache-2.0",
+      "used": "skills/skill-creator (assertion + người chấm độc lập)"
+    }
+  ],
+  "lookup": "/agent-vua-vuong-toa {\"action\":\"lookup\",\"code\":\"T-5a0bacbbcd\"}  hoặc  python -m crown vua lookup --q '%7B%22code%22%3A%22T-5a0bacbbcd%22%7D'"
+}

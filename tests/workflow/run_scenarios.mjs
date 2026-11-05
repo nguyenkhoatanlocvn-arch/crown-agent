@@ -110,6 +110,24 @@ function check(scn, name, cond, seen) { rows.push({ scenario: scn, check: name, 
   check('4 trượt rồi làm lại', 'trượt 2 lần → dừng, không đồng bộ', r2.result?.children.S1.state === 'FAILED' && r2.result.children.S2.state === 'READY' && !r2.calls.some(c => c.label.startsWith('đồng bộ:')), `${r2.result?.children.S1.state}/${r2.result?.children.S2.state}`)
 }
 
+// 4b. Người kiểm đánh trượt biên nhận đồng bộ → gửi lại bằng op_id mới, không dùng biên nhận cũ
+{
+  const r = await runWorkflow(WF, base('VT-TEST-SYNCFAIL'), { review: { S2: ['FAIL', 'PASS'] } })
+  const ops = (r.result?.outbox || []).map(o => `${o.op_id}:${o.status}`)
+  check('4b biên nhận bị trượt', 'gửi lại với op_id #1 và xong', r.result?.root_state === 'VERIFIED_DONE' && ops.includes('VT-TEST-SYNCFAIL:S2#1:CONFIRMED'), `${r.result?.root_state}; ${ops.join(', ')}`)
+  check('4b biên nhận bị trượt', 'lần kiểm thứ hai có nhãn riêng', r.calls.some(c => c.label === 'kiểm:S2:A20#r1'), r.calls.filter(c => c.label.startsWith('kiểm:S2')).map(c => c.label).join(','))
+}
+
+// 4c. Bị ngắt giữa lần đồng bộ lại (lỗi thật gặp khi chạy thật 05/11) → tiếp tục, giữ góp ý, đối soát
+{
+  const a = base('VT-TEST-SYNCFAIL-KILL')
+  const r1 = await runWorkflow(WF, a, { review: { S2: ['FAIL', 'PASS'] }, sync: n => (n === 1 ? 'CONFIRMED' : 'WRITE_THEN_KILL') })
+  const r2 = await runWorkflow(WF, { ...a, takeover: true }, { review: { S2: ['PASS'] } })
+  const ops = (r2.result?.outbox || []).map(o => `${o.op_id}:${o.status}`)
+  check('4c ngắt giữa lần đồng bộ lại', 'lượt 1 bị ngắt khi gửi #1', r1.error?.killed, r1.error?.message)
+  check('4c ngắt giữa lần đồng bộ lại', 'tiếp tục: đối soát #1, không lỗi, xong', r2.result?.root_state === 'VERIFIED_DONE' && ops.includes('VT-TEST-SYNCFAIL-KILL:S2#1:CONFIRMED') && !r2.logs.some(l => /LỖI/.test(l)), `${r2.result?.root_state}; ${ops.join(', ')}; ${r2.logs.filter(l => /LỖI/.test(l)).join(' ')}`)
+}
+
 // 5. Quyền Vương Tọa, việc cần duyệt, Hội đồng
 {
   const r = await runWorkflow(WF, base('VT-TEST-AUTH', { issued_by: 'VUA_CEO' }))

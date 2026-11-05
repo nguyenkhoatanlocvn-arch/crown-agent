@@ -1,0 +1,263 @@
+{
+  "label": "DỮ LIỆU KIỂM THỬ (fixture cho phần việc; sổ SQLite chạy thật)",
+  "rows": [
+    {
+      "scenario": "0 đường chuẩn",
+      "check": "không lỗi",
+      "pass": true,
+      "observed": "ok"
+    },
+    {
+      "scenario": "0 đường chuẩn",
+      "check": "gốc VERIFIED_DONE",
+      "pass": true,
+      "observed": "VERIFIED_DONE"
+    },
+    {
+      "scenario": "0 đường chuẩn",
+      "check": "S1, S2 VERIFIED_DONE",
+      "pass": true,
+      "observed": "VERIFIED_DONE/VERIFIED_DONE"
+    },
+    {
+      "scenario": "0 đường chuẩn",
+      "check": "nhãn dữ liệu kiểm thử",
+      "pass": true,
+      "observed": "DỮ LIỆU KIỂM THỬ"
+    },
+    {
+      "scenario": "0 đường chuẩn",
+      "check": "outbox CONFIRMED có biên nhận",
+      "pass": true,
+      "observed": "[TEST] runtime/hoang_thanh_local/VT-TEST-0001_S2.json sha256=7ca8f55c8979cae5"
+    },
+    {
+      "scenario": "0 đường chuẩn",
+      "check": "người kiểm khác người làm (A20)",
+      "pass": true,
+      "observed": "kiểm:S1:A20,kiểm:S2:A20"
+    },
+    {
+      "scenario": "0 đường chuẩn",
+      "check": "cửa A03 về sáng sau khi xong",
+      "pass": true,
+      "observed": "phòng sáng, không có việc"
+    },
+    {
+      "scenario": "0 đường chuẩn",
+      "check": "tra theo mã sau khi xong",
+      "pass": true,
+      "observed": "T-1a17f95cf0 → VERIFIED_DONE"
+    },
+    {
+      "scenario": "0 đường chuẩn",
+      "check": "tra mã việc con có bằng chứng",
+      "pass": true,
+      "observed": "[TEST_FIXTURE] S1"
+    },
+    {
+      "scenario": "0 đường chuẩn",
+      "check": "gửi lại cùng request_id → nhiệm vụ cũ",
+      "pass": true,
+      "observed": "ĐÃ_XONG_TRƯỚC_ĐÓ T-1a17f95cf0"
+    },
+    {
+      "scenario": "0 đường chuẩn",
+      "check": "không phát sinh nhiệm vụ mới",
+      "pass": true,
+      "observed": "3 nhiệm vụ trong sổ"
+    },
+    {
+      "scenario": "0 đường chuẩn",
+      "check": "lượt gọi agent",
+      "pass": true,
+      "observed": "45 (sổ 40, việc 5)"
+    },
+    {
+      "scenario": "1 gửi trùng đồng thời",
+      "check": "hai lượt cùng một mã nhiệm vụ",
+      "pass": true,
+      "observed": "T-98fb38a3f6 / T-98fb38a3f6"
+    },
+    {
+      "scenario": "1 gửi trùng đồng thời",
+      "check": "chỉ một lượt chạy, lượt kia trả trạng thái",
+      "pass": true,
+      "observed": "ĐANG_CHẠY_Ở_LƯỢT_KHÁC + XONG_CHỜ_ĐỌC_LẠI"
+    },
+    {
+      "scenario": "1 gửi trùng đồng thời",
+      "check": "Rồng chỉ làm một lần",
+      "pass": true,
+      "observed": "1 lượt làm"
+    },
+    {
+      "scenario": "1 gửi trùng đồng thời",
+      "check": "sổ có đúng 3 nhiệm vụ",
+      "pass": true,
+      "observed": "3 nhiệm vụ"
+    },
+    {
+      "scenario": "2a ngắt rồi tiếp (sau khi làm)",
+      "check": "lượt 1 bị ngắt",
+      "pass": true,
+      "observed": "TIẾN TRÌNH BỊ NGẮT tại lượt agent #17"
+    },
+    {
+      "scenario": "2a ngắt rồi tiếp (sau khi làm)",
+      "check": "sổ giữ S1 ở REVIEW + kết quả",
+      "pass": true,
+      "observed": "REVIEW; steps=S1:result,intake,plan"
+    },
+    {
+      "scenario": "2a ngắt rồi tiếp (sau khi làm)",
+      "check": "chạy lại khi khóa còn hạn → không chạy chồng",
+      "pass": true,
+      "observed": "ĐANG_CHẠY_Ở_LƯỢT_KHÁC"
+    },
+    {
+      "scenario": "2a ngắt rồi tiếp (sau khi làm)",
+      "check": "takeover tiếp tục tới VERIFIED_DONE",
+      "pass": true,
+      "observed": "VERIFIED_DONE"
+    },
+    {
+      "scenario": "2a ngắt rồi tiếp (sau khi làm)",
+      "check": "không làm lại S1",
+      "pass": true,
+      "observed": "0 lượt làm ở lượt 2"
+    },
+    {
+      "scenario": "2a ngắt rồi tiếp (sau khi làm)",
+      "check": "không tính thử lại",
+      "pass": true,
+      "observed": "retry=0"
+    },
+    {
+      "scenario": "2b ngắt giữa đồng bộ",
+      "check": "outbox kẹt SENDING (chưa rõ)",
+      "pass": true,
+      "observed": "SENDING needs_reconcile=true"
+    },
+    {
+      "scenario": "2b ngắt giữa đồng bộ",
+      "check": "đối soát trước, không gửi lại",
+      "pass": true,
+      "observed": "đối soát=1, gửi=0"
+    },
+    {
+      "scenario": "2b ngắt giữa đồng bộ",
+      "check": "outbox CONFIRMED, attempts=1",
+      "pass": true,
+      "observed": "CONFIRMED attempts=1"
+    },
+    {
+      "scenario": "2b ngắt giữa đồng bộ",
+      "check": "gốc VERIFIED_DONE",
+      "pass": true,
+      "observed": "VERIFIED_DONE"
+    },
+    {
+      "scenario": "3 thiếu quyền đồng bộ",
+      "check": "không lỗi, dừng có kiểm soát",
+      "pass": true,
+      "observed": "DỪNG_CÓ_VIỆC_CHỜ"
+    },
+    {
+      "scenario": "3 thiếu quyền đồng bộ",
+      "check": "S1 vẫn VERIFIED_DONE (phần cục bộ giữ)",
+      "pass": true,
+      "observed": "VERIFIED_DONE"
+    },
+    {
+      "scenario": "3 thiếu quyền đồng bộ",
+      "check": "S2 BLOCKED kèm lý do",
+      "pass": true,
+      "observed": "thiếu quyền/kết nối đồng bộ: [TEST_FIXTURE] phiên không có công cụ ArtifactData"
+    },
+    {
+      "scenario": "3 thiếu quyền đồng bộ",
+      "check": "cửa A03 = xích đỏ",
+      "pass": true,
+      "observed": "xích đỏ — bị chặn"
+    },
+    {
+      "scenario": "3 thiếu quyền đồng bộ",
+      "check": "cửa Agent Vua = xích đỏ (gốc chờ)",
+      "pass": true,
+      "observed": "xích đỏ — bị chặn"
+    },
+    {
+      "scenario": "3 thiếu quyền đồng bộ",
+      "check": "cấp quyền rồi chạy lại → xong, không làm lại S1",
+      "pass": true,
+      "observed": "VERIFIED_DONE; làm=0"
+    },
+    {
+      "scenario": "4 trượt rồi làm lại",
+      "check": "xong sau 1 lần làm lại",
+      "pass": true,
+      "observed": "VERIFIED_DONE retry=1"
+    },
+    {
+      "scenario": "4 trượt rồi làm lại",
+      "check": "trượt 2 lần → dừng, không đồng bộ",
+      "pass": true,
+      "observed": "FAILED/READY"
+    },
+    {
+      "scenario": "4b biên nhận bị trượt",
+      "check": "gửi lại với op_id #1 và xong",
+      "pass": true,
+      "observed": "VERIFIED_DONE; VT-TEST-SYNCFAIL:S2:CONFIRMED, VT-TEST-SYNCFAIL:S2#1:CONFIRMED"
+    },
+    {
+      "scenario": "4b biên nhận bị trượt",
+      "check": "lần kiểm thứ hai có nhãn riêng",
+      "pass": true,
+      "observed": "kiểm:S2:A20,kiểm:S2:A20#r1"
+    },
+    {
+      "scenario": "4c ngắt giữa lần đồng bộ lại",
+      "check": "lượt 1 bị ngắt khi gửi #1",
+      "pass": true,
+      "observed": "TIẾN TRÌNH BỊ NGẮT tại lượt agent #45"
+    },
+    {
+      "scenario": "4c ngắt giữa lần đồng bộ lại",
+      "check": "tiếp tục: đối soát #1, không lỗi, xong",
+      "pass": true,
+      "observed": "VERIFIED_DONE; VT-TEST-SYNCFAIL-KILL:S2:CONFIRMED, VT-TEST-SYNCFAIL-KILL:S2#1:CONFIRMED; "
+    },
+    {
+      "scenario": "5 quyền & duyệt",
+      "check": "Vương Tọa AI chưa ủy nhiệm → từ chối",
+      "pass": true,
+      "observed": "VUA_CEO chưa được ủy nhiệm phạm vi SKILL"
+    },
+    {
+      "scenario": "5 quyền & duyệt",
+      "check": "việc cần duyệt dừng ở WAITING_APPROVAL",
+      "pass": true,
+      "observed": "WAITING_APPROVAL"
+    },
+    {
+      "scenario": "5 quyền & duyệt",
+      "check": "cửa A03 = lồng đèn vàng khi chờ Chủ tịch duyệt",
+      "pass": true,
+      "observed": "lồng đèn vàng — chờ duyệt"
+    },
+    {
+      "scenario": "5 quyền & duyệt",
+      "check": "có quyết định hợp lệ → tiếp tục và xong",
+      "pass": true,
+      "observed": "VERIFIED_DONE"
+    },
+    {
+      "scenario": "5 quyền & duyệt",
+      "check": "Hội đồng không kết nối → ghi lý do, làm cục bộ",
+      "pass": true,
+      "observed": "S1: Hội đồng không mời — council: chưa có kết nối thật — bỏ qua, làm phần cục bộ; tiếp tục phần cục bộ"
+    }
+  ]
+}

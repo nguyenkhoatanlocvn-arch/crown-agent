@@ -227,8 +227,10 @@ const VERDICT_SCHEMA = {
 }
 
 async function workOnce(s, token, feedback) {
-  const steps = (await must('status', { request_id: RID })).steps
-  const rkey = `${s.key}:result${feedback ? ':rework' : ''}`
+  const now0 = await must('status', { request_id: RID })
+  const steps = now0.steps
+  feedback = await feedbackFor(s, now0.children[s.key].retry_count, feedback, steps)
+  const rkey = feedback ? `${s.key}:result:rework${now0.children[s.key].retry_count}` : `${s.key}:result`
   let res
   if (steps.includes(rkey)) {
     res = (await must('step', { request_id: RID, step: rkey })).detail
@@ -271,19 +273,33 @@ async function workOnce(s, token, feedback) {
   await must('move', { request_id: RID, key: s.key, to: 'REVIEW', actor: s.owner, token, note: 'gửi kiểm' })
   return { key: s.key, state: 'REVIEW', res }
 }
+// Góp ý của người kiểm cho lần làm lại được ghi sổ, để lượt chạy sau (sau gián đoạn) vẫn biết phải sửa gì.
+async function feedbackFor(s, att, feedback, steps) {
+  if (!att) return feedback || null
+  const k = `${s.key}:feedback:${att}`
+  if (feedback) { await must('step', { request_id: RID, step: k, detail: { feedback } }); return feedback }
+  return steps.includes(k) ? (await must('step', { request_id: RID, step: k })).detail.feedback : null
+}
 async function storedResult(s) {
   const now = await must('status', { request_id: RID })
   if (s.kind === 'sync') {
-    const o = now.outbox.find(x => x.op_id === `${RID}:${s.key}`) || {}
+    const ops = now.outbox.filter(x => x.op_id === `${RID}:${s.key}` || x.op_id.startsWith(`${RID}:${s.key}#`))
+    const o = ops.sort((a, b) => a.op_id.length - b.op_id.length || a.op_id.localeCompare(b.op_id)).pop() || {}
     return { result: { op_id: o.op_id, receipt: o.receipt }, evidence: now.children[s.key].evidence }
   }
-  const k = now.steps.includes(`${s.key}:result:rework`) ? `${s.key}:result:rework` : `${s.key}:result`
+  const k = latestResultKey(now.steps, s.key)
   return (await must('step', { request_id: RID, step: k })).detail
+}
+function latestResultKey(steps, key) {
+  const ks = steps.filter(k => k === `${key}:result` || k.startsWith(`${key}:result:rework`))
+  ks.sort((a, b) => a.length - b.length || a.localeCompare(b))
+  return ks.length ? ks[ks.length - 1] : null
 }
 function safeParse(x) { try { return JSON.parse(x) } catch (e) { return { raw: x } } }
 
 async function reviewOf(s, res) {
   phase('Kiểm bằng chứng')
+  const rnd = (await must('status', { request_id: RID })).children[s.key].retry_count
   const v = await agent(
     `Bạn là ${REVIEWER} (Kiểm định độc lập) của CROWN AGENT. Bạn KHÔNG làm việc này; nhiệm vụ của bạn là cố bác bỏ nó.\n` +
     `Việc ${s.key} (${s.owner}): ${s.objective}\nĐầu ra bắt buộc: ${s.output}\nĐạt khi: ${s.acceptance}\n` +
@@ -291,7 +307,7 @@ async function reviewOf(s, res) {
     'Tự kiểm lại từng tuyên bố bằng công cụ của bạn (mở URL ghim commit, so sha/nội dung, chạy lại lệnh). ' +
     'Không tin báo cáo của người làm. Mỗi mục kiểm: text (điều kiểm), passed, evidence (bạn thấy gì, ở đâu). ' +
     'Có mục nào trượt hoặc không tự kiểm được → verdict FAIL và ghi must_fix. Mặc định FAIL nếu không chắc.',
-    { label: `kiểm:${s.key}:${REVIEWER}`, schema: VERDICT_SCHEMA, ...(A.reviewer_model ? { model: A.reviewer_model } : {}) })
+    { label: `kiểm:${s.key}:${REVIEWER}${rnd ? '#r' + rnd : ''}`, schema: VERDICT_SCHEMA, ...(A.reviewer_model ? { model: A.reviewer_model } : {}) })
   if (!v) throw new Error(`${REVIEWER} không trả kết luận cho ${s.key}`)
   const checks = (v.checks || []).length ? v.checks : [{ text: 'người kiểm không nêu mục nào', passed: false, evidence: '—' }]
   const verdict = v.verdict === 'PASS' && checks.every(c => c.passed) ? 'PASS' : 'FAIL'
@@ -314,15 +330,18 @@ function syncPayload(s) {
   const deps = (s.depends_on || []).map(k => ({ key: k, owner: byKey[k].owner }))
   return { request_id: RID, root_task_id: ROOT_ID, sync_key: s.key, deps, mode: MODE, target: SYNC_TARGET }
 }
-async function syncOnce(s, token) {
-  const op = `${RID}:${s.key}`
-  const steps = (await must('status', { request_id: RID })).steps
+async function syncOnce(s, token, feedback) {
+  const now0 = await must('status', { request_id: RID })
+  const att = now0.children[s.key].retry_count   // làm lại sau khi bị đánh trượt → op_id mới, không dùng lại biên nhận cũ
+  const op = `${RID}:${s.key}` + (att ? `#${att}` : '')
+  const steps = now0.steps
   const depResults = {}
   for (const d of (s.depends_on || [])) {
-    const k = steps.includes(`${d}:result:rework`) ? `${d}:result:rework` : `${d}:result`
-    if (steps.includes(k)) depResults[d] = (await must('step', { request_id: RID, step: k })).detail.result
+    const k = latestResultKey(steps, d)
+    if (k) depResults[d] = (await must('step', { request_id: RID, step: k })).detail.result
   }
-  const payload = { ...syncPayload(s), results: depResults }
+  feedback = await feedbackFor(s, att, feedback, now0.steps)
+  const payload = { ...syncPayload(s), results: depResults, attempt: att }
   let ob = await must('outbox_put', { request_id: RID, op_id: op, target: SYNC_TARGET, payload })
   if (ob.status === 'BLOCKED') ob = await must('outbox_mark', { op_id: op, status: 'PENDING' })
   if (ob.needs_reconcile) {   // chưa rõ lần trước đã tới đích hay chưa → đối soát trước khi gửi lại
@@ -330,7 +349,7 @@ async function syncOnce(s, token) {
       `Đối soát thao tác ${op} trên ${SYNC_TARGET}. CHỈ ĐỌC, không ghi.\n` + syncWhere() +
       `Tìm xem đích đã có bản ghi mang op_id "${op}" chưa. Trả status CONFIRMED (đã có, kèm receipt), ` +
       'UNKNOWN (chưa có), hoặc NO_PERMISSION (không có công cụ/quyền đọc).',
-      { label: `đối soát:${s.key}`, schema: SYNC_SCHEMA })
+      { label: `đối soát:${s.key}${att ? '#' + att : ''}`, schema: SYNC_SCHEMA })
     if (rc && rc.status === 'CONFIRMED') {
       ob = await must('outbox_mark', { op_id: op, status: 'CONFIRMED', receipt: rc.receipt || 'đối soát thấy op_id' })
       note(`${s.key}: đối soát thấy đã đồng bộ ở lần trước — không gửi lại`)
@@ -348,8 +367,10 @@ async function syncOnce(s, token) {
       'Các bước: (1) tìm công cụ ghi đích (ToolSearch "ArtifactData" nếu đích là web); không có → status NO_PERMISSION, KHÔNG ghi chỗ khác. ' +
       '(2) đọc doc hiện tại và version; (3) gộp thêm bản ghi mang op_id, không xóa dữ liệu cũ, ghi có if_version; ' +
       '(4) ĐỌC LẠI và chỉ trả CONFIRMED nếu thấy op_id trong bản đọc lại (receipt = doc + version + đoạn thấy). ' +
+      'Biên nhận chỉ ghi điều bạn đã ĐẾM/ĐỌC THẤY trong bản đọc lại, không ước lượng. ' +
+      (feedback ? `Lần trước bị người kiểm đánh trượt, phải sửa: ${JSON.stringify(feedback)}. ` : '') +
       'Ghi đã gửi mà không đọc lại được → UNKNOWN. Lỗi khác → ERROR + reason.',
-      { label: `đồng bộ:${s.key}:${s.owner}`, schema: SYNC_SCHEMA })
+      { label: `đồng bộ:${s.key}:${s.owner}${att ? '#' + att : ''}`, schema: SYNC_SCHEMA })
     const status = r ? r.status : 'UNKNOWN'
     if (status === 'CONFIRMED' && r.receipt) ob = await must('outbox_mark', { op_id: op, status: 'CONFIRMED', receipt: r.receipt })
     else if (status === 'NO_PERMISSION' || status === 'ERROR') ob = await must('outbox_mark', { op_id: op, status: 'BLOCKED', reason: (r && r.reason) || status })
@@ -406,12 +427,14 @@ async function runOne(s) {
   if (out.state !== 'REVIEW') return out
   let rv = await reviewOf(s, out.res)
   let rework = 0
-  while (rv.verdict === 'FAIL' && s.kind !== 'sync' && rework < MAX_REWORK) {
+  while (rv.verdict === 'FAIL' && rework < MAX_REWORK) {
     rework++
     await must('move', { request_id: RID, key: s.key, to: 'READY', actor: 'VUA_CEO', note: `làm lại theo ${REVIEWER}` })
     c = await must('claim', { request_id: RID, key: s.key, worker: s.owner, ttl: 3600 })
     phase('Thực hiện')
-    out = await workOnce(s, c.token, rv.must_fix.length ? rv.must_fix : rv.checks.filter(x => !x.passed))
+    const fb = rv.must_fix.length ? rv.must_fix : rv.checks.filter(x => !x.passed)
+    if (s.kind === 'sync') phase('Đồng bộ Hoàng thành')
+    out = s.kind === 'sync' ? await syncOnce(s, c.token, fb) : await workOnce(s, c.token, fb)
     if (out.state !== 'REVIEW') return out
     rv = await reviewOf(s, out.res)
   }
@@ -431,7 +454,11 @@ for (const w of waves(SUBTASKS)) {
     rs.forEach((r, i) => { results[par[i].key] = r || { key: par[i].key, state: 'ERROR', reason: 'Agent lỗi' } })
   } else seq.unshift(...par)
   for (const s of seq) {
-    try { results[s.key] = await runOne(s) } catch (e) { results[s.key] = { key: s.key, state: 'ERROR', reason: String(e.message || e) } }
+    try { results[s.key] = await runOne(s) } catch (e) {
+      if (e && e.killed) throw e
+      results[s.key] = { key: s.key, state: 'ERROR', reason: String(e.message || e) }
+      note(`${s.key}: LỖI — ${results[s.key].reason}`)
+    }
   }
   st = await must('status', { request_id: RID })
   Object.values(results).filter(r => r.state !== 'VERIFIED_DONE').forEach(r => { if (!stoppedAt.includes(r.key)) stoppedAt.push(r.key) })

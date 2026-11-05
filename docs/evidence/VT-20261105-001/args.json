@@ -1,0 +1,32 @@
+{
+  "request_id": "VT-20261105-001",
+  "objective": "Giao A03 thẩm định skill verification-before-completion của obra/superpowers để dùng cho bước nghiệm thu của Agent Vua.",
+  "scope": {"domain": "SKILL", "source_repo": "obra/superpowers", "skill": "verification-before-completion", "write": "chỉ đọc nguồn; đồng bộ tab SKILL sau khi duyệt"},
+  "acceptance": [
+    "Liên kết đúng SKILL.md ghim theo commit",
+    "Ghi commit nguồn và giấy phép",
+    "Nêu phạm vi quyền cần dùng khi Agent Vua áp dụng skill",
+    "Hai ví dụ: một đạt, một trượt",
+    "Một Agent khác kiểm bằng chứng",
+    "Sau khi được duyệt, đồng bộ kết quả sang tab SKILL và đọc lại được"
+  ],
+  "issued_by": "CHAIRMAN",
+  "mode": "LIVE",
+  "python": "python3",
+  "session_id": "VT-20261105-001",
+  "worker_model": "sonnet",
+  "reviewer_model": "sonnet",
+  "runner_model": "haiku",
+  "plan": [
+    {"key": "S1", "owner": "A03", "kind": "work",
+     "objective": "Thẩm định skill verification-before-completion trong repo obra/superpowers để Agent Vua dùng ở bước nghiệm thu",
+     "output": "JSON gồm: skill_md_url (github.com/obra/superpowers/blob/<commit đầy đủ>/skills/verification-before-completion/SKILL.md), commit, license, sha256 của SKILL.md, permissions (công cụ/quyền tối thiểu khi áp dụng, những gì KHÔNG cần), examples: [{kind:'pass', claim, evidence, why}, {kind:'fail', claim, why_fail}], fit_for_vua (cách gắn vào bước nghiệm thu), risks",
+     "acceptance": "URL mở được và đúng commit; sha256 khớp nội dung tại commit; license đọc từ file LICENSE tại commit; quyền nêu cụ thể; có đúng 1 ví dụ đạt và 1 ví dụ trượt bám theo cổng 5 bước của skill",
+     "depends_on": [], "write_scope": ["agents/A03/"], "parallel_ok": false},
+    {"key": "S2", "owner": "A03", "kind": "sync",
+     "objective": "Sau khi A20 duyệt, đồng bộ kết quả thẩm định sang tab SKILL của Hoàng thành",
+     "output": "Biên nhận đọc lại từ office/skill_state có op_id VT-20261105-001:S2",
+     "acceptance": "Đọc lại doc skill_state thấy bản ghi mang op_id",
+     "depends_on": ["S1"], "write_scope": ["hoang-thanh:office/skill_state"], "parallel_ok": false}
+  ]
+}
