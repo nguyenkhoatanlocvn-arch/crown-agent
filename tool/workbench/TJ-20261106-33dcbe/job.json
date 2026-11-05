@@ -1,0 +1,111 @@
+{
+ "job_id": "TJ-20261106-33dcbe",
+ "title": "DIỄN TẬP nghiệm thu: phát hành trùng và quay lui bản lỗi (srt-renumber)",
+ "prompt": "Nghiệm thu mục 8 của Chủ tịch: (a) hai Agent cùng phát hành một phiên bản; (b) tool mới bị lỗi cần quay lui. Đây là diễn tập, không phải tool mới.",
+ "requested_by": "CHAIRMAN",
+ "assigned_to": "agent-tool-at",
+ "origin": "nghiem-thu",
+ "priority": 5,
+ "idempotency_key": null,
+ "state": "READY",
+ "state_version": 0,
+ "fencing_token": 0,
+ "lease": null,
+ "workers": [],
+ "inputs": [],
+ "steps": [
+  {
+   "id": "intake",
+   "branch": "th",
+   "what": "Nhận mẫu vào inbox, băm tệp, ghi nguồn",
+   "status": "PENDING",
+   "attempts": 0,
+   "by": null,
+   "sub": null,
+   "evidence": [],
+   "note": ""
+  },
+  {
+   "id": "research",
+   "branch": "gh",
+   "what": "Tìm nguồn/skill liên quan, ghi giấy phép; hoặc ghi lý do bỏ qua",
+   "status": "PENDING",
+   "attempts": 0,
+   "by": null,
+   "sub": null,
+   "evidence": [],
+   "note": ""
+  },
+  {
+   "id": "analyze",
+   "branch": "pt",
+   "what": "Lấy khung hình/đọc mẫu, ghi thao tác, thay đổi màn hình, đầu vào, kết quả",
+   "status": "PENDING",
+   "attempts": 0,
+   "by": null,
+   "sub": null,
+   "evidence": [],
+   "note": ""
+  },
+  {
+   "id": "spec",
+   "branch": "pt",
+   "what": "Viết đặc tả + giả định cần kiểm + dữ liệu thử",
+   "status": "PENDING",
+   "attempts": 0,
+   "by": null,
+   "sub": null,
+   "evidence": [],
+   "note": ""
+  },
+  {
+   "id": "build",
+   "branch": "lt",
+   "what": "Viết công cụ từ đặc tả và dữ liệu thử",
+   "status": "PENDING",
+   "attempts": 0,
+   "by": null,
+   "sub": null,
+   "evidence": [],
+   "note": ""
+  },
+  {
+   "id": "test",
+   "branch": "kt",
+   "what": "Kiểm thử độc lập trong vùng cách ly",
+   "status": "PENDING",
+   "attempts": 0,
+   "by": null,
+   "sub": null,
+   "evidence": [],
+   "note": ""
+  },
+  {
+   "id": "publish",
+   "branch": "th",
+   "what": "Phát hành vào kho chung",
+   "status": "PENDING",
+   "attempts": 0,
+   "by": null,
+   "sub": null,
+   "evidence": [],
+   "note": ""
+  },
+  {
+   "id": "verify",
+   "branch": "th",
+   "what": "Gọi thử từ kho chung bằng dữ liệu khác mẫu",
+   "status": "PENDING",
+   "attempts": 0,
+   "by": null,
+   "sub": null,
+   "evidence": [],
+   "note": ""
+  }
+ ],
+ "tool_id": null,
+ "version": null,
+ "result": null,
+ "created_at": "2026-11-05T20:09:51+00:00",
+ "updated_at": "2026-11-05T20:09:51+00:00"
+}
