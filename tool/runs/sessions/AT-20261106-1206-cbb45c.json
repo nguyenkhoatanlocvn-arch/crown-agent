@@ -6,8 +6,67 @@
  "started_at": "2026-11-06T05:06:34+00:00",
  "finished_at": null,
  "result": null,
- "plan": null,
+ "plan": {
+  "backlog": [],
+  "requests": [],
+  "github_changed": [
+   "craft-anything"
+  ],
+  "github_duplicates": [],
+  "action": {
+   "do": "EVALUATE_SOURCE",
+   "id": "craft-anything",
+   "from": "tag:v0.3.0@e6280b5dc518",
+   "to": "tag:v0.4.0@3d4b0a18b73b",
+   "key": "ae1ade6b208bf59b",
+   "duplicate": false,
+   "integration": "reference-only"
+  }
+ },
  "releases": [],
  "notes": [],
- "github": null
+ "github": {
+  "checked": [
+   {
+    "id": "ffmpeg",
+    "fingerprint": "tag:n9.0.2@ce8f11b9fac4"
+   },
+   {
+    "id": "jq",
+    "fingerprint": "tag:jq-1.8.2@34f7186b8674"
+   },
+   {
+    "id": "site-replica-skill",
+    "fingerprint": "tree:586f968680af1e74de929163260452ac8859aec1"
+   },
+   {
+    "id": "anthropic-webapp-testing",
+    "fingerprint": "tree:5ffb7dc66b9fd4c25c3e400a4c00da99a349b714"
+   },
+   {
+    "id": "anthropic-skill-creator",
+    "fingerprint": "tree:3cf9a8db32597ba3e24b584a3d696f4e11c7d7b6"
+   },
+   {
+    "id": "anthropic-mcp-builder",
+    "fingerprint": "tree:ea6e4d7bc108b44b3009129688049e23d801f0f3"
+   },
+   {
+    "id": "craft-anything",
+    "fingerprint": "tag:v0.4.0@3d4b0a18b73b"
+   }
+  ],
+  "changed": [
+   {
+    "id": "craft-anything",
+    "from": "tag:v0.3.0@e6280b5dc518",
+    "to": "tag:v0.4.0@3d4b0a18b73b",
+    "key": "ae1ade6b208bf59b",
+    "duplicate": false,
+    "integration": "reference-only"
+   }
+  ],
+  "errors": [],
+  "at": "2026-11-06T05:06:55+00:00"
+ }
 }
