@@ -207,6 +207,7 @@ async function pageModules() {
       m.implemented_scope ? h('div', { class: 'small' }, h('strong', { text: 'Đã có: ' }), m.implemented_scope.join(' · ')) : null,
       m.not_yet ? h('div', { class: 'small muted' }, h('strong', { text: 'Chưa có: ' }), m.not_yet.join(' · ')) : null,
       m.planned_notes ? h('div', { class: 'note small', text: m.planned_notes }) : null,
+      m.verification ? h('div', { class: 'small', text: `Kiểm chứng: ${m.verification}` }) : null,
       h('div', { class: 'small muted', text: `Vận hành: ${m.op_evidence}` }),
       h('label', { class: 'row' }, toggle, h('span', { text: ['PLANNED', 'BLOCKED'].includes(m.dev_status) ? 'Chưa triển khai — không bật được' : 'Bật module' })));
   });

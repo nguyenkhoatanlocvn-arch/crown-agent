@@ -3,13 +3,14 @@
 ## Trạng thái
 - Nhánh: `feature/crown-infinity-prompt-studio` (repo `nguyenkhoatanlocvn-arch/crown-agent`). **Chưa merge vào `master`, chưa mở PR.**
 - Milestone đạt: **M1 — lõi nền tảng + luồng hoàn chỉnh của CROWN PROMPT STUDIO** từ giao diện tới database, có test tự động.
+- Kiểm định độc lập tìm 9 lỗi → đã sửa cả 9, có test tái hiện (đỏ trên mã cũ, xanh trên mã mới). Chi tiết: `TEST_RESULTS.md`.
 - Không có tiến trình chạy nền 24/7, không có lịch tự chạy, không triển khai cloud, không kết nối máy Windows.
 
 ## Tệp đã thêm/sửa
 | Đường dẫn | Nội dung |
 |---|---|
 | `crown_infinity/` | Mã nguồn (Python stdlib) + `web/` (giao diện) + `migrations/0001_init.sql` + `modules.json` |
-| `tests/infinity/` | 47 test backend (helpers, prompts, platform, cli) |
+| `tests/infinity/` | 57 test backend (prompts, platform, cli, review_fixes) |
 | `tests/web/infinity_ui_test.cjs` | 16 kiểm tra giao diện bằng Chromium thật |
 | `docs/infinity/` | SYSTEM_AUDIT, ARCHITECTURE (ADR + bảo mật + chi phí), RESEARCH, API, TEST_RESULTS, HANDOFF |
 | `scripts/infinity/start.ps1`, `stop.ps1` | Chạy/dừng trên Windows (chưa thử trên Windows) |

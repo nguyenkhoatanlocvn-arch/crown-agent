@@ -143,12 +143,60 @@ def _server_running(lock_path: Path) -> bool:
     return True
 
 
+LOCK_BUSY = ("Máy chủ CROWN INFINITY đang chạy (hoặc tiến trình khác đang dùng thư mục dữ liệu này). "
+             "Dừng nó trước. Khóa: {path}")
+
+
+def acquire_lock(lock_path, info: dict) -> None:
+    """Khóa độc quyền thư mục dữ liệu (tạo tệp O_EXCL). Khóa của tiến trình đã chết được thu hồi.
+
+    Dùng cho cả `serve` và `restore` để hai việc không chạy chồng (kiểm định 2026-11-06, lỗi #6).
+    """
+    lock_path = Path(lock_path)
+    lock_path.parent.mkdir(parents=True, exist_ok=True)
+    for _ in range(3):
+        try:
+            fd = os.open(lock_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+        except FileExistsError:
+            if _server_running(lock_path):
+                raise BackupError(LOCK_BUSY.format(path=lock_path))
+            try:
+                lock_path.unlink()
+            except FileNotFoundError:
+                pass
+            continue
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            json.dump({"pid": os.getpid(), **info}, f)
+        return
+    raise BackupError(LOCK_BUSY.format(path=lock_path))
+
+
+def update_lock(lock_path, info: dict) -> None:
+    Path(lock_path).write_text(json.dumps({"pid": os.getpid(), **info}), encoding="utf-8")
+
+
+def release_lock(lock_path) -> None:
+    """Chỉ xóa khóa nếu đúng là khóa của tiến trình này."""
+    lock_path = Path(lock_path)
+    try:
+        if int(json.loads(lock_path.read_text(encoding="utf-8")).get("pid", 0)) == os.getpid():
+            lock_path.unlink()
+    except (OSError, ValueError):
+        pass
+
+
 def restore_backup(zip_path, db_path, backup_dir, lock_path) -> dict:
     """Khôi phục: kiểm trên bản tạm → sao lưu dữ liệu hiện tại → thay thế nguyên tử. Máy chủ phải đang dừng."""
     db_path, backup_dir, lock_path = Path(db_path), Path(backup_dir), Path(lock_path)
-    if _server_running(lock_path):
-        raise BackupError("Máy chủ CROWN INFINITY đang chạy. Dừng máy chủ trước khi khôi phục.")
     db_path.parent.mkdir(parents=True, exist_ok=True)
+    acquire_lock(lock_path, {"kind": "restore"})  # giữ khóa suốt lúc khôi phục: máy chủ không khởi động chen vào
+    try:
+        return _restore_locked(zip_path, db_path, backup_dir)
+    finally:
+        release_lock(lock_path)
+
+
+def _restore_locked(zip_path, db_path: Path, backup_dir: Path) -> dict:
     with tempfile.TemporaryDirectory(dir=db_path.parent, prefix=".restore-") as tmp:
         meta, candidate = verify_backup(zip_path, Path(tmp))
         safety = None
@@ -189,4 +237,4 @@ def copy_db_for_test(src_db, dst_db) -> None:
         src.close()
 
 
-__all__ = ["BackupError", "create_backup", "verify_backup", "restore_backup", "list_backups", "copy_db_for_test"]
+__all__ = ["BackupError", "acquire_lock", "release_lock", "update_lock", "create_backup", "verify_backup", "restore_backup", "list_backups", "copy_db_for_test"]

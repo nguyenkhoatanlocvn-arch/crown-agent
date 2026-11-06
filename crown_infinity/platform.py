@@ -258,6 +258,8 @@ def create_task(conn, actor: Actor, data: dict) -> dict:
     if not title or len(title) > 200:
         raise bad_request("Tiêu đề việc 1–200 ký tự")
     project_id = data.get("project_id") or None
+    if project_id is not None and not isinstance(project_id, str):
+        raise bad_request("project_id phải là chuỗi")
     status = data.get("status") or "TODO"
     if status not in TASK_STATUS:
         raise bad_request("Trạng thái không hợp lệ")
@@ -309,16 +311,26 @@ def update_task(conn, actor: Actor, tid: str, data: dict, if_match) -> Response:
 
 # ---------------------------------------------------------------- nhật ký
 
+def _int_param(value, default: int, lo: int, hi: int, name: str) -> int:
+    if value in (None, ""):
+        return default
+    try:
+        v = int(value)
+    except (TypeError, ValueError) as exc:
+        raise bad_request(f"{name} phải là số nguyên") from exc
+    return min(hi, max(lo, v))
+
+
 def list_activity(conn, actor: Actor, q: dict) -> dict:
     where, args = [], []
     if not actor.is_owner:
         where.append("actor_id=?"), args.append(actor.id)
     if q.get("before_id"):
-        where.append("id<?"), args.append(int(q["before_id"]))
+        where.append("id<?"), args.append(_int_param(q["before_id"], 0, 0, 2 ** 62, "before_id"))
     for k in ("action", "object_type", "object_id", "result"):
         if q.get(k):
             where.append(f"{k}=?"), args.append(q[k])
-    limit = min(200, max(1, int(q.get("limit") or 50)))
+    limit = _int_param(q.get("limit"), 50, 1, 200, "limit")
     rows = conn.execute("SELECT * FROM activity_logs " + ("WHERE " + " AND ".join(where) if where else "") +
                         " ORDER BY id DESC LIMIT ?", (*args, limit)).fetchall()
     return {"items": [dict(r) | {"detail": json.loads(r["detail_json"])} for r in rows]}

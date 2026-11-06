@@ -85,7 +85,8 @@
     {
       "module_id": "crown_prompt_studio", "code": "11", "name": "CROWN PROMPT STUDIO", "version": "0.1.0",
       "description": "Thư viện, phiên bản, biên tập, phân tích tĩnh, nhập/xuất prompt; bộ nhớ có cấu trúc trong database.",
-      "dev_status": "IMPLEMENTED",
+      "dev_status": "VERIFIED",
+      "verification": "Kiểm tự động 2026-11-06 trên Linux (container cloud): test backend + trình duyệt Chromium, xem docs/infinity/TEST_RESULTS.md. Windows: NOT VERIFIED.",
       "implemented_scope": ["Thư viện + tìm kiếm FTS5 (có/không dấu)", "Bản nháp autosave + phục hồi", "Phiên bản bất biến, diff, khôi phục, duyệt, con trỏ production", "Xung đột revision", "Biến {{ten}} + khối {{> P-id}}", "Phân tích tĩnh", "Nguồn tham chiếu", "Nhập TXT/MD, xuất TXT/MD/JSON"],
       "not_yet": ["AI Writer/Optimizer (cần AI Hub bật)", "Test Lab gọi model thật", "Semantic search"],
       "capabilities": ["prompts.read", "prompts.write", "prompts.review", "prompts.import", "prompts.export"],

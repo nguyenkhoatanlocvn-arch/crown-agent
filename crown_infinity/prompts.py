@@ -294,6 +294,30 @@ def save_draft(conn, actor: Actor, pid: str, content, if_match) -> Response:
     return _resp(conn, actor, pid)
 
 
+def _head_content(conn, row) -> str | None:
+    if not row["head_version_id"]:
+        return None
+    return conn.execute("SELECT content FROM prompt_versions WHERE id=?", (row["head_version_id"],)).fetchone()[0]
+
+
+def _snapshot_dirty_draft(conn, actor: Actor, row, reason: str, replacement: str) -> str | None:
+    """Nếu bản nháp chưa được lưu thành phiên bản và sắp bị thay bằng nội dung khác, lưu nó thành phiên bản trước.
+
+    Không bao giờ làm mất âm thầm công việc chưa lưu (kết quả kiểm định độc lập 2026-11-06, lỗi #2).
+    """
+    draft = row["draft_content"]
+    if not draft.strip() or draft == replacement or draft == _head_content(conn, row):
+        return None
+    vid = _insert_version(conn, actor, row["id"], draft, f"Tự lưu bản nháp trước khi {reason}")
+    audit(conn, actor, "prompt.version.autosnapshot", "prompt", row["id"], detail={"version_id": vid, "reason": reason})
+    return vid
+
+
+def _not_archived(row):
+    if row["archived_at"]:
+        raise ApiError(409, "ARCHIVED", "Prompt đã lưu trữ; khôi phục từ lưu trữ trước khi sửa")
+
+
 def commit_version(conn, actor: Actor, pid: str, data: dict, if_match) -> Response:
     changelog = _text(data, "changelog", 500)
     with tx(conn):
@@ -306,10 +330,10 @@ def commit_version(conn, actor: Actor, pid: str, data: dict, if_match) -> Respon
             content = _content(data["content"])
         if not content.strip():
             raise bad_request("Không lưu phiên bản rỗng", "EMPTY_CONTENT")
-        if row["head_version_id"]:
-            head = conn.execute("SELECT content FROM prompt_versions WHERE id=?", (row["head_version_id"],)).fetchone()
-            if head[0] == content:
-                raise ApiError(409, "NO_CHANGE", "Nội dung giống phiên bản hiện tại; không tạo phiên bản mới")
+        if _head_content(conn, row) == content:
+            raise ApiError(409, "NO_CHANGE", "Nội dung giống phiên bản hiện tại; không tạo phiên bản mới")
+        if "content" in data:
+            _snapshot_dirty_draft(conn, actor, row, "lưu nội dung khác", content)
         vid = _insert_version(conn, actor, pid, content, changelog or "Cập nhật nội dung")
         ts = now_iso()
         conn.execute("UPDATE prompts SET head_version_id=?, draft_content=?, draft_updated_at=?, draft_updated_by=?, "
@@ -384,13 +408,12 @@ def diff(conn, actor: Actor, pid: str, a_ref: str, b_ref: str) -> dict:
 def restore(conn, actor: Actor, pid: str, vid: str, data: dict, if_match) -> Response:
     with tx(conn):
         row, _ = _load(conn, actor, pid, "write")
+        _not_archived(row)
         _check_rev(row, if_match)
         old = _version(conn, pid, vid)
-        head = None
-        if row["head_version_id"]:
-            head = conn.execute("SELECT content FROM prompt_versions WHERE id=?", (row["head_version_id"],)).fetchone()
-        if head and head[0] == old["content"]:
+        if _head_content(conn, row) == old["content"] and row["draft_content"] == old["content"]:
             raise ApiError(409, "NO_CHANGE", "Phiên bản hiện tại đã có đúng nội dung này")
+        _snapshot_dirty_draft(conn, actor, row, f"khôi phục v{old['version_no']}", old["content"])
         note = _text(data, "changelog", 500) or f"Khôi phục nội dung từ v{old['version_no']}"
         new_vid = _insert_version(conn, actor, pid, old["content"], note, restored_from=vid)
         ts = now_iso()
@@ -433,6 +456,9 @@ def review(conn, actor: Actor, pid: str, vid: str, data: dict) -> dict:
 def set_production(conn, actor: Actor, pid: str, data: dict) -> Response:
     require_owner(actor)
     vid = data.get("version_id")
+    if not (vid is None or isinstance(vid, str)) or not (data.get("expected_version_id") is None
+                                                         or isinstance(data.get("expected_version_id"), str)):
+        raise bad_request("version_id/expected_version_id phải là chuỗi hoặc null")
     if "expected_version_id" not in data:
         raise bad_request("Cần expected_version_id (con trỏ production hiện tại mà bạn thấy, có thể null)")
     with tx(conn):
@@ -508,7 +534,7 @@ def search(conn, actor: Actor, q: dict) -> dict:
                      "WHERE pt.prompt_id=p.id AND t.name=? COLLATE NOCASE)")
         args.append(q["tag"])
     try:
-        page = max(1, int(q.get("page") or 1))
+        page = min(100_000, max(1, int(q.get("page") or 1)))
         limit = min(100, max(1, int(q.get("limit") or 20)))
     except ValueError as exc:
         raise bad_request("page/limit phải là số") from exc
@@ -589,9 +615,29 @@ def variables_of(text: str) -> list[str]:
     return out
 
 
-def _expand_blocks(conn, actor: Actor, text: str, chain: tuple, errors: list) -> str:
+MAX_BLOCK_EXPANSIONS = 200
+
+
+def _expand_blocks(conn, actor: Actor, text: str, chain: tuple, errors: list, st: dict | None = None) -> str:
+    """Mở khối {{> P-id}}. Có memo theo yêu cầu, trần số lần mở và trần tổng kích thước
+    (kết quả kiểm định độc lập 2026-11-06, lỗi #1: khối lồng nhiều nhánh làm treo máy chủ)."""
+    st = st if st is not None else {"memo": {}, "count": 0, "size": 0, "too_large": False}
+
+    def too_large():
+        if not st["too_large"]:
+            st["too_large"] = True
+            errors.append({"code": "BLOCK_TOO_LARGE",
+                           "message": f"Khối mở ra quá lớn (tối đa {MAX_BLOCK_EXPANSIONS} lần mở, "
+                                      f"{MAX_CONTENT_CHARS:,} ký tự)"})
+
     def repl(m):
         ref = m.group(1)
+        if st["too_large"]:
+            return m.group(0)
+        st["count"] += 1
+        if st["count"] > MAX_BLOCK_EXPANSIONS:
+            too_large()
+            return m.group(0)
         if ref in chain:
             errors.append({"code": "BLOCK_CYCLE", "message": f"Khối {ref} tham chiếu vòng: {' → '.join(chain + (ref,))}"})
             return m.group(0)
@@ -611,15 +657,26 @@ def _expand_blocks(conn, actor: Actor, text: str, chain: tuple, errors: list) ->
         if not vid:
             errors.append({"code": "BLOCK_EMPTY", "message": f"Khối {ref} chưa có phiên bản"})
             return m.group(0)
-        content = conn.execute("SELECT content FROM prompt_versions WHERE id=?", (vid,)).fetchone()[0]
-        return _expand_blocks(conn, actor, content, chain + (ref,), errors)
+        if ref in st["memo"]:
+            out = st["memo"][ref]
+        else:
+            content = conn.execute("SELECT content FROM prompt_versions WHERE id=?", (vid,)).fetchone()[0]
+            out = _expand_blocks(conn, actor, content, chain + (ref,), errors, st)
+            st["memo"][ref] = out
+        st["size"] += len(out)
+        if st["size"] > MAX_CONTENT_CHARS:
+            too_large()
+            return m.group(0)
+        return out
 
     return BLOCK_RE.sub(repl, text)
 
 
 def render(conn, actor: Actor, pid: str, data: dict) -> dict:
     row, _ = _load(conn, actor, pid)
-    ref = data.get("version", "draft")
+    ref = data.get("version") or "draft"
+    if not isinstance(ref, str):
+        raise bad_request("version phải là chuỗi: draft, head hoặc mã phiên bản")
     text, label = _content_of(conn, row, ref)
     values = data.get("variables") or {}
     if not isinstance(values, dict):
@@ -852,13 +909,18 @@ def import_preview(conn, actor: Actor, data: dict) -> dict:
         if not dup:
             dup = conn.execute("SELECT p.id, p.title, NULL AS version_no FROM prompts p WHERE p.project_id=? AND "
                                "p.draft_content=? LIMIT 1", (project_id, d["content"])).fetchone()
-        same_title = conn.execute("SELECT id, title, revision FROM prompts WHERE project_id=? AND title=? COLLATE NOCASE "
-                                  "LIMIT 1", (project_id, title)).fetchone()
+        same_title = conn.execute("SELECT id, title, revision, archived_at FROM prompts WHERE project_id=? AND "
+                                  "title=? COLLATE NOCASE AND archived_at IS NULL LIMIT 1", (project_id, title)).fetchone()
+        conflict = None
+        if same_title:
+            full = conn.execute("SELECT * FROM prompts WHERE id=?", (same_title["id"],)).fetchone()
+            conflict = {"id": full["id"], "title": full["title"], "revision": full["revision"],
+                        "draft_dirty": full["draft_content"] != (_head_content(conn, full) or "")}
         items.append({"index": i, "ok": True, "filename": d["filename"], "encoding": d["encoding"], "title": title,
                       "chars": len(d["content"]), "lines": d["content"].count("\n") + 1, "checksum": checksum,
                       "preview": d["content"][:600], "variables": variables_of(d["content"]),
                       "duplicate_of": dict(dup) if dup else None,
-                      "title_conflict": dict(same_title) if same_title else None,
+                      "title_conflict": conflict,
                       "suggested_action": "skip" if dup else "create"})
     return {"project_id": project_id, "items": items,
             "note": "Chưa ghi gì. Chọn hành động cho từng tệp rồi gửi /import/commit."}
@@ -874,6 +936,8 @@ def import_commit(conn, actor: Actor, data: dict) -> dict:
     with tx(conn):
         require_project(conn, actor, project_id, "write")
         for i, it in enumerate(items):
+            if not isinstance(it, dict):
+                raise bad_request(f"Mục {i} không hợp lệ")
             action = it.get("action")
             if action not in ("create", "new_version", "skip"):
                 raise bad_request(f"Mục {i}: action phải là create, new_version hoặc skip")
@@ -889,9 +953,13 @@ def import_commit(conn, actor: Actor, data: dict) -> dict:
                 results.append({"index": i, "action": "create", "prompt_id": pid})
             else:
                 target = it.get("target_prompt_id")
-                row = conn.execute("SELECT * FROM prompts WHERE id=?", (target,)).fetchone() if target else None
+                if not isinstance(target, str):
+                    raise bad_request(f"Mục {i}: thiếu target_prompt_id")
+                row = conn.execute("SELECT * FROM prompts WHERE id=?", (target,)).fetchone()
                 if not row or row["project_id"] != project_id:
                     raise bad_request(f"Mục {i}: target_prompt_id không thuộc dự án đã chọn")
+                if row["archived_at"]:
+                    raise ApiError(409, "ARCHIVED", f"Mục {i}: prompt đích đã lưu trữ")
                 if it.get("target_revision") != row["revision"]:
                     raise ApiError(409, "REVISION_CONFLICT", f"Mục {i}: prompt đích đã đổi, hãy xem trước lại",
                                    {"index": i, "current_revision": row["revision"]})
@@ -899,6 +967,7 @@ def import_commit(conn, actor: Actor, data: dict) -> dict:
                         "SELECT content FROM prompt_versions WHERE id=?", (row["head_version_id"],)).fetchone()[0] == d["content"]:
                     results.append({"index": i, "action": "skip", "reason": "Trùng phiên bản hiện tại"})
                     continue
+                _snapshot_dirty_draft(conn, actor, row, f"nhập tệp {d['filename']}", d["content"])
                 vid = _insert_version(conn, actor, target, d["content"], f"Nhập từ tệp {d['filename']}")
                 ts = now_iso()
                 conn.execute("UPDATE prompts SET head_version_id=?, draft_content=?, draft_updated_at=?, "

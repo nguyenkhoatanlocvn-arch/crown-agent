@@ -60,10 +60,19 @@ def cmd_serve(args) -> int:
     if cfg.host in ("0.0.0.0", "::") and not args.allow_lan:
         raise SystemExit("Nghe trên mọi địa chỉ cần cờ --allow-lan (cảnh báo: chỉ dùng trong mạng tin cậy, "
                          "truy cập từ xa phải qua reverse proxy có HTTPS).")
-    app = App(cfg)
-    srv = Server((cfg.host, cfg.port), make_handler(app))
+    from .backup import BackupError, acquire_lock, release_lock, update_lock
+    try:
+        acquire_lock(cfg.lock_path, {"kind": "serve", "host": cfg.host})
+    except BackupError as exc:
+        raise SystemExit(str(exc))
+    try:
+        app = App(cfg)
+        srv = Server((cfg.host, cfg.port), make_handler(app))
+    except BaseException:
+        release_lock(cfg.lock_path)
+        raise
     real_port = srv.server_address[1]
-    cfg.lock_path.write_text(json.dumps({"pid": os.getpid(), "port": real_port, "host": cfg.host}), encoding="utf-8")
+    update_lock(cfg.lock_path, {"kind": "serve", "port": real_port, "host": cfg.host})
     print(f"{APP_NAME} {APP_VERSION} đang chạy: http://{'localhost' if cfg.host == '127.0.0.1' else cfg.host}:{real_port}/",
           flush=True)
     print(f"Dữ liệu: {cfg.data_dir}  ·  tìm kiếm: {app.search_mode}  ·  dừng: Ctrl+C", flush=True)
@@ -83,10 +92,7 @@ def cmd_serve(args) -> int:
         srv.serve_forever(poll_interval=0.5)
     finally:
         srv.server_close()
-        try:
-            cfg.lock_path.unlink()
-        except FileNotFoundError:
-            pass
+        release_lock(cfg.lock_path)
         print("Đã dừng.", flush=True)
     return 0
 

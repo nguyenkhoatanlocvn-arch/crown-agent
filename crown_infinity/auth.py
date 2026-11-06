@@ -117,7 +117,7 @@ def update_user(conn, actor: Actor, uid: str, data: dict) -> dict:
         if not fields:
             raise bad_request("Không có trường nào để cập nhật")
         conn.execute(f"UPDATE users SET {', '.join(fields)}, updated_at=? WHERE id=?", (*vals, now_iso(), uid))
-        if "password" in data or data.get("is_active") is False or "role" in data:
+        if "password" in data or ("is_active" in data and not data["is_active"]) or "role" in data:
             conn.execute("UPDATE sessions SET revoked_at=? WHERE user_id=? AND revoked_at IS NULL", (now_iso(), uid))
         audit(conn, actor, "user.update", "user", uid, detail={"fields": sorted(k for k in data if k != "password")
                                                                + (["password"] if "password" in data else [])})

@@ -438,7 +438,7 @@ async function tabHistory(box) {
       } catch (e) { toastErr(e); }
     } })];
     if (canWrite() && v.id !== headId) acts.push(h('button', { class: 'btn small', text: 'Khôi phục', onclick: async () => {
-      if (!(await confirmDlg(`Khôi phục v${v.version_no}`, `Tạo phiên bản MỚI có nội dung của v${v.version_no} và đặt làm bản nháp. Lịch sử giữ nguyên; production và Agent không đổi.`, 'Khôi phục'))) return;
+      if (!(await confirmDlg(`Khôi phục v${v.version_no}`, `Tạo phiên bản MỚI có nội dung của v${v.version_no} và đặt làm bản nháp. Nếu bản nháp hiện tại chưa lưu phiên bản, hệ thống tự lưu nó thành một phiên bản trước. Lịch sử giữ nguyên; production và Agent không đổi.`, 'Khôi phục'))) return;
       await queueSave();
       await chainOp(async () => {
         try { const d = await post(`/prompts/${c.id}/versions/${v.id}/restore`, {}, { ifMatch: C.baseRev }); C.data = d; C.baseRev = d.revision; C.baseDraft = d.draft_content; C.text = d.draft_content; C.ta.value = C.text; lsDel(C.id); updateCounts(); setStatus('saved'); renderMeta(); renderTab(); toast(`Đã khôi phục thành v${d.head_version.version_no}`); }

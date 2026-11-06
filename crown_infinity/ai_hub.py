@@ -5,6 +5,7 @@ Chưa có transport gọi model thật được kiểm chứng: call_model() kh�
 """
 from __future__ import annotations
 
+import math
 import os
 import re
 import time
@@ -132,10 +133,15 @@ def gate(conn, provider_id: str | None, est_usd, est_output_tokens: int | None) 
             reasons.append({"code": "PROVIDER_DISABLED", "message": "Provider đang tắt"})
         if prov["kind"] != "ollama" and not (prov["key_env"] and os.environ.get(prov["key_env"])):
             reasons.append({"code": "KEY_MISSING", "message": "Chưa có khóa trong biến môi trường phía máy chủ"})
+    try:
+        est_usd = None if est_usd is None else float("nan") if isinstance(est_usd, bool) else float(est_usd)
+    except (TypeError, ValueError):
+        est_usd = float("nan")
     if est_usd is None:
         reasons.append({"code": "COST_UNKNOWN", "message": "Không ước tính được chi phí nên không gọi"})
+    elif not math.isfinite(est_usd) or est_usd < 0:
+        reasons.append({"code": "INVALID_ESTIMATE", "message": "Ước tính chi phí phải là số hữu hạn ≥ 0"})
     else:
-        est_usd = float(est_usd)
         if est_usd > budget["per_request_usd"]:
             reasons.append({"code": "OVER_PER_REQUEST", "message": f"Vượt trần mỗi request {budget['per_request_usd']} USD"})
         s = usage_summary(conn)
@@ -143,7 +149,9 @@ def gate(conn, provider_id: str | None, est_usd, est_output_tokens: int | None) 
             reasons.append({"code": "OVER_DAILY", "message": f"Vượt trần ngày {budget['daily_usd']} USD"})
         if s["spent_month_usd"] + est_usd > budget["monthly_usd"]:
             reasons.append({"code": "OVER_MONTHLY", "message": f"Vượt trần tháng {budget['monthly_usd']} USD"})
-    if est_output_tokens is None or est_output_tokens > budget["max_output_tokens"]:
+    if not isinstance(est_output_tokens, int) or isinstance(est_output_tokens, bool) or est_output_tokens < 0:
+        reasons.append({"code": "INVALID_TOKENS", "message": "Số token đầu ra phải là số nguyên ≥ 0"})
+    elif est_output_tokens > budget["max_output_tokens"]:
         reasons.append({"code": "TOKENS_OVER", "message": f"Vượt giới hạn {budget['max_output_tokens']} token đầu ra"})
     running = conn.execute("SELECT COUNT(*) FROM ai_usage WHERE status='RESERVED'").fetchone()[0]
     if running >= budget["max_concurrency"]:

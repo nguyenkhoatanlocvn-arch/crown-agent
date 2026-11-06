@@ -81,7 +81,9 @@ class App:
             try:
                 return self._dispatch(conn, req)
             except ApiError as exc:
-                if exc.status in (401, 403) and req.path != "/api/v1/auth/me":
+                # Chỉ ghi lượt bị từ chối của tác nhân ĐÃ xác thực; 401 ẩn danh không ghi để trang lạ không
+                # làm phình nhật ký chỉ thêm (kiểm định 2026-11-06, lỗi #7).
+                if exc.status == 403 and req.ctx.get("actor") is not None:
                     try:
                         AU.audit(conn, req.ctx.get("actor"), f"http.{req.method.lower()}", "route", req.path[:120],
                                  result="DENIED", detail={"code": exc.code})

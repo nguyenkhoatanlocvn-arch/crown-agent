@@ -10,7 +10,6 @@ import mimetypes
 import re
 import traceback
 from dataclasses import dataclass, field
-from http.cookies import CookieError, SimpleCookie
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, unquote, urlsplit
@@ -54,15 +53,14 @@ class Request:
         return self.headers.get(name.lower(), default)
 
     def cookies(self) -> dict:
-        raw = self.header("cookie")
-        if not raw:
-            return {}
-        c = SimpleCookie()
-        try:
-            c.load(raw)
-        except CookieError:
-            return {}
-        return {k: v.value for k, v in c.items()}
+        # Tự tách thay vì SimpleCookie: SimpleCookie bỏ CẢ header nếu một cookie lạ (của ứng dụng khác cùng
+        # localhost) chứa dấu cách/ngoặc kép → mọi người bị đăng xuất (kiểm định 2026-11-06, lỗi #3).
+        out = {}
+        for part in self.header("cookie").split(";"):
+            name, sep, value = part.strip().partition("=")
+            if sep and name and name not in out:
+                out[name] = value.strip().strip('"')
+        return out
 
     def json(self) -> dict:
         if not self.body:
@@ -72,7 +70,7 @@ class Request:
             raise ApiError(415, "UNSUPPORTED_MEDIA_TYPE", "Chỉ nhận application/json")
         try:
             data = json.loads(self.body.decode("utf-8"))
-        except (UnicodeDecodeError, ValueError) as exc:
+        except (UnicodeDecodeError, ValueError, RecursionError) as exc:
             raise bad_request("JSON không hợp lệ", "INVALID_JSON") from exc
         if not isinstance(data, dict):
             raise bad_request("Thân yêu cầu phải là một đối tượng JSON", "INVALID_JSON")
@@ -144,9 +142,10 @@ def serve_static(root: Path, path: str) -> Response:
     try:
         target = (root / rel).resolve()
         target.relative_to(root.resolve())
-    except (ValueError, OSError):
+        is_file = target.is_file()
+    except (ValueError, OSError):  # gồm cả tên quá dài (ENAMETOOLONG)
         raise ApiError(404, "NOT_FOUND", "Không tìm thấy")
-    if not target.is_file():
+    if not is_file:
         # SPA dùng hash-router nên mọi đường dẫn lạ trả 404 thay vì index.html
         raise ApiError(404, "NOT_FOUND", "Không tìm thấy")
     ctype = STATIC_TYPES.get(target.suffix.lower())
