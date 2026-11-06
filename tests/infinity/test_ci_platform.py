@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import shutil
 import socket
 import sqlite3
@@ -15,7 +16,7 @@ from unittest import mock
 from crown_infinity import ai_hub
 from crown_infinity.auth import SYSTEM
 from crown_infinity.backup import BackupError, copy_db_for_test, create_backup, restore_backup, verify_backup
-from crown_infinity.db import MIGRATIONS_DIR, MigrationError, connect, migrate, table_counts
+from crown_infinity.db import MIGRATIONS_DIR, MigrationError, connect, latest_schema_version, migrate, table_counts
 from crown_infinity.httpcore import ApiError
 from tests.infinity.helpers import EDITOR_PW, OWNER_PW, VIEWER_PW, InfinityTestCase, ServerHarness, b64
 
@@ -48,7 +49,7 @@ class T07BackupRestore(Fixture):
         with zipfile.ZipFile(zpath) as z:
             self.assertEqual(set(z.namelist()), {"metadata.json", "database.sqlite"})
             meta = json.loads(z.read("metadata.json"))
-        self.assertEqual(meta["schema_version"], 1)
+        self.assertEqual(meta["schema_version"], latest_schema_version())
         clean = self.tmp / "clean"
         clean.mkdir()
         res = restore_backup(zpath, clean / "crown_infinity.sqlite", clean / "backups", clean / "server.lock")
@@ -115,10 +116,13 @@ class T07BackupRestore(Fixture):
 
 
 class T08Migration(Fixture):
-    def _mig_dir(self, extra_sql: str, name="0002_test_change.sql") -> Path:
+    def _mig_dir(self, extra_sql: str) -> Path:
+        """Bản sao các migration thật + một migration thử đánh số tiếp theo."""
         d = Path(tempfile.mkdtemp(dir=self.tmp))
-        shutil.copy(MIGRATIONS_DIR / "0001_init.sql", d / "0001_init.sql")
-        (d / name).write_text(extra_sql, encoding="utf-8")
+        for p in MIGRATIONS_DIR.glob("*.sql"):
+            shutil.copy(p, d / p.name)
+        nxt = latest_schema_version() + 1
+        (d / f"{nxt:04d}_test_change.sql").write_text(extra_sql, encoding="utf-8")
         return d
 
     def test_migration_on_copy_keeps_data_and_backs_up_first(self):
@@ -132,7 +136,8 @@ class T08Migration(Fixture):
         mig = self._mig_dir("ALTER TABLE prompts ADD COLUMN test_flag INTEGER NOT NULL DEFAULT 0;\n"
                             "CREATE TABLE test_extra (id INTEGER PRIMARY KEY);")
         res = migrate(copy, migrations_dir=mig, backup_dir=self.tmp / "mbk")
-        self.assertEqual((res["from"], res["to"], res["applied"]), (1, 2, [2]))
+        n = latest_schema_version()
+        self.assertEqual((res["from"], res["to"], res["applied"]), (n, n + 1, [n + 1]))
         self.assertTrue(Path(res["backup"]).is_file(), "phải sao lưu trước khi đổi lược đồ")
         c = connect(copy)
         try:
@@ -161,7 +166,7 @@ class T08Migration(Fixture):
         c = connect(copy)
         try:
             self.assertIsNone(c.execute("SELECT 1 FROM sqlite_master WHERE name='half'").fetchone())
-            self.assertEqual(c.execute("SELECT MAX(version) FROM schema_migrations").fetchone()[0], 1)
+            self.assertEqual(c.execute("SELECT MAX(version) FROM schema_migrations").fetchone()[0], latest_schema_version())
         finally:
             c.close()
 
@@ -274,9 +279,7 @@ class T10Authz(Fixture):
     def test_every_user_route_requires_login(self):
         anon = self.h.client()
         for r in self.h.app.router.routes:
-            path = r.template
-            for k in ("pid", "vid", "sid", "uid", "tid", "mid", "aid", "agent_id"):
-                path = path.replace("{" + k + "}", "X-1")
+            path = re.sub(r"\{\w+\}", "X-1", r.template)  # mọi tham số đường dẫn, kể cả route thêm sau này
             st, body, _ = anon.request(r.method, path, {} if r.method != "GET" else None)
             if r.auth == "public":
                 continue

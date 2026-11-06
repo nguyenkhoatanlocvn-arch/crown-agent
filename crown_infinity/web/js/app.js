@@ -1,6 +1,7 @@
 import { ApiError, del, get, onConnection, patch, post, put, qs, setCsrf } from './api.js';
 import { add, badge, clear, fill, confirmDlg, dialog, field, fmtTime, h, select, toast, toastErr } from './ui.js';
 import { mountStudio, unmountStudio } from './studio.js';
+import { pageOps } from './ops.js';
 
 export const session = { user: null, app: null };
 const $ = (id) => document.getElementById(id);
@@ -67,7 +68,7 @@ window.addEventListener('unhandledrejection', (ev) => {
 
 // ------------------------------------------------------------------ định tuyến
 const pages = {
-  dashboard: pageDashboard, prompts: pagePrompts, projects: pageProjects, tasks: pageTasks, modules: pageModules,
+  dashboard: pageDashboard, ops: () => pageOps(view(), session), prompts: pagePrompts, projects: pageProjects, tasks: pageTasks, modules: pageModules,
   tools: pageTools, agents: pageAgents, ai: pageAi, activity: pageActivity, admin: pageAdmin,
 };
 let currentPage = null;

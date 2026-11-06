@@ -6,12 +6,12 @@
       "module_id": "crown_agent_control", "code": "01", "name": "CROWN AGENT CONTROL", "version": "0.1.0",
       "description": "Agent, nhiệm vụ, trạng thái, báo cáo của CROWN AGENT.",
       "dev_status": "IMPLEMENTED",
-      "implemented_scope": ["Adapter CHỈ ĐỌC sổ đăng ký registries/*.json", "Danh tính Agent + token riêng", "Cấp prompt theo phiên bản cố định cho Agent", "Đọc sổ nhiệm vụ crown tasks.db nếu có tệp (chỉ đọc)"],
-      "not_yet": ["Tạo/giao/dừng nhiệm vụ của Agent (chưa có endpoint/quyền tương ứng)", "Đồng bộ Hoàng Thành Rồng (artifact DB)"],
-      "capabilities": ["agents.read", "assignments.manage", "agent_prompt.read"],
+      "implemented_scope": ["Adapter CHỈ ĐỌC sổ đăng ký registries/*.json", "Danh tính Agent + token riêng", "Cấp prompt theo phiên bản cố định cho Agent", "Đọc sổ nhiệm vụ crown tasks.db nếu có tệp (chỉ đọc)", "Bộ não điều hành: bộ nhớ quyết định theo dự án (quyết định ≠ đề xuất AI)", "Bản đồ mã Graphify (code-only, offline) gắn commit", "Quyền Agent theo nhiệm vụ + dự án", "Rà soát bản build bởi Agent Vua (chỉ đọc, chống chạy trùng)", "Lịch rà soát mỗi 2 giờ (mặc định tắt)"],
+      "not_yet": ["Giao/dừng nhiệm vụ của sổ CROWN AGENT gốc (tasks.db)", "Đồng bộ Hoàng Thành Rồng (artifact DB)", "Gọi model AI thật (chưa có transport; ngân sách 0)", "Tự sửa/merge/deploy — cố ý không làm ở giai đoạn này"],
+      "capabilities": ["agents.read", "assignments.manage", "agent_prompt.read", "decisions.manage", "graph.read", "build_review.run"],
       "permissions_required": ["OWNER để cấp token và assignment"],
       "dependencies": ["crown_prompt_studio", "crown_admin_center"],
-      "routes": {"ui": ["#/agents"], "api": ["/api/v1/agents", "/api/v1/assignments", "/api/v1/agent/prompts", "/api/v1/integrations/crown-agent/*"]}
+      "routes": {"ui": ["#/agents", "#/ops"], "api": ["/api/v1/agents", "/api/v1/assignments", "/api/v1/agent/*", "/api/v1/integrations/crown-agent/*", "/api/v1/ops/*", "/api/v1/agent-grants"]}
     },
     {
       "module_id": "crown_tool_desk", "code": "02", "name": "CROWN TOOL DESK", "version": "0.1.0",

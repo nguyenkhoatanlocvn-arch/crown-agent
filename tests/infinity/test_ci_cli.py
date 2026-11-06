@@ -96,7 +96,7 @@ class CliTest(unittest.TestCase):
         self.assertTrue(Path(json.loads(r.stdout)["safety_backup"]).is_file())
         r = run("--data-dir", str(self.data), "status")
         st = json.loads(r.stdout)
-        self.assertEqual((st["db_schema"], st["counts"]["prompts"]), (1, 1))
+        self.assertEqual((st["db_schema"], st["counts"]["prompts"]), (st["code_schema"], 1))
 
     def test_refuses_lan_without_flag(self):
         r = run("--data-dir", str(self.data), "serve", "--host", "0.0.0.0", "--port", "0")

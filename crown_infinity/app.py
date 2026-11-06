@@ -9,6 +9,9 @@ from . import APP_NAME, APP_VERSION
 from . import agents as AG
 from . import ai_hub as AI
 from . import auth as AU
+from . import decisions as DC
+from . import graphmap as GM
+from . import ops as OPS
 from . import platform as PF
 from . import prompts as PS
 from .backup import BackupError, create_backup, list_backups
@@ -243,6 +246,61 @@ class App:
         r("GET", "/api/v1/agent/prompts/{pid}", ag(lambda c, q: AG.agent_get_prompt(c, A(q), q.params["pid"])),
           auth="agent")
 
+        # --- Bộ não điều hành: bộ nhớ quyết định
+        r("GET", "/api/v1/decisions", lambda c, q: DC.list_decisions(c, A(q), q.q("project_id", ""), q.q("status")))
+        r("POST", "/api/v1/decisions", lambda c, q: DC.create_decision(c, A(q), q.json()))
+        r("PATCH", "/api/v1/decisions/{did}", lambda c, q: DC.update_decision(c, A(q), q.params["did"], q.json(),
+                                                                              q.if_match()))
+        r("GET", "/api/v1/decisions/{did}/history", lambda c, q: DC.history(c, A(q), q.params["did"]))
+
+        # --- Bản đồ mã (Graphify)
+        def _map_read(c, q):
+            m = GM.map_row(c, q.params["mid"])
+            AU.require_project(c, A(q), m["project_id"])
+            return m
+        r("GET", "/api/v1/graph/maps", lambda c, q: (AU.require_project(c, A(q), q.q("project_id", "")),
+                                                     {"items": GM.list_maps(c, q.q("project_id", ""))})[1])
+        r("POST", "/api/v1/graph/maps/build", lambda c, q: Response.json(GM.build_map(
+            c, A(q), self.config.repo_root, str(q.json().get("project_id") or ""),
+            str(q.json().get("scope") or "crown_infinity"), self.config.graphify_bin), 201))
+        r("GET", "/api/v1/graph/maps/{mid}/query", lambda c, q: (_map_read(c, q), GM.query(
+            c, q.params["mid"], q.q("node", ""), q.q("relation") or None, q.q("direction", "both"),
+            PF._int_param(q.q("limit"), 60, 1, 200, "limit")))[1])
+        r("GET", "/api/v1/graph/maps/{mid}/source", lambda c, q: (_map_read(c, q), GM.read_source(
+            c, self.config.repo_root, q.params["mid"], q.q("path", ""), q.q("line")))[1])
+
+        # --- Rà soát bản build, lịch, quyền Agent theo nhiệm vụ (thuộc CROWN AGENT CONTROL)
+        r("GET", "/api/v1/ops/status", ag(lambda c, q: self._ops_status(c, A(q), q.q("project_id", ""))))
+        r("POST", "/api/v1/ops/reviews", ag(lambda c, q: Response.json(OPS.run_review(
+            c, A(q), self.config.repo_root, str(q.json().get("project_id") or ""),
+            {k: q.json().get(k) for k in ("analysis_provider_id", "verify_provider_id")}), 201)))
+        r("GET", "/api/v1/ops/reviews", ag(lambda c, q: OPS.list_runs(c, A(q), q.q("project_id", ""))))
+        r("GET", "/api/v1/ops/reviews/{rid}", ag(lambda c, q: self._run_read(c, A(q), q.params["rid"])))
+        r("GET", "/api/v1/ops/schedule", ag(lambda c, q: OPS.get_schedule(c, A(q), q.q("project_id", ""))))
+        r("PUT", "/api/v1/ops/schedule", ag(lambda c, q: OPS.set_schedule(c, A(q), str(q.json().get("project_id") or ""),
+                                                                         q.json())))
+        r("GET", "/api/v1/agent-grants", ag(lambda c, q: OPS.list_grants(c, A(q), q.q("project_id"))))
+        r("POST", "/api/v1/agent-grants", ag(lambda c, q: Response.json(OPS.grant(
+            c, A(q), str(q.json().get("agent_id") or ""), str(q.json().get("task_id") or ""),
+            str(q.json().get("permission") or "READ")), 201)))
+        r("POST", "/api/v1/agent-grants/{gid}/revoke", ag(lambda c, q: OPS.revoke_grant(c, A(q), q.params["gid"])))
+        # Agent (Bearer) — chỉ trong phạm vi nhiệm vụ được cấp
+        r("GET", "/api/v1/agent/grants", ag(lambda c, q: OPS.agent_grants(c, A(q))), auth="agent")
+        r("GET", "/api/v1/agent/tasks/{tid}/decisions", ag(lambda c, q: (lambda s: {
+            "task_id": s.task_id, "project_id": s.project_id, "items": DC.active_decisions(c, s.project_id)})(
+            OPS.scope_for(c, A(q), q.params["tid"]))), auth="agent")
+        r("GET", "/api/v1/agent/tasks/{tid}/graph/query", ag(lambda c, q: (lambda s, m: GM.query(
+            c, m["id"], q.q("node", ""), q.q("relation") or None, q.q("direction", "both")))(
+            *(lambda s: (s, OPS.scoped_map(c, s, q.q("map_id"))))(OPS.scope_for(c, A(q), q.params["tid"])))),
+            auth="agent")
+        r("GET", "/api/v1/agent/tasks/{tid}/graph/source", ag(lambda c, q: (lambda s, m: GM.read_source(
+            c, self.config.repo_root, m["id"], q.q("path", ""), q.q("line")))(
+            *(lambda s: (s, OPS.scoped_map(c, s, q.q("map_id"))))(OPS.scope_for(c, A(q), q.params["tid"])))),
+            auth="agent")
+        r("POST", "/api/v1/agent/tasks/{tid}/proposals", ag(lambda c, q: Response.json((lambda s: DC.propose(
+            c, A(q), s.project_id, q.json(), str(q.json().get("ai_model") or "")))(
+            OPS.scope_for(c, A(q), q.params["tid"], "PROPOSE")), 201)), auth="agent")
+
         # --- Admin
         r("GET", "/api/v1/admin/users", lambda c, q: (AU.require_owner(A(q)), {"items": AU.list_users(c)})[1])
         r("POST", "/api/v1/admin/users", self._create_user)
@@ -286,6 +344,21 @@ class App:
         u = AU.create_user(conn, str(d.get("username", "")), str(d.get("password", "")), str(d.get("role", "")),
                            str(d.get("display_name", "")), actor=actor)
         return Response.json(u, 201)
+
+    def _run_read(self, conn, actor, rid: str) -> dict:
+        run = OPS.get_run(conn, rid)
+        AU.require_project(conn, actor, run["project_id"])
+        return run
+
+    def _ops_status(self, conn, actor, project_id: str) -> dict:
+        AU.require_project(conn, actor, project_id)
+        exe = GM.find_graphify(self.config.graphify_bin)
+        runs = OPS.list_runs(conn, actor, project_id, 1)["items"]
+        return {"project_id": project_id, "commit": OPS.commit_info(self.config.repo_root),
+                "graphify": {"available": bool(exe), "path": exe, "tested_version": GM.GRAPHIFY_TESTED_VERSION},
+                "latest_map": GM.latest_map(conn, project_id), "latest_run": runs[0] if runs else None,
+                "schedule": OPS.get_schedule(conn, actor, project_id),
+                "environment": {"repo_root": str(self.config.repo_root), "data_dir": str(self.config.data_dir)}}
 
     def _create_backup(self, conn, req: Request) -> Response:
         actor = req.ctx["actor"]

@@ -37,6 +37,10 @@ def _cfg(args) -> Config:
         kw["secure_cookies"] = True
     if getattr(args, "repo_root", None):
         kw["repo_root"] = Path(args.repo_root)
+    if getattr(args, "graphify", None):
+        kw["graphify_bin"] = args.graphify
+    if getattr(args, "no_scheduler", False):
+        kw["scheduler"] = False
     return Config(**kw)
 
 
@@ -73,6 +77,11 @@ def cmd_serve(args) -> int:
         raise
     real_port = srv.server_address[1]
     update_lock(cfg.lock_path, {"kind": "serve", "port": real_port, "host": cfg.host})
+    sched = None
+    if cfg.scheduler:
+        from .ops import Scheduler
+        sched = Scheduler(cfg.db_path, cfg.repo_root)
+        sched.start()
     print(f"{APP_NAME} {APP_VERSION} đang chạy: http://{'localhost' if cfg.host == '127.0.0.1' else cfg.host}:{real_port}/",
           flush=True)
     print(f"Dữ liệu: {cfg.data_dir}  ·  tìm kiếm: {app.search_mode}  ·  dừng: Ctrl+C", flush=True)
@@ -91,6 +100,8 @@ def cmd_serve(args) -> int:
     try:
         srv.serve_forever(poll_interval=0.5)
     finally:
+        if sched:
+            sched.stop()
         srv.server_close()
         release_lock(cfg.lock_path)
         print("Đã dừng.", flush=True)
@@ -170,6 +181,57 @@ def cmd_restore(args) -> int:
     return 0
 
 
+def _owner_and_project(conn, username: str, project: str, create: bool = False):
+    from . import auth as AU
+    from .platform import create_project
+    u = conn.execute("SELECT * FROM users WHERE username=? COLLATE NOCASE AND role='OWNER' AND is_active=1",
+                     (username,)).fetchone()
+    if not u:
+        raise SystemExit(f"Không có OWNER đang hoạt động tên '{username}'")
+    actor = AU.Actor("USER", u["id"], "OWNER", u["display_name"])
+    p = conn.execute("SELECT id FROM projects WHERE id=? OR name=? ORDER BY id=? DESC LIMIT 1",
+                     (project, project, project)).fetchone()
+    if not p:
+        if not create:
+            raise SystemExit(f"Không có dự án '{project}'")
+        return actor, create_project(conn, actor, {"name": project})["id"]
+    return actor, p["id"]
+
+
+def cmd_graph_build(args) -> int:
+    from .graphmap import build_map
+    from .httpcore import ApiError
+    cfg = _cfg(args)
+    conn = _open_db(cfg)
+    try:
+        actor, pid = _owner_and_project(conn, args.as_user, args.project)
+        try:
+            info = build_map(conn, actor, cfg.repo_root, pid, args.scope, args.graphify)
+        except ApiError as exc:
+            print(f"LỖI {exc.code}: {exc.message}", file=sys.stderr)
+            if exc.details:
+                print(json.dumps(exc.details, ensure_ascii=False)[:2000], file=sys.stderr)
+            return 2
+        print(json.dumps(info, ensure_ascii=False, indent=2))
+        return 0
+    finally:
+        conn.close()
+
+
+def cmd_decision_add(args) -> int:
+    from .decisions import create_decision
+    cfg = _cfg(args)
+    conn = _open_db(cfg)
+    try:
+        actor, pid = _owner_and_project(conn, args.as_user, args.project, create=True)
+        resp = create_decision(conn, actor, {"project_id": pid, "title": args.title, "content": args.content,
+                                             "source": args.source, "decided_at": args.decided_at or ""})
+        print(resp.body.decode("utf-8"))
+        return 0
+    finally:
+        conn.close()
+
+
 def cmd_status(args) -> int:
     from .db import connect, latest_schema_version, schema_version, table_counts
     cfg = _cfg(args)
@@ -205,7 +267,24 @@ def main(argv=None) -> int:
     s.add_argument("--allow-lan", action="store_true")
     s.add_argument("--secure-cookies", action="store_true", help="Bật khi chạy sau HTTPS")
     s.add_argument("--repo-root", help="Thư mục repo crown-agent (đọc registries/, tool/catalog)")
+    s.add_argument("--graphify", help="Đường dẫn lệnh graphify (gói graphifyy) để dựng bản đồ mã")
+    s.add_argument("--no-scheduler", action="store_true", help="Không chạy bộ lập lịch rà soát trong tiến trình này")
     s.set_defaults(fn=cmd_serve)
+    s = sub.add_parser("graph-build", help="Dựng bản đồ mã bằng Graphify ở commit HEAD và lưu vào database")
+    s.add_argument("--project", required=True, help="Tên hoặc mã dự án")
+    s.add_argument("--scope", default="crown_infinity")
+    s.add_argument("--graphify")
+    s.add_argument("--repo-root")
+    s.add_argument("--as-user", required=True, help="Tên đăng nhập OWNER chịu trách nhiệm")
+    s.set_defaults(fn=cmd_graph_build)
+    s = sub.add_parser("decision-add", help="OWNER ghi một quyết định đã xác nhận từ dòng lệnh")
+    s.add_argument("--project", required=True, help="Tên hoặc mã dự án (tạo mới nếu chưa có tên này)")
+    s.add_argument("--title", required=True)
+    s.add_argument("--content", required=True)
+    s.add_argument("--source", required=True)
+    s.add_argument("--decided-at")
+    s.add_argument("--as-user", required=True, help="Tên đăng nhập OWNER xác nhận")
+    s.set_defaults(fn=cmd_decision_add)
     s = sub.add_parser("init-owner")
     s.add_argument("--username", required=True)
     s.add_argument("--display-name")

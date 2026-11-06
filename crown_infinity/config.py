@@ -32,6 +32,8 @@ class Config:
     session_idle_seconds: int = 12 * 3600
     session_absolute_seconds: int = 7 * 24 * 3600
     max_body_bytes: int = 4 * 1024 * 1024
+    graphify_bin: str | None = None       # đường dẫn lệnh graphify (tùy chọn)
+    scheduler: bool = True                # chạy bộ lập lịch trong tiến trình serve
 
     def __post_init__(self):
         self.data_dir = Path(self.data_dir)

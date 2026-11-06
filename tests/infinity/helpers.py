@@ -81,9 +81,9 @@ class Client:
 
 
 class ServerHarness:
-    def __init__(self, data_dir: Path, **app_kw):
+    def __init__(self, data_dir: Path, repo_root: Path | None = None, graphify_bin: str | None = None, **app_kw):
         self.data_dir = Path(data_dir)
-        self.cfg = Config(data_dir=self.data_dir, port=0, repo_root=REPO_ROOT)
+        self.cfg = Config(data_dir=self.data_dir, port=0, repo_root=repo_root or REPO_ROOT, graphify_bin=graphify_bin)
         self.app = App(self.cfg, **app_kw)
         self.srv = Server(("127.0.0.1", 0), make_handler(self.app))
         self.port = self.srv.server_address[1]
@@ -130,9 +130,12 @@ class InfinityTestCase(unittest.TestCase):
 
     app_kw: dict = {}
 
+    def harness_kw(self) -> dict:
+        return {}
+
     def setUp(self):
         self.tmp = Path(tempfile.mkdtemp(prefix="ci-test-"))
-        self.h = ServerHarness(self.tmp / "data", **self.app_kw)
+        self.h = ServerHarness(self.tmp / "data", **self.harness_kw(), **self.app_kw)
         self.ids = seed_users(self.h)
         self.owner = self.h.client()
         st, _ = self.owner.login("loc", OWNER_PW)
