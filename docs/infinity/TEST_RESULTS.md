@@ -46,3 +46,45 @@ Tìm 9 lỗi có tái hiện: 1 HIGH (khối `{{> P-id}}` lồng nhiều nhánh 
 - iPhone/Safari thật: **NOT VERIFIED** (chỉ giả lập khung 390px trên Chromium; không cuộn ngang).
 - Tải nhiều người dùng đồng thời: chưa đo.
 - Test có sẵn của repo `test_parallel_processes_open_fresh_db` chập chờn (lần đầu lỗi "database is locked", các lần sau đạt) — không thuộc mã INFINITY.
+
+---
+
+# Bộ não điều hành v1 — nghiệm thu (2026-11-06, commit `91f6c1d`, nhánh `feature/crown-infinity-ops-brain`)
+
+**Môi trường:** container Linux cloud, Python 3.13.18, SQLite 3.53.1, Chromium headless (Playwright 1.63), Graphify `graphifyy` 0.9.103 trong venv riêng. **Không phải Windows.**
+```
+CROWN_INFINITY_GRAPHIFY=<venv>/bin/graphify python3 -m unittest discover -s tests -t .   # 266 test — OK (gồm 68 test INFINITY)
+node tests/web/infinity_ui_test.cjs                                                      # 16/16 — PASS (không hồi quy)
+CROWN_INFINITY_GRAPHIFY=<venv>/bin/graphify node tests/web/ops_acceptance_test.cjs <ảnh> # 12/12 — PASS, chạy 2 lần liên tiếp
+```
+
+## Thao tác thật trên giao diện + máy chủ thật (`tests/web/ops_acceptance_test.cjs`)
+| # | Phép thử | Kết quả | Bằng chứng ghi lại |
+|---|---|---|---|
+| 1 | Tạo quyết định "Tạm hoãn Voice Studio, Video Studio và SEO Studio. Ưu tiên nền tảng CROWN INFINITY." trên giao diện | PASS | Nhãn "QUYẾT ĐỊNH ĐÃ XÁC NHẬN", người xác nhận Nguyễn Khoa Tấn Lộc |
+| 2 | Dừng dịch vụ bằng Ctrl+C (mã thoát 0), chạy lại tiến trình mới, đọc lại | PASS | Cùng mã quyết định, rev 1 |
+| 3 | Dựng bản đồ Graphify ở commit hiện tại (nút trên giao diện) | PASS | 28 tệp `crown_infinity/`, 532 nút, 2300 cạnh (2140 EXTRACTED, 160 INFERRED), commit nguồn = HEAD |
+| 4 | Tra một quan hệ thật có nguồn, mở tệp đối chiếu | PASS | `._create_backup()` --calls--> `create_backup()` [EXTRACTED] tại `crown_infinity/app.py:367`; dòng nguồn mở bằng `git show <commit>:crown_infinity/app.py`, băm khớp |
+| 5 | Hiển thị rõ trích xuất / suy luận | PASS | Nút `Response`: 13 EXTRACTED, 12 INFERRED; ví dụ suy luận `App` uses `Response` → `app.py:72 def handle(self, req: Request) -> Response:` |
+| 6 | Agent (token A18) truy vấn quan hệ + mở nguồn trong phạm vi nhiệm vụ được cấp; nhiệm vụ không được cấp | PASS | Đọc được quan hệ và dòng nguồn; nhiệm vụ khác → 403 |
+| 7 | Bấm "Rà soát bản build" | PASS | SUCCEEDED, báo cáo có commit HEAD, mục ĐÃ KIỂM CHỨNG / CHỈ ĐƯỢC BÁO CÁO / CHƯA BIẾT; mọi bước "Gọi AI thật: KHÔNG" |
+| 8 | Báo cáo có việc tiếp theo + người phụ trách | PASS | Ví dụ: chạy lại test → A20; chạy trên Windows → Chủ tịch |
+| 9 | Bấm lại với cùng commit + cùng đầu vào | PASS | Lượt mới `SKIPPED_DUPLICATE` trỏ về lượt gốc |
+| 10 | Bật lịch 2 giờ sau lần chạy thủ công thành công | PASS | Hiện lần kế tiếp (+2 giờ) và dịch vụ lập lịch ONLINE (nhịp từ tiến trình serve) |
+| 11 | Màn Điều hành trên khung điện thoại 390px | PASS | Không cuộn ngang |
+| 12 | Không có lỗi JavaScript | PASS | — |
+
+Lỗi thật do nghiệm thu bắt được và đã sửa (commit `0aa663e`): sau `await`, `ev.currentTarget` là `null` → nút "Rà soát bản build", "Dựng bản đồ", "Đồng bộ tool", "Sao lưu ngay" bị kẹt ở trạng thái vô hiệu.
+
+## Test backend mới (`tests/infinity/test_ci_ops.py`, 11 test, repo git tạm làm nguồn)
+Quyết định: vòng đời + lịch sử chỉ thêm + If-Match; quyền (EDITOR/VIEWER/dự án khác); ràng buộc DB (DECISION phải có người xác nhận, không xóa, lịch sử không sửa); còn sau khởi động lại; đề xuất AI tách biệt (quyền READ không ghi được, READ_PROPOSE ghi được, chỉ thành quyết định khi OWNER xác nhận).
+Bản đồ: quan hệ có nhãn, mở nguồn ở đúng commit kể cả khi tệp trên đĩa đã đổi, chặn đường dẫn lạ/../tuyệt đối, chặn dự án khác; dựng bằng Graphify thật (chạy khi có `CROWN_INFINITY_GRAPHIFY`).
+Phạm vi Agent: chỉ dự án + nhiệm vụ được cấp; bản đồ dự án khác 403; nhiệm vụ đóng thì hết quyền.
+Rà soát: nhiệm vụ giao VUA_CEO, quyền READ thu hồi khi xong; chống trùng; commit mới / quyết định mới → chạy lại; EDITOR không kích hoạt được.
+AI: chọn model trả phí không có khóa → bị cổng chặn; model cục bộ được cổng cho qua nhưng chưa có transport → "KHÔNG gọi AI"; 0 lời gọi; ngân sách vẫn 0.
+Lịch: phải chạy thủ công trước; 3 nhịp đồng thời chỉ giành 1 lượt; lượt lịch trùng đầu vào → SKIPPED_DUPLICATE; dịch vụ ONLINE; tắt lịch xóa lần kế tiếp.
+
+## Chưa kiểm
+- Windows (PowerShell, Git for Windows, Graphify trên Windows, đường dẫn `%LOCALAPPDATA%`): **NOT VERIFIED**.
+- Lời gọi model thật: **không có** (chưa có transport; ngân sách 0) — không phải PASS.
+- Lịch chạy thật sau 2 giờ trên máy thật: chưa chờ đủ; đã kiểm bằng nhịp mô phỏng thời điểm (`scheduler_tick` với giờ tương lai) và nhịp thật ghi trạng thái ONLINE.

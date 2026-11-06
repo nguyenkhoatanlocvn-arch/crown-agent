@@ -1,5 +1,15 @@
 # CROWN INFINITY — Bàn giao phiên 2026-11-06
 
+## Cập nhật: Bộ não điều hành v1 (nhánh `feature/crown-infinity-ops-brain`, tách từ nhánh Prompt Studio)
+- Đã có: bộ nhớ quyết định theo dự án (quyết định ≠ đề xuất AI), bản đồ mã Graphify gắn commit, Rà soát bản build bởi Agent Vua
+  (chỉ đọc, chống chạy trùng), lịch 2 giờ mặc định tắt, màn hình Điều hành `#/ops`. Chi tiết + hướng dẫn Windows: `OPS_BRAIN.md`.
+- Nghiệm thu: 12/12 thao tác thật trên giao diện (2 lần liên tiếp), 266 test Python, 16/16 test giao diện cũ — xem `TEST_RESULTS.md`.
+- Quyết định đầu tiên của Chủ tịch đã lưu trong DB chạy thử; trên máy Windows cần ghi lại một lần (lệnh trong `OPS_BRAIN.md` mục 3).
+- Chưa: chạy trên Windows, gọi model thật, chạy lại test tự động trong lượt rà soát, đồng bộ Hoàng Thành Rồng.
+- Quyết định cần OWNER: (1) merge PR #2 trước rồi mới mở PR cho nhánh này; (2) có cài Graphify trên máy Windows không;
+  (3) khi nào cấp ngân sách AI và provider cho bước phân tích/kiểm tra lại.
+
+
 ## Trạng thái
 - Nhánh: `feature/crown-infinity-prompt-studio` (repo `nguyenkhoatanlocvn-arch/crown-agent`). **Chưa merge vào `master`, chưa mở PR.**
 - Milestone đạt: **M1 — lõi nền tảng + luồng hoàn chỉnh của CROWN PROMPT STUDIO** từ giao diện tới database, có test tự động.
