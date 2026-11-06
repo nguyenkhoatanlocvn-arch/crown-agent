@@ -219,8 +219,9 @@ async function pageModules() {
 async function pageTools() {
   const d = await get('/tools');
   const sync = isOwner() ? h('button', { class: 'btn', text: 'Đồng bộ từ kho TOOL', onclick: async (ev) => {
-    ev.currentTarget.disabled = true;
-    try { const r = await post('/tools/sync'); toast(`Đã đọc ${r.synced} tool (${r.status})`); route(); } catch (e) { toastErr(e); ev.currentTarget.disabled = false; }
+    const b = ev.currentTarget;
+    b.disabled = true;
+    try { const r = await post('/tools/sync'); toast(`Đã đọc ${r.synced} tool (${r.status})`); route(); } catch (e) { toastErr(e); b.disabled = false; }
   } }) : null;
   const list = d.items.length ? d.items.map((t) => h('div', { class: 'card stack' },
     h('div', { class: 'row' }, h('h2', { text: t.name }), h('span', { class: 'spacer' }), badge('info', t.category || 'khác'), h('span', { class: 'small muted', text: `v${t.version}` })),
@@ -347,8 +348,9 @@ async function pageAdmin() {
       } }))));
     add(out, h('div', { class: 'card stack' }, h('div', { class: 'row' }, h('h2', { text: 'Sao lưu' }), h('span', { class: 'spacer' }),
       h('button', { class: 'btn primary', text: 'Sao lưu ngay', onclick: async (ev) => {
-        ev.currentTarget.disabled = true;
-        try { const r = await post('/admin/backups'); toast(`Đã sao lưu ${r.name}`); route(); } catch (e) { toastErr(e); ev.currentTarget.disabled = false; }
+    const b = ev.currentTarget;
+        b.disabled = true;
+        try { const r = await post('/admin/backups'); toast(`Đã sao lưu ${r.name}`); route(); } catch (e) { toastErr(e); b.disabled = false; }
       } })),
       h('p', { class: 'small muted', text: `Thư mục: ${backups.directory}. Khôi phục: dừng máy chủ rồi chạy  py -m crown_infinity restore <tệp.zip>  (tự kiểm tra trên bản tạm và sao lưu dữ liệu hiện tại trước khi thay).` }),
       backups.items.length ? h('ul', {}, backups.items.map((b) => h('li', { class: 'small', text: `${b.name} · ${(b.bytes / 1024).toFixed(1)} KB` }))) : h('p', { class: 'empty', text: 'Chưa có bản sao lưu.' })));

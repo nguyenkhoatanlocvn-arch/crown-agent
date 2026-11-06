@@ -132,9 +132,10 @@ function renderMap() {
   const st = S.status; const m = st.latest_map;
   const build = owner() ? h('button', { class: 'btn small', text: 'Dựng bản đồ ở commit hiện tại', disabled: !st.graphify.available,
     title: st.graphify.available ? '' : 'Máy chủ chưa có Graphify (gói graphifyy)', onclick: async (ev) => {
-      ev.currentTarget.disabled = true;
+    const b = ev.currentTarget;
+      b.disabled = true;
       try { const r = await post('/graph/maps/build', { project_id: S.pid }); toast(`Đã dựng ${r.id}: ${r.node_count} nút, ${r.edge_count} cạnh`); renderStatus(); }
-      catch (e) { toastErr(e, 'Dựng bản đồ'); ev.currentTarget.disabled = false; }
+      catch (e) { toastErr(e, 'Dựng bản đồ'); b.disabled = false; }
     } }) : null;
   const q = h('input', { placeholder: 'Tên hàm/lớp/tệp, VD: create_backup', 'aria-label': 'Tên nút cần tra' });
   const dir = select([['both', 'Hai chiều'], ['out', 'Nó gọi/dùng gì (đi ra)'], ['in', 'Ai gọi/dùng nó (đi vào)']], 'both', { 'aria-label': 'Hướng' });
@@ -182,10 +183,11 @@ async function renderReview(showRun = null) {
   const opts = [['', 'Không dùng AI (chỉ quy tắc)'], ...providers.map((p) => [p.id, `${p.name} · ${p.model || '?'}${p.enabled ? '' : ' (đang tắt)'}`])];
   const ana = select(opts, '', { 'aria-label': 'Model phân tích' }); const ver = select(opts, '', { 'aria-label': 'Model kiểm tra lại' });
   const btn = h('button', { class: 'btn primary', text: 'Rà soát bản build', disabled: !owner(), onclick: async (ev) => {
-    ev.currentTarget.disabled = true; fill(out, h('p', { class: 'muted', text: 'Agent Vua đang rà soát…' }));
+    const b = ev.currentTarget;
+    b.disabled = true; fill(out, h('p', { class: 'muted', text: 'Agent Vua đang rà soát…' }));
     try { const r = await post('/ops/reviews', { project_id: S.pid, analysis_provider_id: ana.value || null, verify_provider_id: ver.value || null }); showReport(out, r); loadRuns(); renderStatus(); }
     catch (e) { fill(out, h('p', { class: 'note bad', role: 'alert', text: `Rà soát thất bại: ${e.message}` })); }
-    finally { ev.currentTarget.disabled = false; }
+    finally { b.disabled = false; }
   } });
   const runs = h('div', { class: 'stack small' });
   S.loadRuns = loadRuns;
