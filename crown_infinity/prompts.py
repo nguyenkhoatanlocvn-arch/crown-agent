@@ -321,8 +321,9 @@ def commit_version(conn, actor: Actor, pid: str, data: dict, if_match) -> Respon
 
 def list_versions(conn, actor: Actor, pid: str) -> dict:
     _load(conn, actor, pid)
-    rows = conn.execute("SELECT * FROM prompt_versions WHERE prompt_id=? ORDER BY version_no DESC", (pid,)).fetchall()
-    return {"items": [_version_summary(r) for r in rows]}
+    rows = conn.execute("SELECT v.*, u.display_name AS author_name FROM prompt_versions v LEFT JOIN users u "
+                        "ON u.id=v.author_id WHERE v.prompt_id=? ORDER BY v.version_no DESC", (pid,)).fetchall()
+    return {"items": [dict(_version_summary(r), author_name=r["author_name"] or r["author_id"]) for r in rows]}
 
 
 def _version(conn, pid: str, vid: str):

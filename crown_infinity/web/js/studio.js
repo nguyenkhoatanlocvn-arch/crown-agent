@@ -457,7 +457,7 @@ async function tabHistory(box) {
     } }));
     add(box, h('div', { class: 'version-row' },
       h('div', { class: 'row' }, h('strong', { text: `v${v.version_no}` }), badge(v.review_status), v.id === prodId ? badge('prod', 'PRODUCTION') : null, v.id === headId ? badge('info', 'mới nhất') : null,
-        h('span', { class: 'small muted', text: `${fmtTime(v.created_at)} · ${v.author_id || ''}` })),
+        h('span', { class: 'small muted', text: `${fmtTime(v.created_at)} · ${v.author_name || v.author_id || ''}` })),
       h('div', { class: 'small', text: `${v.changelog || '—'}${v.restored_from ? ` (khôi phục từ ${v.restored_from})` : ''}` }),
       h('div', { class: 'row' }, acts)));
   }
