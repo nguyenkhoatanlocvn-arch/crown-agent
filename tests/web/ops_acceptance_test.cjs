@@ -91,6 +91,7 @@ async function main() {
       await page.fill('#ops-graph [aria-label="Tên nút cần tra"]', 'httpcore_response');
       await page.selectOption('#ops-graph [aria-label="Hướng"]', 'in');
       await page.click('#ops-graph >> text=Tra quan hệ');
+      await page.waitForSelector('#ops-graph strong:text-is("Response")'); // chờ bảng MỚI, không đọc nhầm bảng cũ
       await page.waitForSelector('#ops-graph tbody .badge');
       const labels = await page.locator('#ops-graph tbody .badge').allTextContents();
       const inf = page.locator('#ops-graph tbody tr', { hasText: 'INFERRED' }).first();
