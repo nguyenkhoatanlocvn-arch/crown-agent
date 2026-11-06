@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CROWN INFINITY</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/app.css">
+<script type="module" src="/js/app.js"></script>
+</head>
+<body>
+<div id="boot" class="boot">Đang tải CROWN INFINITY…</div>
+
+<main id="login" class="login" hidden>
+  <form id="login-form" class="login-card" autocomplete="on">
+    <p class="eyebrow">CROWN INFINITY</p>
+    <h1>Đăng nhập</h1>
+    <label>Tên đăng nhập <input name="username" autocomplete="username" required></label>
+    <label>Mật khẩu <input name="password" type="password" autocomplete="current-password" required></label>
+    <p id="login-error" class="form-error" role="alert"></p>
+    <button type="submit" class="btn primary">Đăng nhập</button>
+    <p class="muted small">Chưa có tài khoản OWNER? Chạy <code>py -m crown_infinity init-owner --username &lt;tên&gt;</code> trên máy chủ.</p>
+  </form>
+</main>
+
+<div id="shell" class="shell" hidden>
+  <header class="topbar">
+    <button id="nav-toggle" class="btn ghost icon" aria-label="Mở menu" aria-expanded="false">☰</button>
+    <a href="#/dashboard" class="brand"><span class="crown" aria-hidden="true">♛</span> CROWN INFINITY</a>
+    <span id="conn-status" class="conn" title="Trạng thái kết nối máy chủ">●</span>
+    <span class="spacer"></span>
+    <span id="whoami" class="muted small"></span>
+    <button id="logout" class="btn ghost small">Đăng xuất</button>
+  </header>
+  <nav id="sidebar" class="sidebar" aria-label="Điều hướng">
+    <a href="#/dashboard" data-route="dashboard">Tổng quan</a>
+    <a href="#/prompts" data-route="prompts">Prompt Studio</a>
+    <a href="#/projects" data-route="projects">Dự án</a>
+    <a href="#/tasks" data-route="tasks">Việc</a>
+    <a href="#/modules" data-route="modules">Module Registry</a>
+    <a href="#/tools" data-route="tools">Tool Registry</a>
+    <a href="#/agents" data-route="agents" data-owner>CROWN AGENT</a>
+    <a href="#/ai" data-route="ai" data-owner>AI Hub</a>
+    <a href="#/activity" data-route="activity">Nhật ký</a>
+    <a href="#/admin" data-route="admin">Quản trị</a>
+  </nav>
+  <section id="view" class="view" tabindex="-1"></section>
+</div>
+<div id="toasts" class="toasts" aria-live="polite"></div>
+</body>
+</html>
