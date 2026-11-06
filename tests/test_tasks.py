@@ -199,3 +199,37 @@ class ConcurrentInitTest(unittest.TestCase):
                      for _ in range(5)]
             errs = [p.communicate()[1] for p in procs]
             self.assertTrue(all(p.returncode == 0 for p in procs), "\n".join(e for e in errs if e))
+
+    def test_wal_switch_waits_for_writer_instead_of_failing(self):
+        """Tái hiện xác định lỗi chập chờn: khi tiến trình khác đang giữ khóa ghi trên DB mới,
+        việc đổi sang WAL bị SQLite trả 'database is locked' NGAY (không qua busy timeout).
+        TaskStore phải chờ khóa nhả rồi mở được, không chết."""
+        db = Path(tempfile.mkdtemp()) / "w.db"
+        writer = sqlite3.connect(db, isolation_level=None, check_same_thread=False)
+        writer.execute("BEGIN IMMEDIATE")  # như tiến trình khác đang đổi WAL / tạo schema
+        release = threading.Timer(0.3, lambda: writer.execute("COMMIT"))
+        release.start()
+        try:
+            s = TaskStore(db)
+        finally:
+            release.join()
+            writer.close()
+        self.assertEqual(s.db.execute("PRAGMA journal_mode").fetchone()[0], "wal")
+        s.close()
+
+    def test_wal_switch_retry_is_bounded(self):
+        """Khóa không bao giờ nhả thì vẫn báo lỗi sau thời hạn, không treo vô hạn."""
+        import time
+        from unittest import mock
+        from crown import tasks
+        db = Path(tempfile.mkdtemp()) / "b.db"
+        writer = sqlite3.connect(db, isolation_level=None)
+        writer.execute("BEGIN IMMEDIATE")
+        try:
+            with mock.patch.object(tasks, "LOCK_TIMEOUT", 0.3):
+                t0 = time.monotonic()
+                with self.assertRaisesRegex(sqlite3.OperationalError, "locked"):
+                    TaskStore(db)
+                self.assertLess(time.monotonic() - t0, 5)
+        finally:
+            writer.close()

@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
+import time
 import uuid
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -17,6 +18,7 @@ from zoneinfo import ZoneInfo
 
 VN_TZ = ZoneInfo("Asia/Ho_Chi_Minh")
 MAX_RETRY = 3
+LOCK_TIMEOUT = 10  # giây chờ khóa SQLite (busy timeout và thử lại khi đổi WAL)
 
 TRANSITIONS: dict[str, set[str]] = {
     "DRAFT": {"READY", "CANCELLED"},
@@ -94,14 +96,35 @@ def to_vn(iso: str | None) -> str:
     return datetime.fromisoformat(iso).astimezone(VN_TZ).strftime("%Y-%m-%d %H:%M (UTC+7)")
 
 
+def _enable_wal(db: sqlite3.Connection) -> None:
+    """Bật WAL, chịu được nhiều tiến trình cùng mở một DB mới.
+
+    Đổi sang WAL phải nâng giao dịch đọc lên ghi; nếu tiến trình khác đang giữ khóa ghi,
+    SQLite trả 'database is locked' NGAY, không qua busy timeout (để tránh deadlock).
+    Nên tự thử lại có giới hạn thời gian; DB đã ở WAL thì không đổi nữa.
+    """
+    deadline = time.monotonic() + LOCK_TIMEOUT
+    delay = 0.01
+    while True:
+        try:
+            if db.execute("PRAGMA journal_mode").fetchone()[0].lower() != "wal":
+                db.execute("PRAGMA journal_mode=WAL")
+            return
+        except sqlite3.OperationalError as e:
+            if "locked" not in str(e) or time.monotonic() + delay > deadline:
+                raise
+            time.sleep(delay)
+            delay = min(delay * 2, 0.2)
+
+
 class TaskStore:
     def __init__(self, path: str | Path, registry=None, clock: Callable[[], datetime] = utc_now):
         self.path = str(path)
         self.registry = registry
         self.clock = clock
-        self.db = sqlite3.connect(self.path, isolation_level=None, timeout=10, check_same_thread=False)
+        self.db = sqlite3.connect(self.path, isolation_level=None, timeout=LOCK_TIMEOUT, check_same_thread=False)
         self.db.row_factory = sqlite3.Row
-        self.db.execute("PRAGMA journal_mode=WAL")
+        _enable_wal(self.db)
         self.db.executescript(SCHEMA)
         cols = {r["name"] for r in self.db.execute("PRAGMA table_info(tasks)")}
         # Nâng cấp DB cũ, không mất dữ liệu. Nhiều tiến trình có thể cùng nâng cấp một lúc
