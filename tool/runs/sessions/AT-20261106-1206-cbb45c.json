@@ -4,8 +4,8 @@
  "trigger": "scheduler",
  "trigger_basis": "không có dấu chạy tay và bắt đầu lúc 12:06 — trong khung phút 05–24 của lịch 5 * * * *",
  "started_at": "2026-11-06T05:06:34+00:00",
- "finished_at": null,
- "result": null,
+ "finished_at": "2026-11-06T05:12:57+00:00",
+ "result": "NO_RELEASE",
  "plan": {
   "backlog": [],
   "requests": [],
@@ -24,7 +24,9 @@
   }
  },
  "releases": [],
- "notes": [],
+ "notes": [
+  "Phiên theo lịch 12:05: không có yêu cầu web CHO_WORKER, không việc tồn; đánh giá nguồn craft-anything v0.3.0→v0.4.0 = NOTED (tham khảo ý tưởng, không tích hợp; chưa đọc được trang so sánh)"
+ ],
  "github": {
   "checked": [
    {
