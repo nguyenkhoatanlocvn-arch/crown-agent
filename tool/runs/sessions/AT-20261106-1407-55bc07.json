@@ -1,0 +1,13 @@
+{
+ "run_id": "AT-20261106-1407-55bc07",
+ "agent": "agent-tool-at",
+ "trigger": "scheduler",
+ "trigger_basis": "không có dấu chạy tay và bắt đầu lúc 14:07 — trong khung phút 05–24 của lịch 5 * * * *",
+ "started_at": "2026-11-06T07:07:51+00:00",
+ "finished_at": null,
+ "result": null,
+ "plan": null,
+ "releases": [],
+ "notes": [],
+ "github": null
+}
