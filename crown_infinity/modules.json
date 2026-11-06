@@ -1,0 +1,96 @@
+{
+  "version": "2026-11-06.1",
+  "note": "dev_status = trạng thái phát triển (PLANNED/IMPLEMENTED/VERIFIED/BLOCKED). Trạng thái vận hành (ONLINE/OFFLINE/ERROR/UNKNOWN) được tính lúc chạy, không ghi ở đây.",
+  "modules": [
+    {
+      "module_id": "crown_agent_control", "code": "01", "name": "CROWN AGENT CONTROL", "version": "0.1.0",
+      "description": "Agent, nhiệm vụ, trạng thái, báo cáo của CROWN AGENT.",
+      "dev_status": "IMPLEMENTED",
+      "implemented_scope": ["Adapter CHỈ ĐỌC sổ đăng ký registries/*.json", "Danh tính Agent + token riêng", "Cấp prompt theo phiên bản cố định cho Agent", "Đọc sổ nhiệm vụ crown tasks.db nếu có tệp (chỉ đọc)"],
+      "not_yet": ["Tạo/giao/dừng nhiệm vụ của Agent (chưa có endpoint/quyền tương ứng)", "Đồng bộ Hoàng Thành Rồng (artifact DB)"],
+      "capabilities": ["agents.read", "assignments.manage", "agent_prompt.read"],
+      "permissions_required": ["OWNER để cấp token và assignment"],
+      "dependencies": ["crown_prompt_studio", "crown_admin_center"],
+      "routes": {"ui": ["#/agents"], "api": ["/api/v1/agents", "/api/v1/assignments", "/api/v1/agent/prompts", "/api/v1/integrations/crown-agent/*"]}
+    },
+    {
+      "module_id": "crown_tool_desk", "code": "02", "name": "CROWN TOOL DESK", "version": "0.1.0",
+      "description": "Danh mục công cụ; nguồn hiện có là kho tool/catalog của bộ phận TOOL (Thiên Công).",
+      "dev_status": "IMPLEMENTED",
+      "implemented_scope": ["Tool Registry đọc tool/catalog (chỉ đọc)"],
+      "not_yet": ["Chạy tool từ web", "Ứng dụng Desktop (Tauri) — làm sau khi lõi ổn định"],
+      "capabilities": ["tools.read", "tools.sync"], "permissions_required": ["OWNER để đồng bộ"],
+      "dependencies": ["crown_admin_center"], "routes": {"ui": ["#/tools"], "api": ["/api/v1/tools"]}
+    },
+    {
+      "module_id": "crown_ai_hub", "code": "03", "name": "CROWN AI HUB", "version": "0.1.0",
+      "description": "Provider, model, usage, ngân sách. Mọi lời gọi trả phí TẮT mặc định.",
+      "dev_status": "IMPLEMENTED",
+      "implemented_scope": ["Cấu hình provider (khóa nằm ở biến môi trường phía máy chủ)", "Ngân sách mặc định 0", "Cổng chặn + giữ chỗ ngân sách trước request"],
+      "not_yet": ["Gọi model thật (chưa có transport được kiểm chứng)", "AI Writer / Optimizer / chấm ngữ nghĩa"],
+      "capabilities": ["ai.settings", "ai.gate"], "permissions_required": ["OWNER"],
+      "dependencies": ["crown_admin_center"], "routes": {"ui": ["#/ai"], "api": ["/api/v1/ai"]}
+    },
+    {
+      "module_id": "crown_social_manager", "code": "04", "name": "CROWN SOCIAL MANAGER", "version": "0.0.0",
+      "description": "Tài khoản đã kết nối, media có quyền dùng, viết bài, lịch đăng, analytics qua API chính thức.",
+      "dev_status": "PLANNED",
+      "planned_notes": "Mặc định lưu nháp; không tự đăng ngoài tài khoản/chính sách đã cấu hình; lưu nguồn + quyền sử dụng media.",
+      "capabilities": [], "permissions_required": [], "dependencies": ["crown_ai_hub", "crown_automation"], "routes": {}
+    },
+    {
+      "module_id": "crown_btc_control_center", "code": "05", "name": "CROWN BTC CONTROL CENTER", "version": "0.0.0",
+      "description": "Quan sát bot và danh mục BTC, CHỈ ĐỌC.",
+      "dev_status": "PLANNED",
+      "planned_notes": "Không gửi lệnh, không bật vốn thật, không đổi bot, không cấp quyền rút tiền. Dữ liệu không truy cập được hiển thị 'chưa kết nối'.",
+      "capabilities": [], "permissions_required": [], "dependencies": [], "routes": {}
+    },
+    {
+      "module_id": "crown_software_forge", "code": "06", "name": "CROWN SOFTWARE FORGE", "version": "0.0.0",
+      "description": "Quy trình: yêu cầu → đặc tả → chọn nguồn mở → triển khai → so sánh giao diện → test → đóng gói module.",
+      "dev_status": "PLANNED",
+      "planned_notes": "Không tái tạo phần mềm chỉ từ ảnh rồi tuyên bố đủ backend; không sao chép tài sản độc quyền.",
+      "capabilities": [], "permissions_required": [], "dependencies": ["crown_prompt_studio"], "routes": {}
+    },
+    {
+      "module_id": "crown_automation", "code": "07", "name": "CROWN AUTOMATION", "version": "0.0.0",
+      "description": "Lịch, job bền vững, worker: idempotency, retry hữu hạn, timeout, hủy, log.",
+      "dev_status": "PLANNED",
+      "planned_notes": "Chỉ thêm scheduler khi có lịch thật cần chạy. Không cam kết exactly-once.",
+      "capabilities": [], "permissions_required": [], "dependencies": [], "routes": {}
+    },
+    {
+      "module_id": "crown_mcp_gateway", "code": "08", "name": "CROWN MCP GATEWAY", "version": "0.0.0",
+      "description": "Quản lý MCP server cấu hình rõ ràng và quyền từng công cụ.",
+      "dev_status": "PLANNED",
+      "planned_notes": "Không cài hoặc tự cấp quyền cho server lạ.",
+      "capabilities": [], "permissions_required": [], "dependencies": [], "routes": {}
+    },
+    {
+      "module_id": "crown_marketplace", "code": "09", "name": "CROWN MARKETPLACE", "version": "0.0.0",
+      "description": "Kế hoạch phân phối module.",
+      "dev_status": "PLANNED",
+      "planned_notes": "Không tự tải/chạy plugin chưa kiểm tra.",
+      "capabilities": [], "permissions_required": [], "dependencies": [], "routes": {}
+    },
+    {
+      "module_id": "crown_admin_center", "code": "10", "name": "CROWN ADMIN CENTER", "version": "0.1.0",
+      "description": "Người dùng, quyền, phiên đăng nhập, sao lưu.",
+      "dev_status": "IMPLEMENTED",
+      "implemented_scope": ["OWNER/EDITOR/VIEWER + thành viên dự án", "Phiên cookie HttpOnly + CSRF + thu hồi", "Giới hạn đăng nhập sai", "Sao lưu nhất quán; khôi phục qua CLI khi máy chủ dừng"],
+      "not_yet": ["MFA/SSO (chưa triển khai)", "Quản lý thiết bị"],
+      "capabilities": ["users.manage", "sessions.revoke", "backups.create"], "permissions_required": ["OWNER"],
+      "dependencies": [], "routes": {"ui": ["#/admin"], "api": ["/api/v1/admin/*", "/api/v1/auth/*"]}
+    },
+    {
+      "module_id": "crown_prompt_studio", "code": "11", "name": "CROWN PROMPT STUDIO", "version": "0.1.0",
+      "description": "Thư viện, phiên bản, biên tập, phân tích tĩnh, nhập/xuất prompt; bộ nhớ có cấu trúc trong database.",
+      "dev_status": "IMPLEMENTED",
+      "implemented_scope": ["Thư viện + tìm kiếm FTS5 (có/không dấu)", "Bản nháp autosave + phục hồi", "Phiên bản bất biến, diff, khôi phục, duyệt, con trỏ production", "Xung đột revision", "Biến {{ten}} + khối {{> P-id}}", "Phân tích tĩnh", "Nguồn tham chiếu", "Nhập TXT/MD, xuất TXT/MD/JSON"],
+      "not_yet": ["AI Writer/Optimizer (cần AI Hub bật)", "Test Lab gọi model thật", "Semantic search"],
+      "capabilities": ["prompts.read", "prompts.write", "prompts.review", "prompts.import", "prompts.export"],
+      "permissions_required": ["Thành viên dự án (EDITOR để ghi)", "OWNER để duyệt/production"],
+      "dependencies": ["crown_admin_center"], "routes": {"ui": ["#/prompts"], "api": ["/api/v1/prompts", "/api/v1/import/*"]}
+    }
+  ]
+}

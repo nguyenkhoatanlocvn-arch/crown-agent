@@ -42,3 +42,23 @@ DRAFT → READY → RUNNING → REVIEW → VERIFIED_DONE; nhánh BLOCKED / WAITI
 ## Chưa có (đúng phạm vi M1-a)
 Chưa nối laptop, chưa chạy Agent thật bằng model, chưa có web/3D, chưa có ngân sách giữ chỗ, chưa backup tự động.
 "20 Agent đăng ký" ≠ 20 phiên đang chạy: M1 chỉ A03 ACTIVE.
+
+---
+
+# CROWN INFINITY + CROWN PROMPT STUDIO (v0.1.0, 2026-11-06)
+
+Nền tảng chung quản lý dự án, module, công cụ, prompt, kết nối AI và tác vụ. Module ưu tiên: **CROWN PROMPT STUDIO**.
+Python ≥3.10 chỉ thư viện chuẩn + SQLite; web responsive không cần Node. Dữ liệu nằm ngoài repo
+(`%LOCALAPPDATA%\CrownInfinity` trên Windows, `~/.local/share/crown-infinity` trên Linux).
+
+```
+py -m crown_infinity init-owner --username loc      # tạo OWNER (hỏi mật khẩu, không hiện ra)
+py -m crown_infinity serve                          # http://localhost:8765/
+py -m crown_infinity backup                         # sao lưu nhất quán
+py -m crown_infinity restore <tệp.zip> [--verify-only]   # khôi phục (máy chủ phải dừng)
+py -m crown_infinity status
+powershell -ExecutionPolicy Bypass -File scripts\infinity\start.ps1   # Windows: tạo OWNER nếu thiếu + chạy + mở trình duyệt
+python -m unittest discover -s tests/infinity -t .  # test nghiệm thu backend
+node tests/web/infinity_ui_test.cjs                 # test giao diện bằng trình duyệt thật (cần Playwright)
+```
+Tài liệu: `docs/infinity/` — SYSTEM_AUDIT, ARCHITECTURE (ADR, bảo mật, chi phí), RESEARCH, API, TEST_RESULTS, HANDOFF.
