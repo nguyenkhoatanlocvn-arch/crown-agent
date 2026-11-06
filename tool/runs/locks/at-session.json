@@ -1,8 +1,5 @@
 {
- "state": "HELD",
- "run_id": "AT-20261106-1507-ca172c",
- "holder": "agent-tool-at",
- "trigger": "scheduler",
- "started_at": "2026-11-06T08:07:36+00:00",
- "expires_at": "2026-11-06T08:57:36+00:00"
+ "state": "FREE",
+ "last_run": "AT-20261106-1507-ca172c",
+ "released_at": "2026-11-06T08:08:02+00:00"
 }
